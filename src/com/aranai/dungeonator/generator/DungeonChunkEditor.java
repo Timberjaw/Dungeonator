@@ -112,22 +112,81 @@ public class DungeonChunkEditor {
 	{
 		if(command.equalsIgnoreCase("new"))
 		{
-			
+			this.cmdNew(args);
 		}
-		
-		if(command.equalsIgnoreCase("load"))
+		else if(command.equalsIgnoreCase("load"))
 		{
-			
+			this.cmdLoad(args);
 		}
-		
-		if(command.equalsIgnoreCase("cancel"))
+		else if(command.equalsIgnoreCase("cancel"))
 		{
-			
+			this.cmdCancel();
 		}
-		
-		if(command.equalsIgnoreCase("save"))
+		else if(command.equalsIgnoreCase("save"))
 		{
-			
+			this.cmdSave(args);
 		}
+		else if(command.equalsIgnoreCase("exits"))
+		{
+			this.cmdExits(args);
+		}
+	}
+	
+	/**
+	 * Command: New DungeonChunk
+	 * 
+	 * This will activate the editor with a blank chunk.
+	 *
+	 * @param args the args
+	 */
+	public void cmdNew(String[] args)
+	{
+		
+	}
+	
+	/**
+	 * Command: Load DungeonChunk
+	 * 
+	 * This will activate the editor with a specified chunk loaded.
+	 *
+	 * @param args the args
+	 */
+	public void cmdLoad(String[] args)
+	{
+		
+	}
+	
+	/**
+	 * Command: Cancel Edit
+	 * 
+	 * This will cancel the editing process.
+	 */
+	public void cmdCancel()
+	{
+		
+	}
+	
+	/**
+	 * Command: Save DungeonChunk
+	 * 
+	 * This will save the current DungeonChunk. The editor will remain active.
+	 *
+	 * @param args the args
+	 */
+	public void cmdSave(String[] args)
+	{
+		
+	}
+	
+	/**
+	 * Command: Exits
+	 * 
+	 * Parent command for getting, setting, and removing exit data for the current chunk.
+	 *
+	 * @param args the args
+	 */
+	public void cmdExits(String[] args)
+	{
+		// Get, set, or remove an exit
 	}
 }
