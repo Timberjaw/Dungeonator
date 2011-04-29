@@ -1,0 +1,14 @@
+name: Dungeonator
+main: com.aranai.dungeonator.Dungeonator
+version: 0.1
+author: Timberjaw
+commands:
+  flatten:
+    description: Flattens the current chunk
+    usage: /<command>
+  flattenate:
+    description: Flatten everything
+    usage: /<command>
+  tile:
+    description: Tile a chunk
+    usage: /<command>
