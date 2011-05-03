@@ -175,7 +175,23 @@ public class DungeonChunkEditor {
 	 */
 	public void cmdSave(String[] args)
 	{
-		
+		/*
+		 * Example NBT Format:
+		 * 
+		 * CompoundTag("DungeonChunkSchematic"):
+		 *  - ByteTag("type"): byte								Type ID for the DungeonChunk
+		 * 	- ByteTag("exits"): byte							Exits from the chunk
+		 * 	- CompoundTag("widgetSpawns"):						Potential widget spawn locations for the chunk
+		 * 		- CompoundTag("widget"): 						A single widget spawn location (origin is at NW corner of the widget to be placed)
+		 * 			- ByteTag("type") : byte						Type ID for the widget spawn location, or 0 if any widget type is acceptable
+		 * 			- ShortTag("locX") : short						X coordinate for the widget spawn location
+		 * 			- ShortTag("locY") : short						Y coordinate for the widget spawn location
+		 * 			- ShortTag("locZ") : short						Z coordinate for the widget spawn location
+		 * 			- ShortTag("maxX") : short						Maximum X size for a widget placed at this location
+		 *  		- ShortTag("maxY") : short						Maximum Y size for a widget placed at this location
+		 *  		- ShortTag("maxZ") : short						Maximum Z size for a widget placed at this location
+		 * 	- ByteArrayTag("blocks"): byte[]					Raw block data
+		 */
 	}
 	
 	/**
