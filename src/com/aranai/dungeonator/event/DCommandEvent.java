@@ -6,7 +6,8 @@ import org.bukkit.entity.Player;
 /**
  * The Class DCommandEvent.
  * 
- * Provides a standard set of attributes associated with Dungeonator command input.
+ * Provides a standard set of attributes associated with Dungeonator command input: player, base command, additional arguments, and originating chunk.
+ * Named arguments are supported with the format: "argument:value". Values can be of types String, integer, float, or boolean.
  */
 public class DCommandEvent {
 	
