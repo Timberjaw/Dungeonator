@@ -40,9 +40,14 @@ public class DWorldListener extends WorldListener {
 		
 		String worldName = world.getName();
 		
+		// Initialize the DungeonChunkProvider and replace the world's current provider
 		this.dcp = new DungeonChunkProvider(world, 0);
 		((CraftWorld)world).getHandle().chunkProviderServer.chunkProvider = dcp;
 		
+		/*
+		 * Horrible hack. Necessary for now to regenerate the spawn chunks.
+		 * TODO: Don't have horrible hacks
+		 */
 		for(int ci = 0; ci < chunks.length; ci++)
 		{
 			Chunk c = chunks[ci];
@@ -61,19 +66,6 @@ public class DWorldListener extends WorldListener {
 			
 			if((ci % 50) == 0) { System.gc(); }
 		}
-		
-		// DEBUG: Add sand block near spawn
-		/*
-		world.getBlockAt(0,1,0).setType(Material.SAND);
-		world.getBlockAt(1,1,0).setType(Material.SAND);
-		world.getBlockAt(1,1,1).setType(Material.SAND);
-		world.getBlockAt(0,1,1).setType(Material.SAND);
-		world.getBlockAt(1,1,-1).setType(Material.SAND);
-		world.getBlockAt(0,1,-1).setType(Material.SAND);
-		world.getBlockAt(-1,1,-1).setType(Material.SAND);
-		world.getBlockAt(-1,1,0).setType(Material.SAND);
-		world.getBlockAt(-1,1,1).setType(Material.SAND);
-		*/
 		
 		List<Entity> entities = world.getEntities();
 		

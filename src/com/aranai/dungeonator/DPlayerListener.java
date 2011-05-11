@@ -19,7 +19,7 @@ public class DPlayerListener extends PlayerListener {
 	
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args)
 	{
-		if(command.getName().equalsIgnoreCase("editor") || command.getName().equalsIgnoreCase("edit"))
+		if(command.getName().equalsIgnoreCase("edit"))
 		{
 			// Pass command to editor
 			if(args.length > 0)
@@ -37,10 +37,8 @@ public class DPlayerListener extends PlayerListener {
 			else
 			{
 				// List available commands
-				sender.sendMessage("Available commands: Load, New, Save");
+				sender.sendMessage("Available commands: load, new, save, cancel");
 			}
-			
-			return true;
 		}
 				
 		return true;

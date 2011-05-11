@@ -51,17 +51,23 @@ public class DungeonChunkEditor {
 	 */
 	public void start(DungeonChunk c, boolean flatten, boolean hint)
 	{
-		/*
-		 * Flatten 9 chunks total: the selected chunk and the 8 surrounding chunks
-		 */
+		if(flatten)
+		{
+			/*
+			 * Flatten 9 chunks total: the selected chunk and the 8 surrounding chunks
+			 */
+		}
 		
-		/*
-		 * Add corner hints
-		 */
-		
-		/*
-		 * Add doorway hints
-		 */
+		if(hint)
+		{
+			/*
+			 * Add corner hints
+			 */
+			
+			/*
+			 * Add doorway hints
+			 */
+		}
 		
 		/*
 		 * Mark editor as active
