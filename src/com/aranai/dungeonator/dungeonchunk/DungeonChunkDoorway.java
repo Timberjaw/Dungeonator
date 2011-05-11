@@ -1,4 +1,4 @@
-package com.aranai.dungeonator;
+package com.aranai.dungeonator.dungeonchunk;
 
 /**
  * DungeonChunkDoorway represents a single doorway for a chunk.

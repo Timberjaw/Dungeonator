@@ -1,6 +1,7 @@
 package com.aranai.dungeonator;
 
 import com.aranai.dungeonator.datastore.*;
+import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 
 /**
  * Abstracts all data store access for Dungeonator.
@@ -45,7 +46,7 @@ public class DungeonDataManager {
 			 * loss, and move on with our lives.
 			 */
 			
-			plugin.getLogger().severe("Failed to get requested DungeonChunk at Location: "+ e.getLocation() +". Reason: " + e.getReason());
+			Dungeonator.getLogger().severe("Failed to get requested DungeonChunk at Location: "+ e.getLocation() +". Reason: " + e.getReason());
 		}
 		
 		return chunk;

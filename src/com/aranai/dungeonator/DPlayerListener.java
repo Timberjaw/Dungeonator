@@ -3,7 +3,6 @@ package com.aranai.dungeonator;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -11,6 +10,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerListener;
+
+import com.aranai.dungeonator.event.DCommandEvent;
 
 public class DPlayerListener extends PlayerListener {
 	private Dungeonator plugin;
@@ -30,7 +31,7 @@ public class DPlayerListener extends PlayerListener {
 				String editCommand = args[0];
 				LinkedList<String> editArgList = new LinkedList<String>();
 				for(String a : args) { editArgList.add(a); }
-				plugin.getChunkEditor().onCommand((Player)sender, editCommand, editArgList.toArray(new String[editArgList.size()]));
+				plugin.getChunkEditor().onCommand(new DCommandEvent((Player)sender, editCommand, editArgList.toArray(new String[editArgList.size()])));
 			}
 			else
 			{
@@ -76,7 +77,7 @@ public class DPlayerListener extends PlayerListener {
 			
 			Location newLocation = p.getLocation();
 			newLocation.setY(plugin.py + 2);
-			p.teleportTo(newLocation);
+			p.teleport(newLocation);
 		}
 		
 		if(command.getName().equalsIgnoreCase("tile"))

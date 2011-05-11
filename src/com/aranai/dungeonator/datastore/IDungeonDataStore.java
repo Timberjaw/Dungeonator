@@ -1,6 +1,6 @@
 package com.aranai.dungeonator.datastore;
 
-import com.aranai.dungeonator.DungeonChunk;
+import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 
 /**
  * Interface for data store classes. Specifies standard methods for accessing,

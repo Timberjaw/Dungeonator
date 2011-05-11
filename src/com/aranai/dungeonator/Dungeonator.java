@@ -11,6 +11,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.aranai.dungeonator.datastore.DungeonDataStore;
+import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
 import com.aranai.dungeonator.generator.DungeonChunkEditor;
 
 /**
@@ -18,7 +19,7 @@ import com.aranai.dungeonator.generator.DungeonChunkEditor;
  */
 public class Dungeonator extends JavaPlugin {
 	
-	private Logger log;
+	private static Logger log;
 	
 	/** The world listener. Used for detecting chunk load and unload events. */
 	private DWorldListener worldListener;
@@ -75,6 +76,9 @@ public class Dungeonator extends JavaPlugin {
 		// Initialize chunk manager
 		chunkManager = new DungeonChunkManager(dataManager);
 		
+		// Initialize chunk editor
+		chunkEditor = new DungeonChunkEditor(this);
+		
 		// Enable message
         PluginDescriptionFile pdfFile = this.getDescription();
 		log.info("[Dungeonator] version ["+ pdfFile.getVersion()+ "] loaded");
@@ -100,9 +104,9 @@ public class Dungeonator extends JavaPlugin {
 	 *
 	 * @return the logger
 	 */
-	public Logger getLogger()
+	public static Logger getLogger()
 	{
-		return log;
+		return Dungeonator.log;
 	}
 	
 	/**

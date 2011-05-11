@@ -1,9 +1,11 @@
-package com.aranai.dungeonator;
+package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Chunk;
 
+import com.aranai.dungeonator.Direction;
+import com.aranai.dungeonator.DungeonDataManager;
 import com.aranai.dungeonator.generator.DungeonChunkGenerator;
 
 /**
@@ -227,9 +229,9 @@ public class DungeonChunkManager {
 		DungeonChunk neighborW = null;
 		
 		if(this.isChunkGenerated(world, x+16, z)) { neighborN = this.getChunk(world, x+16, z); }
-		if(this.isChunkGenerated(world, x, z+16)) { neighborN = this.getChunk(world, x, z+16); }
-		if(this.isChunkGenerated(world, x-16, z)) { neighborN = this.getChunk(world, x-16, z); }
-		if(this.isChunkGenerated(world, x, z-16)) { neighborN = this.getChunk(world, x, z-16); }
+		if(this.isChunkGenerated(world, x, z+16)) { neighborE = this.getChunk(world, x, z+16); }
+		if(this.isChunkGenerated(world, x-16, z)) { neighborS = this.getChunk(world, x-16, z); }
+		if(this.isChunkGenerated(world, x, z-16)) { neighborW = this.getChunk(world, x, z-16); }
 		
 		// Add neighbors
 		newChunk.setNeighbor(Direction.N, neighborN);

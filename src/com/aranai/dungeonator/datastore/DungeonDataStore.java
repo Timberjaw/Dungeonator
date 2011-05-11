@@ -1,6 +1,6 @@
 package com.aranai.dungeonator.datastore;
 
-import com.aranai.dungeonator.DungeonChunk;
+import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 
 /**
  * Provides a default (non-functional) implementation for others to extend.

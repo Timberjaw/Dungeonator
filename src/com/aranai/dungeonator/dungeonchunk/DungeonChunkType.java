@@ -1,4 +1,4 @@
-package com.aranai.dungeonator;
+package com.aranai.dungeonator.dungeonchunk;
 
 /**
  * Specifies types for DungeonChunks

@@ -3,8 +3,8 @@ package com.aranai.dungeonator.generator;
 import java.util.Vector;
 
 import com.aranai.dungeonator.Direction;
-import com.aranai.dungeonator.DungeonChunk;
-import com.aranai.dungeonator.DungeonChunkDoorway;
+import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
+import com.aranai.dungeonator.dungeonchunk.DungeonChunkDoorway;
 
 /**
  * Handles the down and dirty details of dungeon data generation

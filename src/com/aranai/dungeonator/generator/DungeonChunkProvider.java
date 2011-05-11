@@ -2,9 +2,7 @@ package com.aranai.dungeonator.generator;
 
 import java.util.Arrays;
 
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.craftbukkit.CraftWorld;
 
 import net.minecraft.server.Chunk;
@@ -60,10 +58,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 		{
 			for(int z = 0; z < 16; z++)
 			{
-				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (0 & 0x7F);
-				blocks[pos] = 1;
-				//mw.notify(x, 0, z);
-				//mw.applyPhysics(x, 0, z, 1);
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (0 & 0x7F);	// Converts X,Y,Z coordinates to an array index
+																		// My math notes because this kicked my ass for a while:
+																		// (x & 0xF) 	= x & 16				Bitwise AND
+																		// x2 << 11 	= x2^11					Bitshift left (exponent)
+																		// (z & 0xF) 	= z & 16				Bitwise AND
+																		// z2 << 7 		= z2^7					Bitshift left (exponent)
+																		// (0 & 0x7F) 	= 0 & 128 = 0			Bitwise AND with 127 (all 1's)
+																		//										Does nothing here; world normally ensure that larger values were clipped to 8 bits
+																		// x3 | z3 | 0 	= bitwise OR of X,Z,Y
+				
+				blocks[pos] = 1;										// Set to stone
 			}
 		}
 		

@@ -1,8 +1,10 @@
-package com.aranai.dungeonator;
+package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 
 import org.bukkit.Chunk;
+
+import com.aranai.dungeonator.Direction;
 
 /**
  * Stores and manipulates Dungeonator chunk information, including type, neighbors, and doorways.
@@ -53,6 +55,16 @@ public class DungeonChunk implements IDungeonChunk {
 		this.world = "world";
 		this.x = 0;
 		this.z = 0;
+	}
+	
+	/**
+	 * Instantiates a new dungeon chunk from an existing chunk
+	 *
+	 * @param chunk the chunk
+	 */
+	public DungeonChunk(Chunk chunk)
+	{
+		this(DungeonChunkType.BASIC_TILE, chunk.getWorld().getName(), chunk.getX(), chunk.getZ(), chunk);
 	}
 	
 	public DungeonChunk(DungeonChunkType type, String world, int x, int z, Chunk chunk)

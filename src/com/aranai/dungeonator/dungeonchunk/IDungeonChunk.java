@@ -1,4 +1,4 @@
-package com.aranai.dungeonator;
+package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 

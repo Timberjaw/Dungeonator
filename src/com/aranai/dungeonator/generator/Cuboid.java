@@ -1,7 +1,6 @@
 package com.aranai.dungeonator.generator;
 
 import org.bukkit.Location;
-import org.bukkit.World;
 
 /**
  * The Cuboid class allows for cubic regions of variable size and thickness
@@ -117,7 +116,7 @@ public class Cuboid {
 	 *
 	 * @return the thickness
 	 */
-	private int getThickness()
+	public int getThickness()
 	{
 		return thickness;
 	}
