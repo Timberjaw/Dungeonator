@@ -70,6 +70,129 @@ public class DCommandEvent {
 		}
 		
 		/**
+		 * Gets a boolean value from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the argument was not specified
+		 * @return the resulting boolean value
+		 */
+		public boolean getNamedArgBool(String name, boolean defaultValue)
+		{
+			String value = this.getNamedArg(name);
+			
+			if(value != null)
+			{
+				if(value.equalsIgnoreCase("true"))
+				{
+					return true;
+				}
+				else if(value.equalsIgnoreCase("false"))
+				{
+					return false;
+				}
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
+		 * Gets the int value from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the named argument was not specified
+		 * @return the resulting int value
+		 */
+		public int getNamedArgInt(String name, int defaultValue)
+		{
+			String value = this.getNamedArg(name);
+			
+			if(value != null)
+			{
+				// Attempt to parse an integer value from the value
+				try
+				{
+					int intValue = Integer.parseInt(value);
+					return intValue;
+				}
+				catch(NumberFormatException e)
+				{
+					// Bad value; do nothing
+				}
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
+		 * Gets the float value from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the named argument was not specified
+		 * @return the resulting float value
+		 */
+		public float getNamedArgFloat(String name, float defaultValue)
+		{
+			String value = this.getNamedArg(name);
+			
+			if(value != null)
+			{
+				// Attempt to parse an integer value from the value
+				try
+				{
+					float floatValue = Float.parseFloat(value);
+					return floatValue;
+				}
+				catch(NumberFormatException e)
+				{
+					// Bad value; do nothing
+				}
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
+		 * Gets a string value from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the argument was not specified
+		 * @return the resulting string value
+		 */
+		public String getNamedArgString(String name, String defaultValue)
+		{
+			String value = this.getNamedArg(name);
+			
+			if(value != null)
+			{
+				return value;
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
+		 * Gets the raw string value of a named argument.
+		 *
+		 * @param name the name of the argument to look for
+		 * @return the resulting raw string value, or null if the named argument was not specified
+		 */
+		private String getNamedArg(String name)
+		{
+			for(String s: this.args)
+			{
+				// Split the string into two components
+				String[] arg = s.split(":", 2);
+				
+				if(arg[0].equalsIgnoreCase(name) && !arg[1].isEmpty())
+				{
+					return arg[1];
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
 		 * Gets the chunk.
 		 *
 		 * @return the chunk

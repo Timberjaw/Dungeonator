@@ -49,7 +49,7 @@ public class DungeonChunkEditor {
 	 *
 	 * @param c the c
 	 */
-	public void start(DungeonChunk c)
+	public void start(DungeonChunk c, boolean flatten, boolean hint)
 	{
 		/*
 		 * Flatten 9 chunks total: the selected chunk and the 8 surrounding chunks
@@ -164,10 +164,17 @@ public class DungeonChunkEditor {
 	public void cmdNew(DCommandEvent cmd)
 	{
 		/*
+		 * Get 'flatten' and 'hint' args
+		 */
+		
+		boolean flatten = cmd.getNamedArgBool("flatten", true);
+		boolean hint = cmd.getNamedArgBool("hint", true);
+		
+		/*
 		 * Start the editor
 		 */
 		
-		this.start(new DungeonChunk(cmd.getChunk()));
+		this.start(new DungeonChunk(cmd.getChunk()), flatten, hint);
 		
 		/*
 		 * Let the player know what we've done
