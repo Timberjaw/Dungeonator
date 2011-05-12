@@ -1,8 +1,19 @@
 package com.aranai.dungeonator.generator;
 
+import java.util.Arrays;
+
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.CraftChunk;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+
 import com.aranai.dungeonator.event.DCommandEvent;
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 
 /**
  * Handles in-game chunk editing for tiles. Supports manual construction and
@@ -28,8 +39,14 @@ public class DungeonRoomEditor {
 	/** The chunk. */
 	private DungeonChunk chunk;
 	
+	/** The room. */
+	private DungeonRoom room;
+	
 	/** The active file. */
 	private String activeFile;
+	
+	/** The editing player. */
+	private Player editor;
 	
 	/**
 	 * Instantiates the dungeon chunk editor.
@@ -49,14 +66,40 @@ public class DungeonRoomEditor {
 	 *
 	 * @param c the c
 	 */
-	public void start(DungeonChunk c, boolean flatten, boolean hint)
+	public void start(boolean flatten, boolean hint)
 	{
 		if(flatten)
 		{
 			/*
 			 * Flatten 9 chunks total: the selected chunk and the 8 surrounding chunks
 			 */
+			
+			editor.sendMessage("Flattening chunks...");
+			
+			Material mat;
+			
+			for(int fX = chunk.getX()-1; fX <= chunk.getX()+1; fX++)
+			{
+				for(int fZ = chunk.getZ()-1; fZ <= chunk.getZ()+1; fZ++)
+				{
+					if(fX == chunk.getX() && fZ == chunk.getZ())
+					{
+						mat = Material.COBBLESTONE;
+					}
+					else
+					{
+						mat = Material.STONE;
+					}
+					this.flattenChunk(chunk.getWorld().getChunkAt(fX, fZ), mat);
+				}
+			}
 		}
+		
+		/*
+		 * Teleport player to avoid killing them
+		 */
+		
+		editor.teleport(new Location(editor.getWorld(), editor.getLocation().getX(), 10, editor.getLocation().getZ()));
 		
 		if(hint)
 		{
@@ -64,9 +107,26 @@ public class DungeonRoomEditor {
 			 * Add corner hints
 			 */
 			
+			editor.sendMessage("Adding corner hints...");
+			
+			World w = chunk.getWorld();
+			
+			int blockX = chunk.getX() << 4;
+			int blockZ = chunk.getZ() << 4;
+			
+			for(int y = 8; y < 16; y++)
+			{
+				w.getBlockAt(blockX-1, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+15+1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+15+1, y, blockZ+15+1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+15+1, y, blockZ-1).setType(Material.OBSIDIAN);
+			}
+			
 			/*
 			 * Add doorway hints
 			 */
+			
+			editor.sendMessage("Adding doorway hints...");
 		}
 		
 		/*
@@ -142,6 +202,8 @@ public class DungeonRoomEditor {
 	 */
 	public void onCommand(DCommandEvent cmd)
 	{
+		this.editor = cmd.getPlayer();
+		
 		if(cmd.getCmd().equals("new"))
 		{
 			this.cmdNew(cmd);
@@ -185,7 +247,8 @@ public class DungeonRoomEditor {
 		 * Start the editor
 		 */
 		
-		this.start(new DungeonChunk(cmd.getChunk()), flatten, hint);
+		this.chunk = new DungeonChunk(cmd.getChunk());
+		this.start(flatten, hint);
 		
 		/*
 		 * Let the player know what we've done
@@ -260,5 +323,40 @@ public class DungeonRoomEditor {
 	public void cmdExits(DCommandEvent cmd)
 	{
 		// Get, set, or remove an exit
+	}
+	
+	/**
+	 * Flatten the specified chunk.
+	 *
+	 * @param c the chunk to flatten
+	 */
+	public void flattenChunk(Chunk c, Material floorMaterial)
+	{
+		byte[] blocks = new byte[32768];
+		
+		Arrays.fill(blocks, (byte)0);
+		
+		int pos = 0;
+		for(int x = 0; x < 16; x++)
+		{
+			for(int z = 0; z < 16; z++)
+			{
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (7 & 0x7F);
+				blocks[pos] = 7;
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (8 & 0x7F);
+				blocks[pos] = (byte)(floorMaterial.getId() & 0xFF);
+			}
+		}
+		
+		((CraftChunk)c).getHandle().b = blocks;
+		
+		// DEBUG: Try to force lighting recalc
+		((CraftChunk)c).getHandle().b(); // Redo SKYLIGHT
+		
+		c.getWorld().refreshChunk(c.getX(), c.getZ());
+		for(Entity e : c.getEntities())
+		{
+			e.remove();
+		}
 	}
 }
