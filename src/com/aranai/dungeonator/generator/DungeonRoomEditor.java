@@ -93,13 +93,13 @@ public class DungeonRoomEditor {
 					this.flattenChunk(chunk.getWorld().getChunkAt(fX, fZ), mat);
 				}
 			}
+			
+			/*
+			 * Teleport player to avoid killing them
+			 */
+			
+			editor.teleport(new Location(editor.getWorld(), editor.getLocation().getX(), 10, editor.getLocation().getZ()));
 		}
-		
-		/*
-		 * Teleport player to avoid killing them
-		 */
-		
-		editor.teleport(new Location(editor.getWorld(), editor.getLocation().getX(), 10, editor.getLocation().getZ()));
 		
 		if(hint)
 		{
@@ -125,6 +125,49 @@ public class DungeonRoomEditor {
 			/*
 			 * Add doorway hints
 			 */
+			
+			for(int y = 8; y < 12; y++)
+			{
+				w.getBlockAt(blockX+0, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+4, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+5, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+10, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+11, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+15, y, blockZ-1).setType(Material.OBSIDIAN);
+				
+				w.getBlockAt(blockX+0, y, blockZ+16).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+4, y, blockZ+16).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+5, y, blockZ+16).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+10, y, blockZ+16).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+11, y, blockZ+16).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+15, y, blockZ+16).setType(Material.OBSIDIAN);
+				
+				w.getBlockAt(blockX-1, y, blockZ+0).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+4).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+5).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+10).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+11).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+15).setType(Material.OBSIDIAN);
+				
+				w.getBlockAt(blockX+16, y, blockZ+0).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+16, y, blockZ+4).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+16, y, blockZ+5).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+16, y, blockZ+10).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+16, y, blockZ+11).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+16, y, blockZ+15).setType(Material.OBSIDIAN);
+			}
+			
+			for(int x = blockX; x < blockX + 16; x++)
+			{
+				w.getBlockAt(x, 12, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(x, 12, blockZ+16).setType(Material.OBSIDIAN);
+			}
+			
+			for(int z = blockZ; z < blockZ + 16; z++)
+			{
+				w.getBlockAt(blockX-1, 12, z).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+16, 12, z).setType(Material.OBSIDIAN);
+			}
 			
 			editor.sendMessage("Adding doorway hints...");
 		}
@@ -356,7 +399,10 @@ public class DungeonRoomEditor {
 		c.getWorld().refreshChunk(c.getX(), c.getZ());
 		for(Entity e : c.getEntities())
 		{
-			e.remove();
+			if(!(e instanceof Player))
+			{
+				e.remove();
+			}
 		}
 	}
 }
