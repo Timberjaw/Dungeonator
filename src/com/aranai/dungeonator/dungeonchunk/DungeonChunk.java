@@ -18,6 +18,9 @@ public class DungeonChunk implements IDungeonChunk {
 	/** X coordinate for the chunk. */
 	private int x;
 	
+	/** Y coordinate for the chunk. */
+	private int y;
+	
 	/** Z coordinate for the chunk. */
 	private int z;
 	
@@ -91,6 +94,30 @@ public class DungeonChunk implements IDungeonChunk {
 	public int getX() {
 		return x;
 	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.Dungeonator.IDungeonChunk#setX()
+	 */
+	@Override
+	public void setX(int x) {
+		this.x = x;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.Dungeonator.IDungeonChunk#getY()
+	 */
+	@Override
+	public int getY() {
+		return y;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.Dungeonator.IDungeonChunk#setY()
+	 */
+	@Override
+	public void setY(int y) {
+		this.y = y;
+	}
 
 	/* (non-Javadoc)
 	 * @see com.aranai.Dungeonator.IDungeonChunk#getZ()
@@ -98,6 +125,14 @@ public class DungeonChunk implements IDungeonChunk {
 	@Override
 	public int getZ() {
 		return z;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.Dungeonator.IDungeonChunk#setZ()
+	 */
+	@Override
+	public void setZ(int z) {
+		this.z = z;
 	}
 	
 	/* (non-Javadoc)
