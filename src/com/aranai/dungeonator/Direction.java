@@ -1,7 +1,7 @@
 package com.aranai.dungeonator;
 
 /**
- * Specifies byte values for the 12 cardinal directions, starting at 0 for North and proceeding clockwise.
+ * Specifies byte values for the 12 cardinal directions, up, and down, starting at 0 for North and proceeding clockwise.
  * Also includes convenience arrays and functions for determining side from direction, directions from side,
  * and computing rotations. 
  */
@@ -43,6 +43,12 @@ public final class Direction {
 	/** North by Northwest */
 	public static byte NNW = 11;
 	
+	/** Up */
+	public static byte UP = 12;
+	
+	/** Down */
+	public static byte DOWN = 13;
+	
 	/** North Side Directions */
 	public static byte[] SIDE_NORTH = { NNW, N, NNE };
 	
@@ -54,6 +60,12 @@ public final class Direction {
 	
 	/** West Side Directions */
 	public static byte[] SIDE_WEST = { WSW, W, WNW };
+	
+	/** Top side directions */
+	public static byte[] SIDE_TOP = { UP };
+	
+	/** Bottom side directions */
+	public static byte[] SIDE_BOTTOM = { DOWN };
 	
 	/** Cardinal Directions */
 	public static byte[] CARDINALS = { N, E, S, W };
@@ -74,10 +86,12 @@ public final class Direction {
 	{
 		if(direction >= 0 && direction <= 12)
 		{
-			if(direction < 3) { return SIDE_NORTH; }
-			else if(direction < 6) { return SIDE_EAST; }
-			else if(direction < 9) { return SIDE_SOUTH; }
-			else { return SIDE_WEST; }
+			if(direction < 3) 			{ return SIDE_NORTH; }
+			else if(direction < 6) 		{ return SIDE_EAST; }
+			else if(direction < 9) 		{ return SIDE_SOUTH; }
+			else if(direction < 12) 	{ return SIDE_WEST; }
+			else if(direction == 12) 	{ return SIDE_TOP; }
+			else if(direction == 13) 	{ return SIDE_BOTTOM; }
 		}
 		
 		return null;
@@ -94,7 +108,7 @@ public final class Direction {
 	 */
 	public static byte rotate(byte start, byte direction, int advance)
 	{
-		if(start >= 0 && start <= 11)
+		if(start >= 0 && start < 12)
 		{
 			if(direction == CLOCKWISE)
 			{

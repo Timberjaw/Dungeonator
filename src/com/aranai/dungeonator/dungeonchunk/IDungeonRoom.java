@@ -10,6 +10,13 @@ import org.bukkit.Chunk;
 public interface IDungeonRoom {
 	
 	/**
+	 * Gets the parent dungeon chunk for the room.
+	 *
+	 * @return the parent dungeon chunk
+	 */
+	public DungeonChunk getDungeonChunk();
+	
+	/**
 	 * Gets the x coordinate for the chunk.
 	 *
 	 * @return the x coordinate for the chunk

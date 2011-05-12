@@ -23,14 +23,25 @@ public class DungeonRoom implements IDungeonRoom {
 	/** Random seed used for procedural rooms. */
 	private long seed = 0;
 	
-	/** Chunk type */
+	/** The DungeonChunk for this room */
+	private DungeonChunk chunk;
+	
+	/** Room type */
 	private DungeonRoomType type;
 	
-	/** Neighboring chunks (NESW, above, below) */
+	/** Neighboring rooms (NESW, above, below) */
 	private DungeonRoom[] neighbors = new DungeonRoom[6];
 	
 	/** Doorways */
 	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[12];
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getDungeonChunk()
+	 */
+	@Override
+	public DungeonChunk getDungeonChunk() {
+		return chunk;
+	}
 
 	/* (non-Javadoc)
 	 * @see com.aranai.Dungeonator.IDungeonChunk#getX()
@@ -137,7 +148,7 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	@Override
 	public boolean hasNeighbor(byte direction) {
-		if(this.isValidChunkDirection(direction))
+		if(this.isValidRoomDirection(direction))
 		{
 			return (neighbors[direction] != null);
 		}
@@ -163,7 +174,7 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	@Override
 	public void setNeighbor(byte direction, IDungeonRoom neighbor) {
-		if(this.isValidChunkDirection(direction))
+		if(this.isValidRoomDirection(direction))
 		{
 			neighbors[direction] = (DungeonRoom)neighbor;
 		}
@@ -175,8 +186,9 @@ public class DungeonRoom implements IDungeonRoom {
 	 * @param direction the direction to check
 	 * @return true, if the direction is a valid chunk direction
 	 */
-	public boolean isValidChunkDirection(byte direction)
+	public boolean isValidRoomDirection(byte direction)
 	{
-		return (direction == Direction.N || direction == Direction.S || direction == Direction.E || direction == Direction.W);
+		return (direction == Direction.N || direction == Direction.S || direction == Direction.E || direction == Direction.W
+				|| direction == Direction.UP || direction == Direction.DOWN);
 	}
 }
