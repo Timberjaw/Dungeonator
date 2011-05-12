@@ -4,7 +4,7 @@ package com.aranai.dungeonator.dungeonchunk;
  * DungeonChunkDoorway represents a single doorway for a chunk.
  * Provides access to meta data (doorway type, direction, and so forth). 
  */
-public class DungeonChunkDoorway {
+public class DungeonRoomDoorway {
 	
 	/** The direction. */
 	private byte direction;
@@ -14,7 +14,7 @@ public class DungeonChunkDoorway {
 	 *
 	 * @param d the direction attachment for the doorway
 	 */
-	public DungeonChunkDoorway(byte d)
+	public DungeonRoomDoorway(byte d)
 	{
 		this.direction = d;
 	}

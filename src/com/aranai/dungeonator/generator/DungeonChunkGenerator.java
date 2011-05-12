@@ -4,7 +4,7 @@ import java.util.Vector;
 
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
-import com.aranai.dungeonator.dungeonchunk.DungeonChunkDoorway;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
 
 /**
  * Handles the down and dirty details of dungeon data generation
@@ -37,7 +37,7 @@ public class DungeonChunkGenerator {
 		 * will not yet have a neighbor).
 		 */
 		
-		DungeonChunkDoorway candidateDoorways[] = new DungeonChunkDoorway[12];
+		DungeonRoomDoorway candidateDoorways[] = new DungeonRoomDoorway[12];
 		
 		/*
 		 * There are 3 candidate doorways for each cardinal direction
@@ -45,7 +45,7 @@ public class DungeonChunkGenerator {
 		 * neighboring DungeonChunks.
 		 */
 		
-		Vector<DungeonChunkDoorway> tmpDoorways;
+		Vector<DungeonRoomDoorway> tmpDoorways = new Vector<DungeonRoomDoorway>();
 		
 		// Loop through the cardinal directions and check for adjacent doorways
 		for(byte direction : Direction.CARDINALS)
@@ -60,6 +60,9 @@ public class DungeonChunkGenerator {
 				 * neighbor direction, then fetching a vector with the active
 				 * doorways on that side. 
 				 */
+				
+				/*
+				 * TODO: Figure out what we're doing in this method
 				tmpDoorways = dc.getNeighbor(direction).getDoorwaysOnSide(
 						Direction.getSideFromDirection(
 								Direction.rotate(
@@ -69,11 +72,12 @@ public class DungeonChunkGenerator {
 								)
 						)
 				);
+				*/
 				
 				/*
 				 * Add the retrieved doorways to our candidate list
 				 */
-				for(DungeonChunkDoorway doorway : tmpDoorways)
+				for(DungeonRoomDoorway doorway : tmpDoorways)
 				{
 					candidateDoorways[doorway.getDirection()] = doorway;
 				}
@@ -84,14 +88,17 @@ public class DungeonChunkGenerator {
 		 * Determine what to do next based on the inferred chunk type.
 		 */
 		
+		/*
+		 * TODO: Figure out what we're doing in this method
 		switch(dc.getType())
 		{
-			case PROCEDURAL:
+			//case PROCEDURAL:
 			default:
 				// Generate a procedural chunk
 				this.generateProceduralChunk(dc, candidateDoorways);
 			break;
 		}
+		*/
 	}
 	
 	/**
@@ -101,7 +108,7 @@ public class DungeonChunkGenerator {
 	 * @param dc the DungeonChunk being processed
 	 * @param candidateDoorways the candidate doorways
 	 */
-	private void generateProceduralChunk(DungeonChunk dc, DungeonChunkDoorway candidateDoorways[])
+	private void generateProceduralChunk(DungeonChunk dc, DungeonRoomDoorway candidateDoorways[])
 	{
 		/*
 		 * At this point, a list of candidate doorways has been generated based

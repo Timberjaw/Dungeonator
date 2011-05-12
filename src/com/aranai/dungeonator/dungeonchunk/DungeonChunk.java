@@ -1,19 +1,17 @@
 package com.aranai.dungeonator.dungeonchunk;
 
-import java.util.Vector;
-
 import org.bukkit.Chunk;
+import org.bukkit.World;
 
 import com.aranai.dungeonator.Direction;
 
 /**
- * Stores and manipulates Dungeonator chunk information, including type, neighbors, and doorways.
- * 
+ * Stores and manipulates Dungeonator chunk information.
  */
-public class DungeonChunk implements IDungeonChunk {
+public class DungeonChunk {
 	
-	/** The world name. */
-	private String world;
+	/** The world. */
+	private World world;
 	
 	/** X coordinate for the chunk. */
 	private int x;
@@ -23,39 +21,9 @@ public class DungeonChunk implements IDungeonChunk {
 	
 	/** The handle for the chunk data */
 	private Chunk chunk;
-	
-	/** Random seed used for procedural chunks. */
-	private long seed = 0;
-	
-	/** Chunk type */
-	private DungeonChunkType type;
-	
-	/** Neighboring chunks (NESW) */
+
+	/** The neighboring chunks */
 	private DungeonChunk[] neighbors = new DungeonChunk[4];
-	
-	/** Doorways */
-	private DungeonChunkDoorway[] doorways = new DungeonChunkDoorway[12];
-	
-	/**
-	 * Instantiates a new dungeon chunk.
-	 */
-	public DungeonChunk()
-	{
-		this(DungeonChunkType.BASIC_TILE);
-	}
-	
-	/**
-	 * Instantiates a new dungeon chunk with a specified DungeonChunkType.
-	 *
-	 * @param type the type
-	 */
-	public DungeonChunk(DungeonChunkType type)
-	{
-		this.type = type;
-		this.world = "world";
-		this.x = 0;
-		this.z = 0;
-	}
 	
 	/**
 	 * Instantiates a new dungeon chunk from an existing chunk
@@ -64,130 +32,79 @@ public class DungeonChunk implements IDungeonChunk {
 	 */
 	public DungeonChunk(Chunk chunk)
 	{
-		this(DungeonChunkType.BASIC_TILE, chunk.getWorld().getName(), chunk.getX(), chunk.getZ(), chunk);
+		this(chunk, DungeonRoomType.BASIC_TILE, chunk.getX(), chunk.getZ());
 	}
 	
-	public DungeonChunk(DungeonChunkType type, String world, int x, int z, Chunk chunk)
+	public DungeonChunk(Chunk chunk, DungeonRoomType type, int x, int z)
 	{
-		this.type = type;
-		this.world = world;
+		this.world = chunk.getWorld();
 		this.x = x;
 		this.z = z;
 		this.chunk = chunk;
 	}
 	
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getWorld()
+	/* 
+	 * Gets the native chunk handle for the DungeonChunk
 	 */
-	@Override
-	public String getWorld() {
+	public Chunk getHandle()
+	{
+		return chunk;
+	}
+	
+	/**
+	 * Gets the chunk's parent world
+	 *
+	 * @return the parent world
+	 */
+	public World getWorld()
+	{
 		return world;
 	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getX()
+	
+	/**
+	 * Gets the name of the chunk's parent world.
+	 *
+	 * @return the world name
 	 */
-	@Override
-	public int getX() {
+	public String getWorldName()
+	{
+		return world.getName();
+	}
+	
+	/**
+	 * Gets the x coordinate for the chunk.
+	 *
+	 * @return the x coordinate
+	 */
+	public int getX()
+	{
 		return x;
 	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getZ()
+	
+	/**
+	 * Gets the z coordinate for the chunk.
+	 *
+	 * @return the z coordinate
 	 */
-	@Override
-	public int getZ() {
+	public int getZ()
+	{
 		return z;
 	}
 	
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getSeed()
+	/* 
+	 * Sets the native chunk handle for the DungeonChunk
 	 */
-	@Override
-	public long getSeed() {
-		return seed;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setSeed(long)
-	 */
-	@Override
-	public void setSeed(long seed) {
-		this.seed = seed;
-	}
-	
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getType()
-	 */
-	@Override
-	public DungeonChunkType getType() {
-		return type;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setType(com.aranai.Dungeonator.DungeonChunkType)
-	 */
-	@Override
-	public void setType(DungeonChunkType type) {
-		this.type = type;
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#hasDoorway(com.aranai.Dungeonator.Direction)
-	 */
-	@Override
-	public boolean hasDoorway(byte d) {
-		return (d <= doorways.length && doorways[d] != null);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getDoorway(byte)
-	 */
-	@Override
-	public DungeonChunkDoorway getDoorway(byte direction) {
-		if(this.hasDoorway(direction))
-		{
-			return doorways[direction];
-		}
-		
-		return null;
-	}
-	
-	/* (non-Javadoc)
-	 * @see com.aranai.dungeonator.IDungeonChunk#getDoorwaysOnSide(byte)
-	 */
-	@Override
-	public Vector<DungeonChunkDoorway> getDoorwaysOnSide(byte[] side)
+	public void setHandle(Chunk handle)
 	{
-		Vector<DungeonChunkDoorway> sideDoorways = new Vector<DungeonChunkDoorway>(3);
-		
-		// Loop through the directions available for this side
-		for(byte i = 0; i < side.length; i++)
-		{
-			if(this.hasDoorway(side[i]))
-			{
-				// This DungeonChunk has a doorway at this side
-				// Add the doorway to the list
-				sideDoorways.add(this.getDoorway(side[i]));
-			}
-		}
-		
-		return sideDoorways;
+		chunk = handle;
 	}
 	
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setDoorway(byte, com.aranai.Dungeonator.DungeonChunkDoorway)
+	/**
+	 * Checks for an existing neighbor in the specified direction.
+	 *
+	 * @param direction the direction
+	 * @return true, if successful
 	 */
-	@Override
-	public void setDoorway(DungeonChunkDoorway doorway) {
-		doorways[doorway.getDirection()] = doorway;
-	}
-	
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#hasNeighbor(byte)
-	 */
-	@Override
 	public boolean hasNeighbor(byte direction) {
 		if(this.isValidChunkDirection(direction))
 		{
@@ -196,12 +113,11 @@ public class DungeonChunk implements IDungeonChunk {
 		
 		return false;
 	}
-
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getNeighbor(byte)
+	
+	/* 
+	 * Gets the neighboring chunk in the specified direction
 	 */
-	@Override
-	public IDungeonChunk getNeighbor(byte direction) {
+	public DungeonChunk getNeighbor(byte direction) {
 		if(this.hasNeighbor(direction))
 		{
 			return neighbors[direction];
@@ -210,33 +126,14 @@ public class DungeonChunk implements IDungeonChunk {
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setNeighbor(byte, com.aranai.Dungeonator.IDungeonChunk)
+	/* 
+	 * Set a neighboring chunk in the specified direction
 	 */
-	@Override
-	public void setNeighbor(byte direction, IDungeonChunk neighbor) {
+	public void setNeighbor(byte direction, DungeonChunk neighbor) {
 		if(this.isValidChunkDirection(direction))
 		{
 			neighbors[direction] = (DungeonChunk)neighbor;
 		}
-	}
-	
-	/* (non-Javadoc)
-	 * @see com.aranai.dungeonator.IDungeonChunk#getHandle()
-	 */
-	@Override
-	public Chunk getHandle()
-	{
-		return chunk;
-	}
-	
-	/* (non-Javadoc)
-	 * @see com.aranai.dungeonator.IDungeonChunk#setHandle()
-	 */
-	@Override
-	public void setHandle(Chunk handle)
-	{
-		chunk = handle;
 	}
 	
 	/**

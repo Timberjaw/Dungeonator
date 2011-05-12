@@ -7,14 +7,7 @@ import org.bukkit.Chunk;
 /**
  * Specifies required methods for all dungeon chunk classes
  */
-public interface IDungeonChunk {
-	
-	/**
-	 * Gets the world name.
-	 *
-	 * @return the world name
-	 */
-	public String getWorld();
+public interface IDungeonRoom {
 	
 	/**
 	 * Gets the x coordinate for the chunk.
@@ -49,14 +42,14 @@ public interface IDungeonChunk {
 	 *
 	 * @return the type
 	 */
-	public DungeonChunkType getType();
+	public DungeonRoomType getType();
 	
 	/**
 	 * Sets the DungeonChunkType for the chunk.
 	 *
 	 * @param type the new type
 	 */
-	public void setType(DungeonChunkType type);
+	public void setType(DungeonRoomType type);
 	
 	/**
 	 * Checks for a doorway matching the specified direction.
@@ -72,7 +65,7 @@ public interface IDungeonChunk {
 	 * @param direction the direction of the doorway to get
 	 * @return the doorway, or null if no doorway exists at the specified direction
 	 */
-	public DungeonChunkDoorway getDoorway(byte direction);
+	public DungeonRoomDoorway getDoorway(byte direction);
 	
 	/**
 	 * Gets all of the doorways on the specified side.
@@ -80,14 +73,14 @@ public interface IDungeonChunk {
 	 * @param direction the direction of the side to get
 	 * @return the doorways on the specified side
 	 */
-	public Vector<DungeonChunkDoorway> getDoorwaysOnSide(byte[] side);
+	public Vector<DungeonRoomDoorway> getDoorwaysOnSide(byte[] side);
 	
 	/**
 	 * Sets a doorway. The direction will be inferred from the doorway instance itself.
 	 *
 	 * @param doorway the DungeonChunkDoorway to set
 	 */
-	public void setDoorway(DungeonChunkDoorway doorway);
+	public void setDoorway(DungeonRoomDoorway doorway);
 	
 	/**
 	 * Checks for a neighboring chunk matching the specified direction.
@@ -103,7 +96,7 @@ public interface IDungeonChunk {
 	 * @param direction the direction of the chunk to get
 	 * @return the neighboring chunk, or null if no neighbor exists at the specified direction
 	 */
-	public IDungeonChunk getNeighbor(byte direction);
+	public IDungeonRoom getNeighbor(byte direction);
 	
 	/**
 	 * Sets the neighboring chunk for the specified direction.
@@ -111,17 +104,5 @@ public interface IDungeonChunk {
 	 * @param direction the direction of the neighbor to set
 	 * @param neighbor the chunk to set as a neighbor
 	 */
-	public void setNeighbor(byte direction, IDungeonChunk neighbor);
-	
-	/**
-	 * Gets the handle for the DungeonChunk's chunk data.
-	 *
-	 * @return the chunk
-	 */
-	public Chunk getHandle();
-	
-	/**
-	 * Sets the handle for the DungeonChunk's chunk data.
-	 */
-	public void setHandle(Chunk handle);
+	public void setNeighbor(byte direction, IDungeonRoom neighbor);
 }

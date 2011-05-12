@@ -60,7 +60,7 @@ public class DungeonChunkManager {
 	public void updateCachedChunk(DungeonChunk chunk)
 	{
 		// Save the chunk to the local chunk cache
-		String hash = this.getChunkHash(chunk.getWorld(), chunk.getX(), chunk.getZ());
+		String hash = this.getChunkHash(chunk.getWorldName(), chunk.getX(), chunk.getZ());
 		chunkCache.put(hash, chunk);
 	}
 	
@@ -220,7 +220,7 @@ public class DungeonChunkManager {
 	 */
 	public void generateChunk(String world, int x, int z, Chunk chunk) {
 		// Build an empty DungeonChunk
-		DungeonChunk newChunk = new DungeonChunk(DungeonChunkType.BASIC_TILE, world, x, z, chunk);
+		DungeonChunk newChunk = new DungeonChunk(chunk, DungeonRoomType.BASIC_TILE, x, z);
 		
 		// Check for neighbors
 		DungeonChunk neighborN = null;

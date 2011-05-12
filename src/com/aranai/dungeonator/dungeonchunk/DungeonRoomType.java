@@ -4,7 +4,7 @@ package com.aranai.dungeonator.dungeonchunk;
  * Specifies types for DungeonChunks
  * @see DungeonChunk
  */
-public enum DungeonChunkType {
+public enum DungeonRoomType {
 	
 	/** A basic tile chunk. */
 	BASIC_TILE,
