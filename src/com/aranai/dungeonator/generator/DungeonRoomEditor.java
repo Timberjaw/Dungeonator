@@ -14,7 +14,7 @@ import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
  * Meta data tagging commands are provided for specifying doorways, internal
  * pathing, widget regions, and so forth.
  */
-public class DungeonChunkEditor {
+public class DungeonRoomEditor {
 	
 	/** Dungeonator instance */
 	private Dungeonator dungeonator;
@@ -34,7 +34,7 @@ public class DungeonChunkEditor {
 	/**
 	 * Instantiates the dungeon chunk editor.
 	 */
-	public DungeonChunkEditor(Dungeonator d)
+	public DungeonRoomEditor(Dungeonator d)
 	{
 		dungeonator = d;
 		chunk = null;
@@ -96,8 +96,13 @@ public class DungeonChunkEditor {
 	{
 		// Cancel the edit operation
 		
-		hasUnsavedChanges = false;
-		isActive = false;
+		if(isActive)
+		{
+			hasUnsavedChanges = false;
+			isActive = false;
+			
+			
+		}
 	}
 	
 	/**
@@ -211,7 +216,8 @@ public class DungeonChunkEditor {
 	 */
 	public void cmdCancel(DCommandEvent cmd)
 	{
-		
+		this.cancel();
+		cmd.getPlayer().sendMessage("[Dungeonator][Editor] Cancelled edit operation.");
 	}
 	
 	/**

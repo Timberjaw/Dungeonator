@@ -146,4 +146,17 @@ public class DungeonChunk {
 	{
 		return (direction == Direction.N || direction == Direction.S || direction == Direction.E || direction == Direction.W);
 	}
+	
+	/**
+	 * Gets a block array index from XYZ coordinates.
+	 *
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param z the z coordinate
+	 * @return the block array index
+	 */
+	public static final int getIndexFromCoords(int x, int y, int z)
+	{
+		return (x & 0xF) << 11 | (z & 0xF) << 7 | (y & 0x7F);
+	}
 }

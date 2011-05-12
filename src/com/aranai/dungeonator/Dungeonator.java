@@ -12,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.aranai.dungeonator.datastore.DungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
-import com.aranai.dungeonator.generator.DungeonChunkEditor;
+import com.aranai.dungeonator.generator.DungeonRoomEditor;
 
 /**
  * The Dungeonator JavaPlugin for Bukkit.
@@ -37,7 +37,7 @@ public class Dungeonator extends JavaPlugin {
 	private DungeonChunkManager chunkManager;
 	
 	/** The dungeon chunk editor. */
-	private DungeonChunkEditor chunkEditor;
+	private DungeonRoomEditor chunkEditor;
 	
 	/** Debug field: flattenOn: to flatten, or not to flatten */
 	public boolean flattenOn = false;
@@ -77,7 +77,7 @@ public class Dungeonator extends JavaPlugin {
 		chunkManager = new DungeonChunkManager(dataManager);
 		
 		// Initialize chunk editor
-		chunkEditor = new DungeonChunkEditor(this);
+		chunkEditor = new DungeonRoomEditor(this);
 		
 		// Enable message
         PluginDescriptionFile pdfFile = this.getDescription();
@@ -124,7 +124,7 @@ public class Dungeonator extends JavaPlugin {
 	 *
 	 * @return the chunk editor
 	 */
-	public DungeonChunkEditor getChunkEditor()
+	public DungeonRoomEditor getChunkEditor()
 	{
 		return chunkEditor;
 	}

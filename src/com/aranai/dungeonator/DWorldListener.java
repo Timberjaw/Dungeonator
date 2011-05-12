@@ -104,7 +104,9 @@ public class DWorldListener extends WorldListener {
 			for(int z = 0; z < 16; z++)
 			{
 				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (plugin.py & 0x7F);
-				blocks[pos] = 1;
+				blocks[pos] = 7;
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (plugin.py+1 & 0x7F);
+				blocks[pos] = 48;
 			}
 		}
 		

@@ -68,12 +68,15 @@ public class DungeonChunkProvider implements IChunkProvider {
 																		//										Does nothing here; world normally ensure that larger values were clipped to 8 bits
 																		// x3 | z3 | 0 	= bitwise OR of X,Z,Y
 				
-				blocks[pos] = 1;										// Set to stone
+				blocks[pos] = 7;										// Set to bedrock
+				
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (1 & 0x7F);
+				blocks[pos] = 48;										// Set to mossy stone
 			}
 		}
 		
         Chunk chunk = new Chunk(mw, blocks, arg0, arg1);
-
+        
         return chunk;
 	}
 
