@@ -24,33 +24,11 @@ public interface IDungeonChunk {
 	public int getX();
 	
 	/**
-	 * Sets the x coordinate for the chunk.
-	 */
-	public void setX(int x);
-	
-	/**
-	 * Gets the y coordinate for the chunk.
-	 *
-	 * @return the y coordinate for the chunk
-	 */
-	public int getY();
-	
-	/**
-	 * Sets the y coordinate for the chunk.
-	 */
-	public void setY(int y);
-	
-	/**
 	 * Gets the z coordinate for the chunk.
 	 *
 	 * @return the z coordinate for the chunk
 	 */
 	public int getZ();
-	
-	/**
-	 * Sets the z coordinate for the chunk.
-	 */
-	public void setZ(int z);
 	
 	/**
 	 * Gets the seed.
