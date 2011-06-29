@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
 
+import net.minecraft.server.Block;
 import net.minecraft.server.Chunk;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
@@ -29,7 +30,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public Chunk getChunkAt(int x, int y) {
-		// TODO Auto-generated method stub
+		// Purpose is unclear. Passes control to another method with identical args.
 		System.out.println("Call to getChunkAt("+x+","+y+")");
 		return this.getOrCreateChunk(x, y);
 	}
@@ -45,6 +46,8 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public Chunk getOrCreateChunk(int arg0, int arg1) {
+		// TODO: Hand control to DungeonChunkGenerator
+		
 		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
 		
 		System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+")");
@@ -65,13 +68,67 @@ public class DungeonChunkProvider implements IChunkProvider {
 																		// (z & 0xF) 	= z & 16				Bitwise AND
 																		// z2 << 7 		= z2^7					Bitshift left (exponent)
 																		// (0 & 0x7F) 	= 0 & 128 = 0			Bitwise AND with 127 (all 1's)
-																		//										Does nothing here; world normally ensure that larger values were clipped to 8 bits
+																		//										Does nothing here; would normally ensure that larger values were clipped to 8 bits
 																		// x3 | z3 | 0 	= bitwise OR of X,Z,Y
 				
 				blocks[pos] = 7;										// Set to bedrock
 				
 				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (1 & 0x7F);
 				blocks[pos] = 48;										// Set to mossy stone
+			}
+		}
+		
+		// Add some random walls
+		double cumulative = 0.0;
+		if(Math.random() > (0.6 + cumulative))
+		{
+			// N
+			cumulative += 0.1;
+			for(int x = 0; x < 16; x++)
+			{
+				for(int y = 1; y < 8; y++)
+				{
+					blocks[DungeonMath.getPosFromCoords(x, y, 0)] = 2; // Grass
+				}
+			}
+		}
+		
+		if(Math.random() > (0.6 + cumulative))
+		{
+			// S
+			cumulative += 0.1;
+			for(int x = 0; x < 16; x++)
+			{
+				for(int y = 1; y < 8; y++)
+				{
+					blocks[DungeonMath.getPosFromCoords(x, y, 15)] = 2; // Grass
+				}
+			}
+		}
+		
+		if(Math.random() > (0.6 + cumulative))
+		{
+			// E
+			cumulative += 0.1;
+			for(int z = 0; z < 16; z++)
+			{
+				for(int y = 1; y < 8; y++)
+				{
+					blocks[DungeonMath.getPosFromCoords(0, y, z)] = 2; // Grass
+				}
+			}
+		}
+		
+		if(Math.random() > (0.6 + cumulative))
+		{
+			// E
+			cumulative += 0.1;
+			for(int z = 0; z < 16; z++)
+			{
+				for(int y = 1; y < 8; y++)
+				{
+					blocks[DungeonMath.getPosFromCoords(15, y, z)] = 2; // Grass
+				}
 			}
 		}
 		
@@ -82,22 +139,23 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public boolean isChunkLoaded(int arg0, int arg1) {
-		// TODO Auto-generated method stub
+		// Always returns true; I believe this is present due to some
+		// strangeness/sloppiness in how the IChunkProvider interface
+		// is used for multiple purposes
 		System.out.println("Call to isChunkLoader("+arg0+","+arg1+")");
 		return true;
 	}
 
 	@Override
 	public boolean saveChunks(boolean arg0, IProgressUpdate arg1) {
-		// TODO Auto-generated method stub
+		// Does nothing in this implementation
 		System.out.println("Call to saveChunks("+arg0+","+arg1+")");
 		return true;
 	}
 
 	@Override
 	public boolean unloadChunks() {
-		// TODO Auto-generated method stub
-		//System.out.println("Call to unloadChunks()");
+		// Does nothing in this implementation
 		return false;
 	}
 

@@ -1,5 +1,7 @@
 package com.aranai.dungeonator;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
@@ -44,6 +46,15 @@ public class Dungeonator extends JavaPlugin {
 	
 	/** Debug field: py: player y at time of flattening */
 	public int py = 1000;
+	
+	/** Base data folder path */
+	public static String BaseFolderPath;
+	
+	/** Tile folder path */
+	public static String TileFolderPath;
+	
+	/** Widget folder path */
+	public static String WidgetFolderPath;
 
 	/**
 	 * Instantiates the JavaPlugin.
@@ -66,6 +77,16 @@ public class Dungeonator extends JavaPlugin {
 	public void onEnable() {
 		// Get logger
 		log = this.getServer().getLogger();
+		
+		// Set folder paths
+		try {
+			// Base folder path
+			Dungeonator.BaseFolderPath = this.getDataFolder().getCanonicalPath().toString()+File.separator;
+			// Tile folder path
+			Dungeonator.TileFolderPath = Dungeonator.BaseFolderPath+"tiles"+File.separator;
+			// Widget folder path
+			Dungeonator.WidgetFolderPath = Dungeonator.BaseFolderPath+"widgets"+File.separator;
+		} catch (IOException e) { e.printStackTrace(); }
 		
 		// Initialize data store
 		dataStore = new DungeonDataStore(); // TODO: Use a real data store so we can actually, y'know, store data

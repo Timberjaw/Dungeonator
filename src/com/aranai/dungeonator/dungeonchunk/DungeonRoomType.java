@@ -1,20 +1,20 @@
 package com.aranai.dungeonator.dungeonchunk;
 
 /**
- * Specifies types for DungeonChunks
- * @see DungeonChunk
+ * Specifies types for DungeonRooms
+ * @see DungeonRoom
  */
 public enum DungeonRoomType {
 	
-	/** A basic tile chunk. */
+	/** A basic tile room. */
 	BASIC_TILE,
 	
-	/** A set tile chunk. */
+	/** A set tile room. */
 	SET_TILE,
 	
-	/** A procedurally generated chunk. */
+	/** A procedurally generated room. */
 	PROCEDURAL,
 	
-	/** A biome chunk. */
+	/** A biome room. */
 	BIOME
 }

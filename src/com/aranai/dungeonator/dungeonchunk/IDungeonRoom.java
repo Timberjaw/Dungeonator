@@ -2,8 +2,6 @@ package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 
-import org.bukkit.Chunk;
-
 /**
  * Specifies required methods for all dungeon chunk classes
  */
@@ -45,14 +43,14 @@ public interface IDungeonRoom {
 	public void setSeed(long seed);
 	
 	/**
-	 * Gets the DungeonChunkType for the chunk.
+	 * Gets the DungeonRoomType for the room.
 	 *
 	 * @return the type
 	 */
 	public DungeonRoomType getType();
 	
 	/**
-	 * Sets the DungeonChunkType for the chunk.
+	 * Sets the DungeonRoomType for the room.
 	 *
 	 * @param type the new type
 	 */
@@ -106,10 +104,10 @@ public interface IDungeonRoom {
 	public IDungeonRoom getNeighbor(byte direction);
 	
 	/**
-	 * Sets the neighboring chunk for the specified direction.
+	 * Sets the neighboring room for the specified direction.
 	 *
 	 * @param direction the direction of the neighbor to set
-	 * @param neighbor the chunk to set as a neighbor
+	 * @param neighbor the room to set as a neighbor
 	 */
 	public void setNeighbor(byte direction, IDungeonRoom neighbor);
 }

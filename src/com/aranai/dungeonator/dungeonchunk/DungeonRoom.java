@@ -3,8 +3,10 @@ package com.aranai.dungeonator.dungeonchunk;
 import java.util.Vector;
 
 import org.bukkit.Chunk;
+import org.bukkit.craftbukkit.CraftChunk;
 
 import com.aranai.dungeonator.Direction;
+import com.aranai.dungeonator.generator.DungeonMath;
 
 /**
  * Represents a 16Xx16Zx8Y cuboid region within an overall DungeonChunk. Each DungeonChunk contains 16 DungeonRooms stacked vertically.
@@ -34,6 +36,14 @@ public class DungeonRoom implements IDungeonRoom {
 	
 	/** Doorways */
 	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[12];
+	
+	public DungeonRoom(DungeonChunk chunk)
+	{
+		this.chunk = chunk;
+		this.x = chunk.getX();
+		this.z = chunk.getZ();
+		this.y = 1;
+	}
 	
 	/* (non-Javadoc)
 	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getDungeonChunk()
@@ -190,5 +200,30 @@ public class DungeonRoom implements IDungeonRoom {
 	{
 		return (direction == Direction.N || direction == Direction.S || direction == Direction.E || direction == Direction.W
 				|| direction == Direction.UP || direction == Direction.DOWN);
+	}
+	
+	/**
+	 * Gets the raw blocks for the room.
+	 *
+	 * @return the block byte array
+	 */
+	public byte[] getRawBlocks()
+	{
+		byte[] blocks = new byte[16*16*8];
+		int pos = 0;
+		
+		for(int x = 0; x < 16; x++)
+		{
+			for(int z = 0; z < 16; z++)
+			{
+				for(int y = 0; y < 8; y++)
+				{
+					pos = DungeonMath.getRoomPosFromCoords(x, y, z);
+					blocks[pos] = (byte)chunk.getHandle().getBlock(x, (this.y*8)+y, z).getTypeId();
+				}
+			}
+		}
+		
+		return blocks;
 	}
 }

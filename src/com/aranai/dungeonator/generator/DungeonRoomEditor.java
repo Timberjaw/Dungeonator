@@ -1,6 +1,17 @@
 package com.aranai.dungeonator.generator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.text.html.HTML.Tag;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -9,6 +20,11 @@ import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.jnbt.ByteArrayTag;
+import org.jnbt.ByteTag;
+import org.jnbt.CompoundTag;
+import org.jnbt.NBTInputStream;
+import org.jnbt.NBTOutputStream;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 import com.aranai.dungeonator.Dungeonator;
@@ -178,6 +194,8 @@ public class DungeonRoomEditor {
 		
 		isActive = true;
 		hasUnsavedChanges = true;
+		
+		this.room = new DungeonRoom(this.chunk);
 	}
 	
 	/**
@@ -185,10 +203,56 @@ public class DungeonRoomEditor {
 	 *
 	 * @param file the file
 	 */
-	public void load(String file)
+	public void load(String path, String name)
 	{
-		// Load the file into a DungeonChunk
-		// Start editor on loaded data
+		CompoundTag schematic = null;
+		
+		// Notify the editor that we are loading the file
+		editor.sendMessage("Loading: " + path + name);
+		
+		// If the editor is not started, start it
+		if(!this.isActive)
+		{
+			this.start(true, true);
+		}
+		
+		// Load the file
+		try {
+			// Open file input stream
+			FileInputStream fis = new FileInputStream(path+File.separator+name);
+			
+			try {
+				// Open NBT input stream
+				NBTInputStream nis = new NBTInputStream(fis);
+				
+				// Read NBT data
+				org.jnbt.Tag tag = nis.readTag();
+				
+				if(tag instanceof CompoundTag)
+				{
+					schematic = (CompoundTag)tag;
+				}
+			} catch (IOException e) { e.printStackTrace(); }
+		} catch (FileNotFoundException e) { e.printStackTrace(); }
+		
+		// Verify the data was loaded
+		if(schematic != null)
+		{
+			// Get blocks
+			byte[] blocks = ((ByteArrayTag)schematic.getValue().get("blocks")).getValue();
+			
+			// Add blocks to chunk
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+					for(int y = 0; y < 8; y++)
+					{
+						this.chunk.getHandle().getBlock(x, y+8, z).setTypeId(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)]);
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -209,24 +273,7 @@ public class DungeonRoomEditor {
 	}
 	
 	/**
-	 * Save the currently active chunk with an inferred path and name.
-	 */
-	public void save()
-	{
-	}
-	
-	/**
-	 * Save the currently active chunk with an inferred path and
-	 * specified name.
-	 *
-	 * @param name the name
-	 */
-	public void save(String name)
-	{
-	}
-	
-	/**
-	 * Save the currently active chunk with an specified path and
+	 * Save the currently active room with an specified path and
 	 * specified name.
 	 *
 	 * @param path the path
@@ -234,6 +281,58 @@ public class DungeonRoomEditor {
 	 */
 	public void save(String path, String name)
 	{
+		// Notify the editor that we are saving the file
+		editor.sendMessage("Saving to: " + path + name);
+		
+		/*
+		 * Example NBT Format:
+		 * 
+		 * CompoundTag("DungeonChunkSchematic"):
+		 *  - ByteTag("type"): byte								Type ID for the DungeonChunk
+		 * 	- ByteTag("exits"): byte							Exits from the chunk
+		 * 	- CompoundTag("widgetSpawns"):						Potential widget spawn locations for the chunk
+		 * 		- CompoundTag("widget"): 						A single widget spawn location (origin is at NW corner of the widget to be placed)
+		 * 			- ByteTag("type") : byte						Type ID for the widget spawn location, or 0 if any widget type is acceptable
+		 * 			- ShortTag("locX") : short						X coordinate for the widget spawn location
+		 * 			- ShortTag("locY") : short						Y coordinate for the widget spawn location
+		 * 			- ShortTag("locZ") : short						Z coordinate for the widget spawn location
+		 * 			- ShortTag("maxX") : short						Maximum X size for a widget placed at this location
+		 *  		- ShortTag("maxY") : short						Maximum Y size for a widget placed at this location
+		 *  		- ShortTag("maxZ") : short						Maximum Z size for a widget placed at this location
+		 * 	- ByteArrayTag("blocks", byte[])					Raw block data
+		 */
+		
+		HashMap<String,org.jnbt.Tag> tags = new HashMap<String,org.jnbt.Tag>();
+		
+		// Room type ID
+		tags.put("type", new ByteTag("type", (byte) 0));
+		
+		// Room exits
+		tags.put("exits", new ByteTag("exits", (byte) 0));
+		
+		// Blocks
+		ByteArrayTag blocks = new ByteArrayTag("blocks", this.room.getRawBlocks());
+		tags.put("blocks", blocks);
+		
+		CompoundTag schematic = new CompoundTag("DungeonRoomSchematic", tags);
+		
+		try {
+			// Create file output stream
+			OutputStream output = new FileOutputStream(path+name);
+			
+			// Create NBT output stream
+			NBTOutputStream os = new NBTOutputStream(output);
+			
+			// Write the room to the file
+			os.writeTag(schematic);
+			
+			// Close the NBT output stream
+			os.close();
+			
+			// Close the file output stream
+			output.flush();
+			output.close();
+		} catch (IOException e) { e.printStackTrace(); }
 	}
 	
 	/**
@@ -305,12 +404,23 @@ public class DungeonRoomEditor {
 	 * 
 	 * This will activate the editor with a specified chunk loaded.
 	 *
-	 * @param p the player triggering the command
-	 * @param args the args
+	 * @param cmd the command event instance
 	 */
 	public void cmdLoad(DCommandEvent cmd)
 	{
+		// Get the path and filename, or use defaults if no values were specified
+		String path = cmd.getNamedArgString("path", Dungeonator.TileFolderPath);
+		String name = cmd.getNamedArgString("name", "")+".nbt";
 		
+		if(name.isEmpty())
+		{
+			cmd.getPlayer().sendMessage("No file specified.");
+		}
+		else
+		{
+			// Load the chunk
+			this.load(path, name);
+		}
 	}
 	
 	/**
@@ -318,7 +428,7 @@ public class DungeonRoomEditor {
 	 * 
 	 * This will cancel the editing process.
 	 *
-	 * @param p the player triggering the command
+	 * @param cmd the command event instance
 	 */
 	public void cmdCancel(DCommandEvent cmd)
 	{
@@ -336,23 +446,12 @@ public class DungeonRoomEditor {
 	 */
 	public void cmdSave(DCommandEvent cmd)
 	{
-		/*
-		 * Example NBT Format:
-		 * 
-		 * CompoundTag("DungeonChunkSchematic"):
-		 *  - ByteTag("type"): byte								Type ID for the DungeonChunk
-		 * 	- ByteTag("exits"): byte							Exits from the chunk
-		 * 	- CompoundTag("widgetSpawns"):						Potential widget spawn locations for the chunk
-		 * 		- CompoundTag("widget"): 						A single widget spawn location (origin is at NW corner of the widget to be placed)
-		 * 			- ByteTag("type") : byte						Type ID for the widget spawn location, or 0 if any widget type is acceptable
-		 * 			- ShortTag("locX") : short						X coordinate for the widget spawn location
-		 * 			- ShortTag("locY") : short						Y coordinate for the widget spawn location
-		 * 			- ShortTag("locZ") : short						Z coordinate for the widget spawn location
-		 * 			- ShortTag("maxX") : short						Maximum X size for a widget placed at this location
-		 *  		- ShortTag("maxY") : short						Maximum Y size for a widget placed at this location
-		 *  		- ShortTag("maxZ") : short						Maximum Z size for a widget placed at this location
-		 * 	- ByteArrayTag("blocks"): byte[]					Raw block data
-		 */
+		// Get the path and filename, or use defaults if no values were specified
+		String path = cmd.getNamedArgString("path", Dungeonator.TileFolderPath);
+		String name = cmd.getNamedArgString("name", "Unnamed-"+System.currentTimeMillis())+".nbt";
+		
+		// Save the chunk
+		this.save(path, name);
 	}
 	
 	/**

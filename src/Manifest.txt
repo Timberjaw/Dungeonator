@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Class-Path: ../libs/jnbt-1.1.jar
