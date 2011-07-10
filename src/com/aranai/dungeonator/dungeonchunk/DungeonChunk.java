@@ -21,6 +21,9 @@ public class DungeonChunk {
 	
 	/** The handle for the chunk data */
 	private Chunk chunk;
+	
+	/** The chunk ready status */
+	private boolean ready;
 
 	/** The neighboring chunks */
 	private DungeonChunk[] neighbors = new DungeonChunk[4];
@@ -37,10 +40,23 @@ public class DungeonChunk {
 	
 	public DungeonChunk(Chunk chunk, DungeonRoomType type, int x, int z)
 	{
-		this.world = chunk.getWorld();
+		this.ready = false;
+		if(chunk != null) {
+			this.world = chunk.getWorld();
+			this.ready = true;
+		}
 		this.x = x;
 		this.z = z;
 		this.chunk = chunk;
+	}
+	
+	/*
+	 * Checks whether the chunk is in ready state
+	 */
+	
+	public boolean isReady()
+	{
+		return ready;
 	}
 	
 	/* 

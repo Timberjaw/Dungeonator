@@ -3,6 +3,7 @@ package com.aranai.dungeonator.dungeonchunk;
 import java.util.Vector;
 
 import com.aranai.dungeonator.Direction;
+import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.generator.DungeonMath;
 
 /**
@@ -31,6 +32,12 @@ public class DungeonRoom implements IDungeonRoom {
 	/** The library id. */
 	private long libraryId = 0;
 	
+	/** Temporary raw block array */
+	private byte[] tempRawBlocks;
+	
+	/** Temporary raw block data array */
+	private byte[] tempRawBlockData;
+	
 	/** The DungeonChunk for this room */
 	private DungeonChunk chunk;
 	
@@ -42,6 +49,14 @@ public class DungeonRoom implements IDungeonRoom {
 	
 	/** Doorways */
 	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[12];
+	
+	public DungeonRoom()
+	{
+		this.chunk = null;
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
+	}
 	
 	public DungeonRoom(DungeonChunk chunk, int y)
 	{
@@ -236,22 +251,49 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	public byte[] getRawBlocks()
 	{
-		byte[] blocks = new byte[16*16*8];
-		int pos = 0;
-		
-		for(int x = 0; x < 16; x++)
+		if(chunk != null && chunk.isReady())
 		{
-			for(int z = 0; z < 16; z++)
+			/*
+			 * If the chunk is in ready state, retrieve the real-world blocks
+			 */
+			
+			byte[] blocks = new byte[16*16*8];
+			int pos = 0;
+			
+			for(int x = 0; x < 16; x++)
 			{
-				for(int y = 0; y < 8; y++)
+				for(int z = 0; z < 16; z++)
 				{
-					pos = DungeonMath.getRoomPosFromCoords(x, y, z);
-					blocks[pos] = (byte)chunk.getHandle().getBlock(x, (this.y*8)+y, z).getTypeId();
+					for(int y = 0; y < 8; y++)
+					{
+						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
+						blocks[pos] = (byte)chunk.getHandle().getBlock(x, (this.y*8)+y, z).getTypeId();
+					}
 				}
 			}
+			
+			return blocks;
+		}
+		else if(tempRawBlocks != null)
+		{
+			/*
+			 * If the chunk is NOT ready, retrieve the local blocks
+			 */
+			
+			return tempRawBlocks;
 		}
 		
-		return blocks;
+		return null;
+	}
+	
+	/**
+	 * Sets the raw blocks for the room.
+	 *
+	 * @param blocks the raw blocks
+	 */
+	public void setRawBlocks(byte[] blocks)
+	{
+		this.tempRawBlocks = blocks;
 	}
 	
 	/**
@@ -261,22 +303,49 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	public byte[] getRawBlockData()
 	{
-		byte[] data = new byte[16*16*8];
-		int pos = 0;
-		
-		for(int x = 0; x < 16; x++)
+		if(chunk != null && chunk.isReady())
 		{
-			for(int z = 0; z < 16; z++)
+			/*
+			 * If the chunk is in ready state, retrieve the real-world block data
+			 */
+
+			byte[] data = new byte[16*16*8];
+			int pos = 0;
+			
+			for(int x = 0; x < 16; x++)
 			{
-				for(int y = 0; y < 8; y++)
+				for(int z = 0; z < 16; z++)
 				{
-					pos = DungeonMath.getRoomPosFromCoords(x, y, z);
-					data[pos] = chunk.getHandle().getBlock(x, (this.y*8)+y, z).getData();
+					for(int y = 0; y < 8; y++)
+					{
+						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
+						data[pos] = chunk.getHandle().getBlock(x, (this.y*8)+y, z).getData();
+					}
 				}
 			}
+			
+			return data;
+		}
+		else if(tempRawBlockData != null)
+		{
+			/*
+			 * If the chunk is NOT ready, retrieve the local block data
+			 */
+			
+			return tempRawBlockData;
 		}
 		
-		return data;
+		return null;
+	}
+	
+	/**
+	 * Sets the raw block data for the room.
+	 *
+	 * @param blocks the raw block data
+	 */
+	public void setRawBlockData(byte[] blockData)
+	{
+		this.tempRawBlockData = blockData;
 	}
 
 	/* (non-Javadoc)

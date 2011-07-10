@@ -135,4 +135,13 @@ public class DungeonDataStore implements IDungeonDataStore {
 		throw new DataStoreDeleteException("Using DungeonDataStore class directly accomplishes nothing.", "deleteLibraryRoom");
 	}
 
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getLibraryRoomRandom()
+	 */
+	@Override
+	public DungeonRoom getLibraryRoomRandom() throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

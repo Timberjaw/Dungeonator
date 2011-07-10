@@ -100,4 +100,12 @@ public interface IDungeonDataStore {
 	 * @throws DataStoreDeleteException the data store delete exception
 	 */
 	public void deleteLibraryRoom(String hash) throws DataStoreDeleteException;
+	
+	/**
+	 * Gets a random room from the Library.
+	 *
+	 * @return the room
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public DungeonRoom getLibraryRoomRandom() throws DataStoreGetException;
 }

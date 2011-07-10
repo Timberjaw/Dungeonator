@@ -42,6 +42,7 @@ public class DWorldListener extends WorldListener {
 		
 		// Initialize the DungeonChunkProvider and replace the world's current provider
 		this.dcp = new DungeonChunkProvider(world, 0);
+		this.dcp.setInstance(plugin);
 		((CraftWorld)world).getHandle().chunkProviderServer.chunkProvider = dcp;
 		
 		/*

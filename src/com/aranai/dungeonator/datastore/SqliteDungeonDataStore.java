@@ -33,7 +33,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	
 	private static String TblChunks = "active_chunks";
 	private static String TblRooms = "active_rooms";
-	private static String TblLibraryRooms = "libary_rooms";
+	private static String TblLibraryRooms = "library_rooms";
 	
 	/*
 	 * SQL Strings
@@ -47,7 +47,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	private static String SqlCreateTableRooms = "CREATE TABLE `"+TblRooms+"`" +
 			"(`world` varchar(32) NOT NULL, `x` REAL, `y` INTEGER, `z` REAL, `library_id` INTEGER, `name` varchar(64));";
 	
-	private static String SqlCreateIndexRooms = "CREATE UNIQUE INDEX chunkIndex on `"+TblRooms+"` (`world`,`x`,`y`,`z`);";
+	private static String SqlCreateIndexRooms = "CREATE UNIQUE INDEX roomIndex on `"+TblRooms+"` (`world`,`x`,`y`,`z`);";
 	
 	private static String SqlCreateTableLibraryRooms = "CREATE TABLE `"+TblLibraryRooms+"`" +
 			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64), `name` varchar(64));";
@@ -140,6 +140,17 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         	System.out.println("Error: " + e.getMessage());
         	e.printStackTrace();
         }
+        finally
+        {
+        	if(conn != null)
+        	{
+        		try {
+					conn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+        	}
+        }
 	}
 
 	/* (non-Javadoc)
@@ -230,7 +241,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	 */
 	@Override
 	public boolean saveRoom(DungeonRoom room) throws DataStoreSaveException {
-		return false;
+		boolean success = false;
+		return success;
 	}
 
 	/* (non-Javadoc)
@@ -267,17 +279,17 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        
 	        // Handle library id
 	        long libraryId = room.getLibraryId();
-	        if(libraryId > 0) { ps.setLong(0, libraryId); } else { ps.setNull(0, java.sql.Types.INTEGER); }
+	        if(libraryId > 0) { ps.setLong(1, libraryId); } else { ps.setNull(1, java.sql.Types.INTEGER); }
 	        
-	        ps.setString(1, room.getFilename());
-	        ps.setString(2, room.getName());
+	        ps.setString(2, room.getFilename());
+	        ps.setString(3, room.getName());
 	        ps.execute();
 	        conn.commit();
 	        conn.close();
 	        
 	        success = true;
         }
-        catch(Exception e) { }
+        catch(Exception e) { e.printStackTrace(); }
         
 		return success;
 	}
@@ -289,6 +301,45 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	public void deleteLibraryRoom(String hash) throws DataStoreDeleteException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getLibraryRoomRandom()
+	 */
+	@Override
+	public DungeonRoom getLibraryRoomRandom() throws DataStoreGetException {
+		ResultSet rs = null;
+		String filename = "";
+		DungeonRoom room = new DungeonRoom();
+		
+		// Get random record
+		try
+        {
+	    	Class.forName("org.sqlite.JDBC");
+	    	Connection conn = DriverManager.getConnection(db);
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement("SELECT * FROM `"+TblLibraryRooms+"` ORDER BY RANDOM() LIMIT 1;");
+	        rs = ps.executeQuery();
+	        
+	        while (rs.next())
+            {
+            	// Successfully retrieved the room
+            	filename = rs.getString("filename");
+            }
+	        
+	        conn.commit();
+	        conn.close();
+	        
+	        if(filename.equals("")) { return null; }
+	        
+	        // Initialize DungeonRoom
+	        room.setFilename(filename);
+	        
+	        return room;
+        }
+        catch(Exception e) { }
+		
+		return null;
 	}
 
 }

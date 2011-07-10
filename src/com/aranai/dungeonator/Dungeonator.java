@@ -13,6 +13,8 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.aranai.dungeonator.datastore.DungeonDataStore;
+import com.aranai.dungeonator.datastore.IDungeonDataStore;
+import com.aranai.dungeonator.datastore.SqliteDungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
 import com.aranai.dungeonator.dungeonmaster.DungeonMaster;
 import com.aranai.dungeonator.generator.DungeonRoomEditor;
@@ -37,7 +39,7 @@ public class Dungeonator extends JavaPlugin {
 	private DEntityListener entityListener;
 	
 	/** The dungeon data store. */
-	private DungeonDataStore dataStore;
+	private IDungeonDataStore dataStore;
 	
 	/** The dungeon data manager. */
 	private DungeonDataManager dataManager;
@@ -99,7 +101,7 @@ public class Dungeonator extends JavaPlugin {
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		// Initialize data store
-		dataStore = new DungeonDataStore(); // TODO: Use a real data store so we can actually, y'know, store data
+		dataStore = new SqliteDungeonDataStore(); // TODO: Use a real data store so we can actually, y'know, store data
 		
 		// Initialize data manager
 		dataManager = new DungeonDataManager(this, dataStore);
