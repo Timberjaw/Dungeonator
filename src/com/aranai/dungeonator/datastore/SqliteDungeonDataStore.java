@@ -230,7 +230,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	 */
 	@Override
 	public boolean saveRoom(DungeonRoom room) throws DataStoreSaveException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -257,8 +256,30 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	 */
 	@Override
 	public boolean saveLibraryRoom(DungeonRoom room) throws DataStoreSaveException {
-		// TODO Auto-generated method stub
-		return false;
+		boolean success = false;
+        
+        try
+        {
+	    	Class.forName("org.sqlite.JDBC");
+	    	Connection conn = DriverManager.getConnection(db);
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryRooms+"` (`id`,`filename`,`name`) VALUES (?, ?, ?);");
+	        
+	        // Handle library id
+	        long libraryId = room.getLibraryId();
+	        if(libraryId > 0) { ps.setLong(0, libraryId); } else { ps.setNull(0, java.sql.Types.INTEGER); }
+	        
+	        ps.setString(1, room.getFilename());
+	        ps.setString(2, room.getName());
+	        ps.execute();
+	        conn.commit();
+	        conn.close();
+	        
+	        success = true;
+        }
+        catch(Exception e) { }
+        
+		return success;
 	}
 
 	/* (non-Javadoc)

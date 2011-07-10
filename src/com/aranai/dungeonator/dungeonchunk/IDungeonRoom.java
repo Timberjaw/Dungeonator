@@ -85,6 +85,20 @@ public interface IDungeonRoom {
 	public String getName();
 	
 	/**
+	 * Sets the filename.
+	 *
+	 * @param name the new filename
+	 */
+	public void setFilename(String name);
+	
+	/**
+	 * Gets the filename.
+	 *
+	 * @return the filename
+	 */
+	public String getFilename();
+	
+	/**
 	 * Checks for a doorway matching the specified direction.
 	 *
 	 * @param d the doorway direction to check

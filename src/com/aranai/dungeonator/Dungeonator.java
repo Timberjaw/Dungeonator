@@ -177,6 +177,16 @@ public class Dungeonator extends JavaPlugin {
 		return roomEditor;
 	}
 	
+	/**
+	 * Gets the data manager.
+	 *
+	 * @return the data manager
+	 */
+	public DungeonDataManager getDataManager()
+	{
+		return dataManager;
+	}
+	
 	public DungeonMaster getDungeonMaster()
 	{
 		return dungeonMaster;

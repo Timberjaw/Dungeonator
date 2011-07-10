@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 
 /**
  * The DungeonMaster is a special player with godlike powers and a disturbing lack of concern for player safety.
- * In more technical terms, this class contains functionality for one player to manipulate the Dungeonator world in a variety of ways.
+ * In more technical terms, this class contains functionality for one or more players to manipulate the Dungeonator world in a variety of ways.
  */
 public class DungeonMaster {
 	

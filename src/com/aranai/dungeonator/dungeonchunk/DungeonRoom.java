@@ -25,6 +25,9 @@ public class DungeonRoom implements IDungeonRoom {
 	/** The room name. */
 	private String name = "";
 	
+	/** The room filename. */
+	private String filename = "";
+	
 	/** The library id. */
 	private long libraryId = 0;
 	
@@ -306,5 +309,21 @@ public class DungeonRoom implements IDungeonRoom {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#setFilename(java.lang.String)
+	 */
+	@Override
+	public void setFilename(String name) {
+		this.filename = name;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getFilename()
+	 */
+	@Override
+	public String getFilename() {
+		return this.filename;
 	}
 }

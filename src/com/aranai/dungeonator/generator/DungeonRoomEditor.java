@@ -95,6 +95,16 @@ public class DungeonRoomEditor {
 	}
 	
 	/**
+	 * Gets the active editor.
+	 *
+	 * @return the active editor
+	 */
+	public Player getActiveEditor()
+	{
+		return editor;
+	}
+	
+	/**
 	 * Starts the editing operation. The specified chunk and adjacent chunks
 	 * will be flattened. Doorway and border hints will be generated.
 	 *
@@ -296,7 +306,7 @@ public class DungeonRoomEditor {
 	 * @param path the path
 	 * @param name the name
 	 */
-	public void save(String path, String name)
+	public void save(String path, String name, boolean saveToLibrary)
 	{
 		// Make sure the editor is active
 		if(!isActive)
@@ -382,6 +392,13 @@ public class DungeonRoomEditor {
 		{
 			editor.sendMessage("Added room to test library.");
 			this.testLibrary.add(name);
+		}
+		
+		// Save to real library
+		if(saveToLibrary)
+		{
+			room.setFilename(name);
+			dungeonator.getDataManager().saveLibraryRoom(room);
 		}
 	}
 	
@@ -520,8 +537,11 @@ public class DungeonRoomEditor {
 		path = cmd.getNamedArgString("path", path);
 		name = cmd.getNamedArgString("name", name);
 		
+		// Check for library save command
+		boolean saveToLibrary = cmd.getNamedArgBool("library", false);
+		
 		// Save the chunk
-		this.save(path, name);
+		this.save(path, name, saveToLibrary);
 	}
 	
 	/**

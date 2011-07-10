@@ -2,6 +2,7 @@ package com.aranai.dungeonator;
 
 import com.aranai.dungeonator.datastore.*;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 
 /**
  * Abstracts all data store access for Dungeonator.
@@ -50,5 +51,24 @@ public class DungeonDataManager {
 		}
 		
 		return chunk;
+	}
+	
+	/**
+	 * Save a room to the library.
+	 *
+	 * @param room the room to save
+	 */
+	public void saveLibraryRoom(DungeonRoom room)
+	{
+		try {
+			// Save the room
+			dataStore.saveLibraryRoom(room);
+			
+			// Notify the editor
+			plugin.getChunkEditor().getActiveEditor().sendMessage("Saved room '"+room.getName()+"["+room.getFilename()+"] to Library.");
+		} catch (DataStoreSaveException e) {
+			// Failed to save room
+			e.printStackTrace();
+		}
 	}
 }
