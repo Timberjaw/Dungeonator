@@ -14,10 +14,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.aranai.dungeonator.datastore.DungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
+import com.aranai.dungeonator.dungeonmaster.DungeonMaster;
 import com.aranai.dungeonator.generator.DungeonRoomEditor;
 
 /**
- * The Dungeonator JavaPlugin for Bukkit.
+ * The Dungeonator Plugin for Bukkit.
+ * A wonderland of cryptic corridors, terrible traps,
+ * claustrophobic chambers, malevolent monsters,
+ * and many more magical mysteries 
  */
 public class Dungeonator extends JavaPlugin {
 	
@@ -29,6 +33,9 @@ public class Dungeonator extends JavaPlugin {
 	/** The player listener. Used for detecting player commands. */
 	private DPlayerListener playerListener;
 	
+	/** The entity listener. Used for detecting entity events. */
+	private DEntityListener entityListener;
+	
 	/** The dungeon data store. */
 	private DungeonDataStore dataStore;
 	
@@ -38,8 +45,11 @@ public class Dungeonator extends JavaPlugin {
 	/** The dungeon chunk manager. */
 	private DungeonChunkManager chunkManager;
 	
-	/** The dungeon chunk editor. */
-	private DungeonRoomEditor chunkEditor;
+	/** The dungeon room editor. */
+	private DungeonRoomEditor roomEditor;
+	
+	/** The DM handler */
+	private DungeonMaster dungeonMaster;
 	
 	/** Debug field: flattenOn: to flatten, or not to flatten */
 	public boolean flattenOn = false;
@@ -98,7 +108,10 @@ public class Dungeonator extends JavaPlugin {
 		chunkManager = new DungeonChunkManager(dataManager);
 		
 		// Initialize chunk editor
-		chunkEditor = new DungeonRoomEditor(this);
+		roomEditor = new DungeonRoomEditor(this);
+		
+		// Initialize DM
+		dungeonMaster = new DungeonMaster();
 		
 		// Enable message
         PluginDescriptionFile pdfFile = this.getDescription();
@@ -110,9 +123,23 @@ public class Dungeonator extends JavaPlugin {
 		// Initialize player listener
 		playerListener = new DPlayerListener(this);
 		
-		// Register events
+		// Initialize entity listener
+		entityListener = new DEntityListener(this);
+		
+		/*
+		 * Register events
+		 */
+		
 		PluginManager pm = this.getServer().getPluginManager();
+		
+		// Chunk Load
 		pm.registerEvent(Event.Type.CHUNK_LOAD, worldListener, Priority.Normal, this);
+		
+		// Player Respawn
+		pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Priority.Normal, this);
+		
+		// Entity Damage
+		pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Priority.Normal, this);
 	}
 	
 	@Override
@@ -147,6 +174,11 @@ public class Dungeonator extends JavaPlugin {
 	 */
 	public DungeonRoomEditor getChunkEditor()
 	{
-		return chunkEditor;
+		return roomEditor;
+	}
+	
+	public DungeonMaster getDungeonMaster()
+	{
+		return dungeonMaster;
 	}
 }

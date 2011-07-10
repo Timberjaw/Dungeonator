@@ -1,5 +1,8 @@
 package com.aranai.dungeonator.generator;
 
+/**
+ * Contains helpful methods for doing Dungeonator math.
+ */
 public class DungeonMath {
 	
 	/**

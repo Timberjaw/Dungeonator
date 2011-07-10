@@ -66,30 +66,16 @@ public class DungeonChunkManager {
 	
 	/**
 	 * Load a {@link DungeonChunk} from the local cache or the data store.
-	 * Convenience alias for {@link #loadChunk(String)}
-	 *
-	 * @param world the world in which the chunk is located
-	 * @param x the x coordinate for the chunk
-	 * @param z the z coordinate for the chunk
-	 * @param chunk the chunk data
-	 */
-	public void loadChunk(String world, int x, int z, Chunk chunkData)
-	{
-		this.loadChunk(this.getChunkHash(world, x, z), chunkData);
-	}
-	
-	/**
-	 * Load a {@link DungeonChunk} from the local cache or the data store.
 	 *
 	 * @param hash the hash for the DungeonChunk
 	 */
-	public void loadChunk(String hash, Chunk chunkData)
+	public void loadChunk(String world, int x, int z, Chunk chunkData)
 	{
 		// Check chunk cache
-		if(!this.isChunkCached(hash))
+		if(!this.isChunkCached(world, x, z))
 		{
 			// Get chunk from data store
-			DungeonChunk chunk = dataManager.getChunk(hash);
+			DungeonChunk chunk = dataManager.getChunk(world, x, z);
 			
 			/** TODO: Attach chunk data */
 			
@@ -109,22 +95,7 @@ public class DungeonChunkManager {
 	 */
 	public DungeonChunk getChunk(String world, int x, int z)
 	{
-		return this.getChunk(this.getChunkHash(world, x, z));
-	}
-	
-	/**
-	 * Gets the {@link DungeonChunk} for the specified coordinates
-	 *
-	 * @param hash the hash for the chunk
-	 * @return the DungeonChunk
-	 * @see DungeonChunkManager#getChunkHash(String, int, int)
-	 */
-	public DungeonChunk getChunk(String hash)
-	{
-		// Load chunk
-		this.loadChunk(hash, null);
-		
-		return this.getCachedChunk(hash);
+		return this.getChunk(world, x, z);
 	}
 	
 	/**

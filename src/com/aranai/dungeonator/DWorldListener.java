@@ -87,7 +87,7 @@ public class DWorldListener extends WorldListener {
 		
 		// HACK: Force re-lighting calculation
 		// TODO: Don't hack
-		((CraftChunk)e.getChunk()).getHandle().b(); // re-do SKYLIGHT
+		((CraftChunk)e.getChunk()).getHandle().initLighting(); // re-do SKYLIGHT
 		
 		return;
 	}
@@ -113,7 +113,7 @@ public class DWorldListener extends WorldListener {
 		((CraftChunk)c).getHandle().b = blocks;
 		
 		// DEBUG: Try to force lighting recalc
-		((CraftChunk)c).getHandle().b(); // Redo SKYLIGHT
+		((CraftChunk)c).getHandle().initLighting(); // Redo SKYLIGHT
 		
 		w.refreshChunk(c.getX(), c.getZ());
 		for(Entity e : c.getEntities())

@@ -4,14 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.text.html.HTML.Tag;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -23,8 +21,10 @@ import org.bukkit.entity.Player;
 import org.jnbt.ByteArrayTag;
 import org.jnbt.ByteTag;
 import org.jnbt.CompoundTag;
+import org.jnbt.LongTag;
 import org.jnbt.NBTInputStream;
 import org.jnbt.NBTOutputStream;
+import org.jnbt.StringTag;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 import com.aranai.dungeonator.Dungeonator;
@@ -58,11 +58,17 @@ public class DungeonRoomEditor {
 	/** The room. */
 	private DungeonRoom room;
 	
+	/** The active path. */
+	private String activePath;
+	
 	/** The active file. */
 	private String activeFile;
 	
 	/** The editing player. */
 	private Player editor;
+	
+	/** Test library */
+	private Vector<String> testLibrary;
 	
 	/**
 	 * Instantiates the dungeon chunk editor.
@@ -74,6 +80,18 @@ public class DungeonRoomEditor {
 		isActive = false;
 		hasUnsavedChanges = false;
 		activeFile = "";
+		activePath = "";
+		testLibrary = new Vector<String>();
+	}
+	
+	/**
+	 * Checks if the room editor is active.
+	 *
+	 * @return true, if the room editor is active
+	 */
+	public boolean isActive()
+	{
+		return isActive;
 	}
 	
 	/**
@@ -195,7 +213,7 @@ public class DungeonRoomEditor {
 		isActive = true;
 		hasUnsavedChanges = true;
 		
-		this.room = new DungeonRoom(this.chunk);
+		this.room = new DungeonRoom(this.chunk, 0);
 	}
 	
 	/**
@@ -267,8 +285,7 @@ public class DungeonRoomEditor {
 		{
 			hasUnsavedChanges = false;
 			isActive = false;
-			
-			
+			activeFile = "";
 		}
 	}
 	
@@ -281,6 +298,13 @@ public class DungeonRoomEditor {
 	 */
 	public void save(String path, String name)
 	{
+		// Make sure the editor is active
+		if(!isActive)
+		{
+			editor.sendMessage("Editor is not active.");
+			return;
+		}
+		
 		// Notify the editor that we are saving the file
 		editor.sendMessage("Saving to: " + path + name);
 		
@@ -302,7 +326,20 @@ public class DungeonRoomEditor {
 		 * 	- ByteArrayTag("blocks", byte[])					Raw block data
 		 */
 		
+		// Schematic tags
 		HashMap<String,org.jnbt.Tag> tags = new HashMap<String,org.jnbt.Tag>();
+		
+		// Meta tags
+		HashMap<String,org.jnbt.Tag> metaTags = new HashMap<String,org.jnbt.Tag>();
+		
+		// Author
+		metaTags.put("author", new StringTag("author", this.editor.getName()));
+		
+		// Date created/updated
+		metaTags.put("dateUpdated", new LongTag("dateUpdated", System.currentTimeMillis()));
+		
+		// Meta compound tag
+		tags.put("meta", new CompoundTag("meta", metaTags));
 		
 		// Room type ID
 		tags.put("type", new ByteTag("type", (byte) 0));
@@ -311,8 +348,10 @@ public class DungeonRoomEditor {
 		tags.put("exits", new ByteTag("exits", (byte) 0));
 		
 		// Blocks
-		ByteArrayTag blocks = new ByteArrayTag("blocks", this.room.getRawBlocks());
-		tags.put("blocks", blocks);
+		tags.put("blocks", new ByteArrayTag("blocks", this.room.getRawBlocks()));
+		
+		// Block data values
+		tags.put("blockData", new ByteArrayTag("blockData", this.room.getRawBlockData()));
 		
 		CompoundTag schematic = new CompoundTag("DungeonRoomSchematic", tags);
 		
@@ -332,7 +371,18 @@ public class DungeonRoomEditor {
 			// Close the file output stream
 			output.flush();
 			output.close();
+			
+			// Set active file and path
+			activeFile = name;
+			activePath = path;
 		} catch (IOException e) { e.printStackTrace(); }
+		
+		// Save to test library
+		if(!testLibrary.contains(name))
+		{
+			editor.sendMessage("Added room to test library.");
+			this.testLibrary.add(name);
+		}
 	}
 	
 	/**
@@ -366,6 +416,10 @@ public class DungeonRoomEditor {
 		{
 			this.cmdExits(cmd);
 		}
+		else if(cmd.getCmd().equals("teststack"))
+		{
+			this.cmdTestStack(cmd);
+		}
 	}
 	
 	/**
@@ -391,6 +445,13 @@ public class DungeonRoomEditor {
 		
 		this.chunk = new DungeonChunk(cmd.getChunk());
 		this.start(flatten, hint);
+		
+		/*
+		 * Reset the active filename and path
+		 */
+		
+		this.activeFile = "";
+		this.activePath = "";
 		
 		/*
 		 * Let the player know what we've done
@@ -446,9 +507,18 @@ public class DungeonRoomEditor {
 	 */
 	public void cmdSave(DCommandEvent cmd)
 	{
-		// Get the path and filename, or use defaults if no values were specified
-		String path = cmd.getNamedArgString("path", Dungeonator.TileFolderPath);
-		String name = cmd.getNamedArgString("name", "Unnamed-"+System.currentTimeMillis())+".nbt";
+		String path = Dungeonator.TileFolderPath;
+		String name = "Unnamed-"+System.currentTimeMillis()+".nbt";
+		
+		// Check for active path and name
+		if(!activePath.equals("")) { path = activePath; }
+		if(!activeFile.equals("")) { name = activeFile; }
+		
+		// Get the specified path and filename, or use defaults if no values were specified
+		// If the editor is active and a file has already been saved, the default will be the last saved name and path
+		// Active path and name can be reset by resetting or restarting the editor 
+		path = cmd.getNamedArgString("path", path);
+		name = cmd.getNamedArgString("name", name);
 		
 		// Save the chunk
 		this.save(path, name);
@@ -464,7 +534,87 @@ public class DungeonRoomEditor {
 	 */
 	public void cmdExits(DCommandEvent cmd)
 	{
-		// Get, set, or remove an exit
+		// Handle reset first: remove all exits
+		
+		// Handle delete: remove specific exits
+		
+		// Handle add
+		
+		// List exits after everything else, so the user knows exactly what exits are active
+	}
+	
+	public void cmdTestStack(DCommandEvent cmd)
+	{
+		// Test the active room library by generating a chunk (stack) of rooms near the player
+		int x = cmd.getChunk().getX();
+		int z = cmd.getChunk().getZ()+1;
+		int y = 8;
+		
+		Chunk tmpChunk = cmd.getPlayer().getWorld().getChunkAt(x, z);
+		
+		this.flattenChunk(tmpChunk, Material.SAND);
+		
+		byte[] blocks;
+		byte[] blockData;
+		
+		Hashtable<String,byte[]> tmpRoomBlocks = new Hashtable<String,byte[]>();
+		
+		for(String s : this.testLibrary)
+		{
+			// Load the file
+			CompoundTag schematic = null;
+			try {
+				// Open file input stream
+				FileInputStream fis = new FileInputStream(Dungeonator.TileFolderPath+File.separator+s);
+				
+				try {
+					// Open NBT input stream
+					NBTInputStream nis = new NBTInputStream(fis);
+					
+					// Read NBT data
+					org.jnbt.Tag tag = nis.readTag();
+					
+					if(tag instanceof CompoundTag)
+					{
+						schematic = (CompoundTag)tag;
+					}
+				} catch (IOException e) { e.printStackTrace(); }
+			} catch (FileNotFoundException e) { e.printStackTrace(); }
+			
+			// Verify the data was loaded
+			if(schematic != null)
+			{
+				// Get blocks
+				tmpRoomBlocks.put(s, ((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
+			}
+		}
+		
+		for(int i = 0; i < 15; i++)
+		{
+			// Get a room from the active library
+			String roomName = this.testLibrary.get(
+					(int) (Math.random() * this.testLibrary.size())
+			);
+			cmd.getPlayer().sendMessage("Selecting room '" + roomName + "' for Y:"+y);
+			
+			blocks = tmpRoomBlocks.get(roomName);
+			//blockData = tmpRoom.getRawBlockData();
+			
+			// Copy blocks to chunk
+			for(int x2 = 0; x2 < 16; x2++)
+			{
+				for(int z2 = 0; z2 < 16; z2++)
+				{
+					for(int y2 = 0; y2 < 8; y2++)
+					{
+						tmpChunk.getBlock(x2, y2+y, z2).setTypeId(blocks[DungeonMath.getRoomPosFromCoords(x2, y2, z2)]);
+					}
+				}
+			}
+			
+			// Update y coordinate
+			y += 8;
+		}
 	}
 	
 	/**
@@ -493,7 +643,7 @@ public class DungeonRoomEditor {
 		((CraftChunk)c).getHandle().b = blocks;
 		
 		// DEBUG: Try to force lighting recalc
-		((CraftChunk)c).getHandle().b(); // Redo SKYLIGHT
+		((CraftChunk)c).getHandle().initLighting(); // Redo SKYLIGHT
 		
 		c.getWorld().refreshChunk(c.getX(), c.getZ());
 		for(Entity e : c.getEntities())

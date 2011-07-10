@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 
@@ -19,6 +20,9 @@ public class DPlayerListener extends PlayerListener {
 	
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args)
 	{
+		/*
+		 * Editor Commands
+		 */
 		if(command.getName().equalsIgnoreCase("edit"))
 		{
 			// Pass command to editor
@@ -31,7 +35,7 @@ public class DPlayerListener extends PlayerListener {
 				LinkedList<String> editArgList = new LinkedList<String>();
 				for(String a : args) { editArgList.add(a); }
 				
-				// Create the command event and hand it off to the DungeonChunkEditor
+				// Create the command event and hand it off to the DungeonRoomEditor
 				plugin.getChunkEditor().onCommand(new DCommandEvent((Player)sender, editCommand, editArgList.toArray(new String[editArgList.size()])));
 			}
 			else
@@ -42,5 +46,9 @@ public class DPlayerListener extends PlayerListener {
 		}
 				
 		return true;
+	}
+	
+	public void onPlayerRespawn(PlayerRespawnEvent event)
+	{
 	}
 }

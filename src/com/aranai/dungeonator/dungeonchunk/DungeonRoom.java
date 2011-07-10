@@ -2,9 +2,6 @@ package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 
-import org.bukkit.Chunk;
-import org.bukkit.craftbukkit.CraftChunk;
-
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.generator.DungeonMath;
 
@@ -25,6 +22,12 @@ public class DungeonRoom implements IDungeonRoom {
 	/** Random seed used for procedural rooms. */
 	private long seed = 0;
 	
+	/** The room name. */
+	private String name = "";
+	
+	/** The library id. */
+	private long libraryId = 0;
+	
 	/** The DungeonChunk for this room */
 	private DungeonChunk chunk;
 	
@@ -37,12 +40,12 @@ public class DungeonRoom implements IDungeonRoom {
 	/** Doorways */
 	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[12];
 	
-	public DungeonRoom(DungeonChunk chunk)
+	public DungeonRoom(DungeonChunk chunk, int y)
 	{
 		this.chunk = chunk;
 		this.x = chunk.getX();
 		this.z = chunk.getZ();
-		this.y = 1;
+		this.y = y;
 	}
 	
 	/* (non-Javadoc)
@@ -54,7 +57,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getX()
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getX()
 	 */
 	@Override
 	public int getX() {
@@ -62,7 +65,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getZ()
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getZ()
 	 */
 	@Override
 	public int getZ() {
@@ -70,7 +73,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getSeed()
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getSeed()
 	 */
 	@Override
 	public long getSeed() {
@@ -78,7 +81,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setSeed(long)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#setSeed(long)
 	 */
 	@Override
 	public void setSeed(long seed) {
@@ -86,7 +89,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getType()
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getType()
 	 */
 	@Override
 	public DungeonRoomType getType() {
@@ -94,7 +97,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setType(com.aranai.Dungeonator.DungeonChunkType)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#setType(com.aranai.Dungeonator.DungeonChunkType)
 	 */
 	@Override
 	public void setType(DungeonRoomType type) {
@@ -103,7 +106,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#hasDoorway(com.aranai.Dungeonator.Direction)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#hasDoorway(com.aranai.Dungeonator.Direction)
 	 */
 	@Override
 	public boolean hasDoorway(byte d) {
@@ -111,7 +114,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getDoorway(byte)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getDoorway(byte)
 	 */
 	@Override
 	public DungeonRoomDoorway getDoorway(byte direction) {
@@ -124,7 +127,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.aranai.dungeonator.IDungeonChunk#getDoorwaysOnSide(byte)
+	 * @see com.aranai.dungeonator.IDungeonRoom#getDoorwaysOnSide(byte)
 	 */
 	@Override
 	public Vector<DungeonRoomDoorway> getDoorwaysOnSide(byte[] side)
@@ -146,7 +149,28 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setDoorway(byte, com.aranai.Dungeonator.DungeonChunkDoorway)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getDoorways()
+	 */
+	@Override
+	public Vector<DungeonRoomDoorway> getDoorways() {
+		Vector<DungeonRoomDoorway> doorways = new Vector<DungeonRoomDoorway>();
+		
+		// Loop through the directions available for this side
+		for(byte i = 0; i < 12; i++)
+		{
+			if(this.hasDoorway(i))
+			{
+				// This DungeonChunk has a doorway at this side
+				// Add the doorway to the list
+				doorways.add(this.getDoorway(i));
+			}
+		}
+		
+		return doorways;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#setDoorway(byte, com.aranai.Dungeonator.DungeonChunkDoorway)
 	 */
 	@Override
 	public void setDoorway(DungeonRoomDoorway doorway) {
@@ -154,7 +178,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#hasNeighbor(byte)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#hasNeighbor(byte)
 	 */
 	@Override
 	public boolean hasNeighbor(byte direction) {
@@ -167,7 +191,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#getNeighbor(byte)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getNeighbor(byte)
 	 */
 	@Override
 	public IDungeonRoom getNeighbor(byte direction) {
@@ -180,7 +204,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.aranai.Dungeonator.IDungeonChunk#setNeighbor(byte, com.aranai.Dungeonator.IDungeonChunk)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#setNeighbor(byte, com.aranai.Dungeonator.IDungeonRoom)
 	 */
 	@Override
 	public void setNeighbor(byte direction, IDungeonRoom neighbor) {
@@ -191,7 +215,7 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/**
-	 * Checks if the specified direction is a valid chunk direction (NESW)
+	 * Checks if the specified direction is a valid chunk direction (NESW,Up,Down)
 	 *
 	 * @param direction the direction to check
 	 * @return true, if the direction is a valid chunk direction
@@ -225,5 +249,62 @@ public class DungeonRoom implements IDungeonRoom {
 		}
 		
 		return blocks;
+	}
+	
+	/**
+	 * Gets the raw block data for the room.
+	 *
+	 * @return the raw block data byte array
+	 */
+	public byte[] getRawBlockData()
+	{
+		byte[] data = new byte[16*16*8];
+		int pos = 0;
+		
+		for(int x = 0; x < 16; x++)
+		{
+			for(int z = 0; z < 16; z++)
+			{
+				for(int y = 0; y < 8; y++)
+				{
+					pos = DungeonMath.getRoomPosFromCoords(x, y, z);
+					data[pos] = chunk.getHandle().getBlock(x, (this.y*8)+y, z).getData();
+				}
+			}
+		}
+		
+		return data;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#setLibraryId(long)
+	 */
+	@Override
+	public void setLibraryId(long id) {
+		this.libraryId = id;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getLibraryId()
+	 */
+	@Override
+	public long getLibraryId() {
+		return this.libraryId;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#setName(java.lang.String)
+	 */
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getName()
+	 */
+	@Override
+	public String getName() {
+		return this.name;
 	}
 }

@@ -194,7 +194,7 @@ public class DCommandEvent {
 		}
 		
 		/**
-		 * Gets the chunk.
+		 * Gets the chunk from which the command was triggered.
 		 *
 		 * @return the chunk
 		 */

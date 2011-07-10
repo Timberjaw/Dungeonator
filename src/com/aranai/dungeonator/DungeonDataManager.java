@@ -31,13 +31,13 @@ public class DungeonDataManager {
 	 * @param hash the hash for the chunk
 	 * @return the DungeonChunk if found, or null if an error occurs
 	 */
-	public DungeonChunk getChunk(String hash)
+	public DungeonChunk getChunk(String world, int x, int z)
 	{
 		DungeonChunk chunk = null;
 		
 		try
 		{
-			chunk = dataStore.getChunk(hash);
+			chunk = dataStore.getChunk(world, x, z);
 		}
 		catch(DataStoreGetException e)
 		{

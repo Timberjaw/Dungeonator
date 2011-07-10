@@ -5,7 +5,6 @@ import java.util.Arrays;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
 
-import net.minecraft.server.Block;
 import net.minecraft.server.Chunk;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
@@ -20,12 +19,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
-	}
-	
-	@Override
-	public boolean b() {
-		// No idea. Returns true in default implementation
-		return true;
 	}
 
 	@Override
@@ -156,6 +149,12 @@ public class DungeonChunkProvider implements IChunkProvider {
 	@Override
 	public boolean unloadChunks() {
 		// Does nothing in this implementation
+		return false;
+	}
+
+	@Override
+	public boolean canSave() {
+		// TODO Auto-generated method stub
 		return false;
 	}
 

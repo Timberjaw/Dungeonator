@@ -57,6 +57,34 @@ public interface IDungeonRoom {
 	public void setType(DungeonRoomType type);
 	
 	/**
+	 * Sets the library id.
+	 *
+	 * @param id the new library id
+	 */
+	public void setLibraryId(long id);
+	
+	/**
+	 * Gets the library id.
+	 *
+	 * @return the library id
+	 */
+	public long getLibraryId();
+	
+	/**
+	 * Sets the name.
+	 *
+	 * @param name the new name
+	 */
+	public void setName(String name);
+	
+	/**
+	 * Gets the name.
+	 *
+	 * @return the name
+	 */
+	public String getName();
+	
+	/**
 	 * Checks for a doorway matching the specified direction.
 	 *
 	 * @param d the doorway direction to check
@@ -81,6 +109,13 @@ public interface IDungeonRoom {
 	public Vector<DungeonRoomDoorway> getDoorwaysOnSide(byte[] side);
 	
 	/**
+	 * Gets all of the doorways for the room.
+	 *
+	 * @return the doorways
+	 */
+	public Vector<DungeonRoomDoorway> getDoorways();
+	
+	/**
 	 * Sets a doorway. The direction will be inferred from the doorway instance itself.
 	 *
 	 * @param doorway the DungeonChunkDoorway to set
@@ -96,10 +131,10 @@ public interface IDungeonRoom {
 	public boolean hasNeighbor(byte direction);
 	
 	/**
-	 * Gets the neighboring chunk matching the specified direction.
+	 * Gets the neighboring room matching the specified direction.
 	 *
-	 * @param direction the direction of the chunk to get
-	 * @return the neighboring chunk, or null if no neighbor exists at the specified direction
+	 * @param direction the direction of the room to get
+	 * @return the neighboring room, or null if no neighbor exists at the specified direction
 	 */
 	public IDungeonRoom getNeighbor(byte direction);
 	
