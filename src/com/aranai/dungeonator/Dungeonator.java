@@ -12,7 +12,6 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.aranai.dungeonator.datastore.DungeonDataStore;
 import com.aranai.dungeonator.datastore.IDungeonDataStore;
 import com.aranai.dungeonator.datastore.SqliteDungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;

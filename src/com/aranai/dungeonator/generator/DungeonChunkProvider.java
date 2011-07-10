@@ -74,7 +74,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 			for(int r = 0; r < rooms.length; r++)
 			{
 				byte[] tmpBlocks = rooms[r].getRawBlocks();
-				byte[] tmpData = rooms[r].getRawBlockData();
+				//byte[] tmpData = rooms[r].getRawBlockData();
 				
 				for(int x = 0; x < 16; x++)
 				{

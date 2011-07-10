@@ -81,14 +81,16 @@ public class DWorldListener extends WorldListener {
 	 */
 	public void onChunkLoad(ChunkLoadEvent e)
 	{
-		/*
-		 * Until the Generator branch is merged, we're relegated to waiting for the server to generate and load a chunk,
-		 * then immediately overwriting it with our own data. This is massively inefficient and I hate it.
-		 */
-		
 		// HACK: Force re-lighting calculation
 		// TODO: Don't hack
-		((CraftChunk)e.getChunk()).getHandle().initLighting(); // re-do SKYLIGHT
+		/*
+		String hash = e.getChunk().getWorld().getName()+"."+e.getChunk().getX()+"."+e.getChunk().getZ();
+		if(this.flattened.contains(hash))
+		{
+			((CraftChunk)e.getChunk()).getHandle().initLighting(); // re-do SKYLIGHT
+			this.flattened.remove(hash);
+		}
+		*/
 		
 		return;
 	}

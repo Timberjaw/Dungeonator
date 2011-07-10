@@ -3,7 +3,6 @@ package com.aranai.dungeonator.dungeonchunk;
 import java.util.Vector;
 
 import com.aranai.dungeonator.Direction;
-import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.generator.DungeonMath;
 
 /**

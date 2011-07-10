@@ -108,6 +108,7 @@ public class DungeonChunkGenerator {
 	 * @param dc the DungeonChunk being processed
 	 * @param candidateDoorways the candidate doorways
 	 */
+	@SuppressWarnings("unused")
 	private void generateProceduralChunk(DungeonChunk dc, DungeonRoomDoorway candidateDoorways[])
 	{
 		/*

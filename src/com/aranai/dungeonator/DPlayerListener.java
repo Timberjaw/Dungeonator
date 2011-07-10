@@ -2,6 +2,7 @@ package com.aranai.dungeonator;
 
 import java.util.LinkedList;
 
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -50,5 +51,6 @@ public class DPlayerListener extends PlayerListener {
 	
 	public void onPlayerRespawn(PlayerRespawnEvent event)
 	{
+		event.setRespawnLocation(new Location(event.getRespawnLocation().getWorld(), 0, 5, 0));
 	}
 }

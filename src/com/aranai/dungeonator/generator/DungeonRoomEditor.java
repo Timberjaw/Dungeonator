@@ -575,7 +575,7 @@ public class DungeonRoomEditor {
 		this.flattenChunk(tmpChunk, Material.SAND);
 		
 		byte[] blocks;
-		byte[] blockData;
+		//byte[] blockData;
 		
 		Hashtable<String,byte[]> tmpRoomBlocks = new Hashtable<String,byte[]>();
 		
