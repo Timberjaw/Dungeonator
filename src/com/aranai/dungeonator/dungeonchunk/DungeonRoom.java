@@ -186,6 +186,10 @@ public class DungeonRoom implements IDungeonRoom {
 		return doorways;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getDoorwaysRaw()
+	 */
+	@Override
 	public byte[] getDoorwaysRaw()
 	{
 		byte[] doorways = new byte[this.doorways.length];

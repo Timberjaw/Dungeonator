@@ -130,6 +130,13 @@ public interface IDungeonRoom {
 	public Vector<DungeonRoomDoorway> getDoorways();
 	
 	/**
+	 * Gets all of the doorways for the room in raw byte format.
+	 *
+	 * @return the doorways
+	 */
+	public byte[] getDoorwaysRaw();
+	
+	/**
 	 * Sets a doorway. The direction will be inferred from the doorway instance itself.
 	 *
 	 * @param doorway the DungeonChunkDoorway to set
