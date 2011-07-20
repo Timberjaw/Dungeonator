@@ -47,7 +47,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		
 		System.out.println("Call to getChunkAt("+arg0+","+arg1+","+arg2+")");
 		
-		arg0.getChunkAt(arg1, arg2).initLighting();
+		//arg0.getChunkAt(arg1, arg2).initLighting();
 	}
 
 	@Override
@@ -120,6 +120,8 @@ public class DungeonChunkProvider implements IChunkProvider {
 		}
 		
         Chunk chunk = new Chunk(mw, blocks, arg0, arg1);
+        
+        chunk.initLighting();
         
         return chunk;
 	}

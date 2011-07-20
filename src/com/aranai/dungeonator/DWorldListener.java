@@ -49,6 +49,7 @@ public class DWorldListener extends WorldListener {
 		 * Horrible hack. Necessary for now to regenerate the spawn chunks.
 		 * TODO: Don't have horrible hacks
 		 */
+		/*
 		for(int ci = 0; ci < chunks.length; ci++)
 		{
 			Chunk c = chunks[ci];
@@ -74,6 +75,7 @@ public class DWorldListener extends WorldListener {
 		{
 			e.remove();
 		}
+		*/
 	}
 	
 	/* (non-Javadoc)

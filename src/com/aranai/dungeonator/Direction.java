@@ -1,5 +1,8 @@
 package com.aranai.dungeonator;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 /**
  * Specifies byte values for the 12 cardinal directions, up, and down, starting at 0 for North and proceeding clockwise.
  * Also includes convenience arrays and functions for determining side from direction, directions from side,
@@ -75,6 +78,94 @@ public final class Direction {
 	
 	/** Counter-Clockwise Direction Sequence */
 	public static byte COUNTER_CLOCKWISE = -100;
+	
+	/** Direction name/value list for easy lookup from user commands. */
+	public static Hashtable<String,Byte> directionValues = new Hashtable<String,Byte>();
+	
+	/** Direction value/name list for easy lookup. Reverse table of directionValues. */
+	public static Hashtable<Byte,String> directionNames = new Hashtable<Byte,String>();
+	
+	static {
+		// Add directions to direction name list
+		directionValues.put("n", Direction.N);
+		directionValues.put("nne", Direction.NNE);
+		directionValues.put("ene", Direction.ENE);
+		directionValues.put("e", Direction.E);
+		directionValues.put("ese", Direction.ESE);
+		directionValues.put("sse", Direction.SSE);
+		directionValues.put("s", Direction.S);
+		directionValues.put("ssw", Direction.SSW);
+		directionValues.put("wsw", Direction.WSW);
+		directionValues.put("w", Direction.W);
+		directionValues.put("wnw", Direction.WNW);
+		directionValues.put("nnw", Direction.NNW);
+		directionValues.put("u", Direction.UP);
+		directionValues.put("d", Direction.DOWN);
+		// Add direction aliases
+		directionValues.put("north", Direction.N);
+		directionValues.put("northnortheast", Direction.NNE);
+		directionValues.put("eastnortheast", Direction.ENE);
+		directionValues.put("east", Direction.E);
+		directionValues.put("eastsoutheast", Direction.ESE);
+		directionValues.put("southsoutheast", Direction.SSE);
+		directionValues.put("south", Direction.S);
+		directionValues.put("southsouthwest", Direction.SSW);
+		directionValues.put("westsouthwest", Direction.WSW);
+		directionValues.put("west", Direction.W);
+		directionValues.put("westnorthwest", Direction.WNW);
+		directionValues.put("northnorthwest", Direction.NNW);
+		directionValues.put("up", Direction.UP);
+		directionValues.put("down", Direction.DOWN);
+		
+		// Set up reverse lookup table for looking up direction names by value
+		for(Map.Entry<String,Byte> entrySet : directionValues.entrySet())
+		{
+			directionNames.put(entrySet.getValue(), entrySet.getKey());
+		}
+	}
+	
+	/**
+	 * Lookup a direction by its string name
+	 *
+	 * @param direction the string name for the direction
+	 * @return the direction
+	 */
+	public static byte getDirectionFromString(String direction)
+	{
+		if(directionValues.containsKey(direction))
+		{
+			return directionValues.get(direction);
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Lookup a direction string by its value
+	 *
+	 * @param direction the byte value for the direction
+	 * @return the direction name
+	 */
+	public static String getDirectionName(byte direction)
+	{
+		if(isValidDirection(direction))
+		{
+			return directionNames.get(direction);
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Checks if a given byte value is a valid direction.
+	 *
+	 * @param direction the value to check
+	 * @return true, if it is a valid direction
+	 */
+	public static boolean isValidDirection(byte direction)
+	{
+		return directionNames.containsKey(direction);
+	}
 	
 	/**
 	 * Gets the side to which the specified direction belongs.

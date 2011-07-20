@@ -47,7 +47,7 @@ public class DungeonRoom implements IDungeonRoom {
 	private DungeonRoom[] neighbors = new DungeonRoom[6];
 	
 	/** Doorways */
-	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[12];
+	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[14];
 	
 	public DungeonRoom()
 	{
@@ -173,7 +173,7 @@ public class DungeonRoom implements IDungeonRoom {
 		Vector<DungeonRoomDoorway> doorways = new Vector<DungeonRoomDoorway>();
 		
 		// Loop through the directions available for this side
-		for(byte i = 0; i < 12; i++)
+		for(byte i = 0; i < this.doorways.length; i++)
 		{
 			if(this.hasDoorway(i))
 			{
@@ -186,12 +186,64 @@ public class DungeonRoom implements IDungeonRoom {
 		return doorways;
 	}
 	
+	public byte[] getDoorwaysRaw()
+	{
+		byte[] doorways = new byte[this.doorways.length];
+		
+		// Loop through the directions available for this side
+		for(byte i = 0; i < this.doorways.length; i++)
+		{
+			if(this.hasDoorway(i))
+			{
+				// This DungeonChunk has a doorway at this side
+				// Add the doorway to the list
+				doorways[i] = this.getDoorway(i).getDirection();
+			}
+		}
+		
+		return doorways;
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.aranai.Dungeonator.IDungeonRoom#setDoorway(byte, com.aranai.Dungeonator.DungeonChunkDoorway)
 	 */
 	@Override
 	public void setDoorway(DungeonRoomDoorway doorway) {
 		doorways[doorway.getDirection()] = doorway;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#setDoorway(byte, boolean)
+	 */
+	@Override
+	public void setDoorway(byte direction, boolean status) {
+		if(Direction.isValidDirection(direction))
+		{
+			if(status)
+			{
+				// Set the doorway
+				doorways[direction] = new DungeonRoomDoorway(direction);
+			}
+			else
+			{
+				// Unset the doorway
+				doorways[direction] = null;
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#resetDoorways()
+	 */
+	@Override
+	public void resetDoorways() {
+		for(int i = 0; i < doorways.length; i++)
+		{
+			if(doorways[i] != null)
+			{
+				doorways[i] = null;
+			}
+		}
 	}
 	
 	/* (non-Javadoc)

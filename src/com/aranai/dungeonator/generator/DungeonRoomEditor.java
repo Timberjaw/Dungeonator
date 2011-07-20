@@ -27,9 +27,11 @@ import org.jnbt.NBTOutputStream;
 import org.jnbt.StringTag;
 
 import com.aranai.dungeonator.event.DCommandEvent;
+import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
 
 /**
  * Handles in-game chunk editing for tiles. Supports manual construction and
@@ -323,7 +325,7 @@ public class DungeonRoomEditor {
 		 * 
 		 * CompoundTag("DungeonChunkSchematic"):
 		 *  - ByteTag("type"): byte								Type ID for the DungeonChunk
-		 * 	- ByteTag("exits"): byte							Exits from the chunk
+		 * 	- ByteArrayTag("exits"): byte[]						Exits from the chunk
 		 * 	- CompoundTag("widgetSpawns"):						Potential widget spawn locations for the chunk
 		 * 		- CompoundTag("widget"): 						A single widget spawn location (origin is at NW corner of the widget to be placed)
 		 * 			- ByteTag("type") : byte						Type ID for the widget spawn location, or 0 if any widget type is acceptable
@@ -355,7 +357,7 @@ public class DungeonRoomEditor {
 		tags.put("type", new ByteTag("type", (byte) 0));
 		
 		// Room exits
-		tags.put("exits", new ByteTag("exits", (byte) 0));
+		tags.put("exits", new ByteArrayTag("exits", room.getDoorwaysRaw()));
 		
 		// Blocks
 		tags.put("blocks", new ByteArrayTag("blocks", this.room.getRawBlocks()));
@@ -429,7 +431,7 @@ public class DungeonRoomEditor {
 		{
 			this.cmdSave(cmd);
 		}
-		else if(cmd.getCmd().equals("exits"))
+		else if(cmd.getCmd().equals("exits") || cmd.getCmd().equals("doors"))
 		{
 			this.cmdExits(cmd);
 		}
@@ -554,13 +556,75 @@ public class DungeonRoomEditor {
 	 */
 	public void cmdExits(DCommandEvent cmd)
 	{
-		// Handle reset first: remove all exits
+		// Handle reset first: remove all exits (N,NNE,ENE,E,ESE,SSE,S,SSW,WSW,W,WNW,NNW,U,D)
+		if(cmd.getNamedArgBool("reset", false) == true)
+		{
+			editor.sendMessage("Resetting doorways.");
+			room.resetDoorways();
+		}
 		
 		// Handle delete: remove specific exits
+		String[] doorways = cmd.getNamedArgStringList("delete", null);
+		if(doorways != null)
+		{
+			StringBuffer removedDoorways = new StringBuffer();
+			
+			// Loop through the list and remove the specified doorways
+			for(String value : doorways)
+			{
+				// Validate the doorway name
+				byte doorway = Direction.getDirectionFromString(value);
+				
+				if(doorway != -1)
+				{
+					removedDoorways.append(value);
+					removedDoorways.append(",");
+					room.setDoorway(doorway, false);
+				}
+			}
+			
+			removedDoorways.setLength(Math.max(removedDoorways.length()-1, 0));
+			
+			editor.sendMessage("Removed doorways: "+removedDoorways.toString());
+		}
 		
 		// Handle add
+		doorways = cmd.getNamedArgStringList("add", null);
+		if(doorways != null)
+		{
+			StringBuffer addedDoorways = new StringBuffer();
+			
+			// Loop through the list and add the specified doorways
+			for(String value : doorways)
+			{
+				// Validate the doorway name
+				byte doorway = Direction.getDirectionFromString(value);
+				
+				if(doorway != -1)
+				{
+					addedDoorways.append(value);
+					addedDoorways.append(",");
+					room.setDoorway(doorway, true);
+				}
+			}
+			
+			addedDoorways.setLength(Math.max(addedDoorways.length()-1,0));
+			
+			editor.sendMessage("Added doorways: "+addedDoorways.toString());
+		}
 		
 		// List exits after everything else, so the user knows exactly what exits are active
+		Vector<DungeonRoomDoorway> finalDoorways = room.getDoorways();
+		StringBuffer sb = new StringBuffer("Doorways: ");
+		
+		for(DungeonRoomDoorway doorway : finalDoorways)
+		{
+			sb.append(Direction.getDirectionName(doorway.getDirection()));
+			sb.append(",");
+		}
+		sb.setLength(Math.max(sb.length()-1, 0));
+		
+		editor.sendMessage(sb.toString());
 	}
 	
 	public void cmdTestStack(DCommandEvent cmd)
@@ -673,5 +737,15 @@ public class DungeonRoomEditor {
 				e.remove();
 			}
 		}
+	}
+	
+	/**
+	 * Checks for unsaved changes.
+	 *
+	 * @return true, if there are unsaved changes
+	 */
+	public boolean hasUnsavedChanges()
+	{
+		return hasUnsavedChanges;
 	}
 }

@@ -137,6 +137,19 @@ public interface IDungeonRoom {
 	public void setDoorway(DungeonRoomDoorway doorway);
 	
 	/**
+	 * Sets/unsets a doorway with a specific direction.
+	 *
+	 * @param direction the direction
+	 * @param status the status (true for on, false for off)
+	 */
+	public void setDoorway(byte direction, boolean status);
+	
+	/**
+	 * Reset (remove) all doorways.
+	 */
+	public void resetDoorways();
+	
+	/**
 	 * Checks for a neighboring chunk matching the specified direction.
 	 *
 	 * @param d the neighbor direction to check

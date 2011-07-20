@@ -97,6 +97,38 @@ public class DCommandEvent {
 		}
 		
 		/**
+		 * Gets a boolean value list from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the argument was not specified
+		 * @return the resulting boolean value list
+		 */
+		public boolean[] getNamedArgBoolList(String name, boolean[] defaultValue)
+		{
+			String[] value = this.getNamedArgList(name);
+			
+			if(value != null)
+			{
+				// Initialize a bool array to store the parsed results
+				boolean[] boolValues = new boolean[value.length];
+				
+				for(int i = 0; i < value.length; i++)
+				{
+					if(value[i].equalsIgnoreCase("true"))
+					{
+						boolValues[i] = true;
+					}
+					else if(value[i].equalsIgnoreCase("false"))
+					{
+						boolValues[i] = false;
+					}
+				}
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
 		 * Gets the int value from a named argument
 		 *
 		 * @param name the name of the argument to look for
@@ -114,6 +146,42 @@ public class DCommandEvent {
 				{
 					int intValue = Integer.parseInt(value);
 					return intValue;
+				}
+				catch(NumberFormatException e)
+				{
+					// Bad value; do nothing
+				}
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
+		 * Gets the int value list from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the named argument was not specified
+		 * @return the resulting int value list
+		 */
+		public int[] getNamedArgIntList(String name, int[] defaultValue)
+		{
+			String[] value = this.getNamedArgList(name);
+			
+			if(value != null)
+			{
+				// Initialize an int array to store the result of the parser
+				int[] intValues = new int[value.length];
+				
+				// Attempt to parse an integer value from the value
+				try
+				{
+					for(int i = 0; i < value.length; i++)
+					{
+						int floatValue = Integer.parseInt(value[i]);
+						intValues[i] = floatValue;
+					}
+					
+					return intValues;
 				}
 				catch(NumberFormatException e)
 				{
@@ -153,6 +221,42 @@ public class DCommandEvent {
 		}
 		
 		/**
+		 * Gets the float value list from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the named argument was not specified
+		 * @return the resulting float value list
+		 */
+		public float[] getNamedArgFloatList(String name, float[] defaultValue)
+		{
+			String[] value = this.getNamedArgList(name);
+			
+			if(value != null)
+			{
+				// Initialize a float array to store the result of the parser
+				float[] floatValues = new float[value.length];
+				
+				// Attempt to parse a float value from the value
+				try
+				{
+					for(int i = 0; i < value.length; i++)
+					{
+						float floatValue = Float.parseFloat(value[i]);
+						floatValues[i] = floatValue;
+					}
+					
+					return floatValues;
+				}
+				catch(NumberFormatException e)
+				{
+					// Bad value; do nothing
+				}
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
 		 * Gets a string value from a named argument
 		 *
 		 * @param name the name of the argument to look for
@@ -169,6 +273,46 @@ public class DCommandEvent {
 			}
 			
 			return defaultValue;
+		}
+		
+		/**
+		 * Gets a list of string values from a named argument
+		 *
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the argument was not specified
+		 * @return the resulting string value list
+		 */
+		public String[] getNamedArgStringList(String name, String[] defaultValue)
+		{
+			// Get the list as a simple string first
+			String[] value = this.getNamedArgList(name);
+			
+			if(value != null)
+			{
+				// Split the string
+				return value;
+			}
+			
+			return defaultValue;
+		}
+		
+		/**
+		 * Gets the raw string value list of a named argument.
+		 *
+		 * @param name the name of the argument to look for
+		 * @return the resulting raw string value list, or null if the named argument was not specified
+		 */
+		private String[] getNamedArgList(String name)
+		{
+			String value = this.getNamedArg(name);
+			
+			if(value != null)
+			{
+				// Return the split string
+				return value.split(",");
+			}
+			
+			return null;
 		}
 		
 		/**
