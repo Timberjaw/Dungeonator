@@ -225,7 +225,7 @@ public class DungeonRoomEditor {
 		isActive = true;
 		hasUnsavedChanges = true;
 		
-		this.room = new DungeonRoom(this.chunk, 0);
+		this.room = new DungeonRoom(this.chunk, 1);
 	}
 	
 	/**
@@ -369,7 +369,7 @@ public class DungeonRoomEditor {
 		
 		try {
 			// Create file output stream
-			OutputStream output = new FileOutputStream(path+name);
+			OutputStream output = new FileOutputStream(path+name+".nbt");
 			
 			// Create NBT output stream
 			NBTOutputStream os = new NBTOutputStream(output);
@@ -527,7 +527,7 @@ public class DungeonRoomEditor {
 	public void cmdSave(DCommandEvent cmd)
 	{
 		String path = Dungeonator.TileFolderPath;
-		String name = "Unnamed-"+System.currentTimeMillis()+".nbt";
+		String name = "Unnamed-"+System.currentTimeMillis();
 		
 		// Check for active path and name
 		if(!activePath.equals("")) { path = activePath; }
@@ -649,7 +649,7 @@ public class DungeonRoomEditor {
 			CompoundTag schematic = null;
 			try {
 				// Open file input stream
-				FileInputStream fis = new FileInputStream(Dungeonator.TileFolderPath+File.separator+s);
+				FileInputStream fis = new FileInputStream(Dungeonator.TileFolderPath+File.separator+s+".nbt");
 				
 				try {
 					// Open NBT input stream

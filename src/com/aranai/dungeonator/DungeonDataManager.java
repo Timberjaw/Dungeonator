@@ -100,7 +100,7 @@ public class DungeonDataManager {
 				
 				if(rooms[i] == null) { return null; }
 				
-				fullPath = Dungeonator.TileFolderPath+File.separator+rooms[i].getFilename()+".nbt";
+				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
 				
 				// Check cache
 				if(roomCache.containsKey(fullPath))

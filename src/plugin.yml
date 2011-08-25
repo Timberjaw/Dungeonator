@@ -1,8 +1,11 @@
 name: Dungeonator
 main: com.aranai.dungeonator.Dungeonator
-version: 0.0.1
+version: 0.0.2
 author: Timberjaw
 commands:
   edit:
     description: Use an edit command
     usage: /<command> <task> <args ...>
+  testmap:
+    description: Test map
+    usage: /<command>

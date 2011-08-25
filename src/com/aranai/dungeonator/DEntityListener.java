@@ -26,7 +26,7 @@ public class DEntityListener extends EntityListener {
 		/*
 		 * If the player is a DM, cancel the damage event
 		 */
-		if(plugin.getDungeonMaster().isDm((Player)event.getEntity()))
+		if(event.getEntity() instanceof Player && plugin.getDungeonMaster().isDm((Player)event.getEntity()))
 		{
 			event.setCancelled(true);
 			return;

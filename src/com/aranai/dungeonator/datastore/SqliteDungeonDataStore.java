@@ -1,6 +1,5 @@
 package com.aranai.dungeonator.datastore;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -25,7 +24,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	protected Connection conn;
 	
 	/** The database path. */
-	public final static String db = "jdbc:sqlite:" + Dungeonator.BaseFolderPath + File.separator + "dungeonator.db";
+	public final static String db = "jdbc:sqlite:" + Dungeonator.BaseFolderPath + "dungeonator.db";
 	
 	/*
 	 * Table names

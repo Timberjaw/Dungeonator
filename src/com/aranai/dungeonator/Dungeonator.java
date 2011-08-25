@@ -2,6 +2,7 @@ package com.aranai.dungeonator;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
@@ -97,6 +98,29 @@ public class Dungeonator extends JavaPlugin {
 			Dungeonator.TileFolderPath = Dungeonator.BaseFolderPath+"tiles"+File.separator;
 			// Widget folder path
 			Dungeonator.WidgetFolderPath = Dungeonator.BaseFolderPath+"widgets"+File.separator;
+			
+			// Make sure we have local folders for our database and such
+			if (!new File(Dungeonator.BaseFolderPath).exists()) {
+				try {
+					(new File(Dungeonator.BaseFolderPath)).mkdir();
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "[Dungeonator]: Unable to create plugin folder.");
+				}
+			}
+			if (!new File(Dungeonator.TileFolderPath).exists()) {
+				try {
+					(new File(Dungeonator.TileFolderPath)).mkdir();
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "[Dungeonator]: Unable to create tile folder.");
+				}
+			}
+			if (!new File(Dungeonator.WidgetFolderPath).exists()) {
+				try {
+					(new File(Dungeonator.WidgetFolderPath)).mkdir();
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "[Dungeonator]: Unable to create widget folder.");
+				}
+			}
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		// Initialize data store
