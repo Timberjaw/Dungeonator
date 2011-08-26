@@ -490,4 +490,9 @@ public class DungeonRoom implements IDungeonRoom {
 	public String getFilename() {
 		return this.filename;
 	}
+	
+	public String toString()
+	{
+		return "{DungeonRoom<"+x+","+y+","+z+">}";
+	}
 }

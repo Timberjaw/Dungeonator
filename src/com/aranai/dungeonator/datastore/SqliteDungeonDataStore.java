@@ -283,13 +283,13 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         if(plugin.getChunkManager().isChunkGenerated(world, x, z))
         {
         	dc = this.getChunk(world, x, z);
-        	Dungeonator.getLogger().info("Getting "+world+","+x+","+z+" from data store.");
+        	//Dungeonator.getLogger().info("Getting "+world+","+x+","+z+" from data store.");
         }
         else
         {
         	dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, x, z);
         	dc.setWorld(plugin.getServer().getWorld(world));
-        	Dungeonator.getLogger().info("Getting "+world+","+x+","+z+" from void.");
+        	//Dungeonator.getLogger().info("Getting "+world+","+x+","+z+" from void.");
         }
         DungeonRoom dr = new DungeonRoom(dc, y);
 		
@@ -343,7 +343,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	    	Class.forName("org.sqlite.JDBC");
 	    	Connection conn = DriverManager.getConnection(db);
 	    	conn.setAutoCommit(false);
-	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblRooms+"`" +
+	        PreparedStatement ps = conn.prepareStatement("INSERT INTO `"+TblRooms+"`" +
 	        		"(`world`,`x`,`y`,`z`,`library_id`,`name`)" +
 	        		"VALUES (?, ?, ?, ?, ?, ?);");
 	        
@@ -353,13 +353,14 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        ps.setInt(4, room.getZ());
 	        ps.setLong(5, room.getLibraryId());
 	        ps.setString(6, room.getName());
-	        ps.execute();
+	        success = ps.execute();
+	        
 	        conn.commit();
 	        conn.close();
-	        
-	        success = true;
         }
+        catch(SQLException e) { Dungeonator.getLogger().warning(room.toString()); e.printStackTrace(); }
         catch(Exception e) { e.printStackTrace(); }
+        finally { if(conn != null) { try { conn.close(); } catch(Exception e) { e.printStackTrace(); } } }
         
 		return success;
 	}

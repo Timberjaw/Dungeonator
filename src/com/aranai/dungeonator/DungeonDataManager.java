@@ -134,7 +134,7 @@ public class DungeonDataManager {
 				if(roomCache.containsKey(fullPath))
 				{
 					rooms[i] = roomCache.get(fullPath);
-					System.out.println("Cache hit for "+fullPath);
+					//System.out.println("Cache hit for "+fullPath);
 					continue;
 				}
 				
@@ -175,9 +175,6 @@ public class DungeonDataManager {
 		{
 			// Set chunk
 			rooms[i].setDungeonChunk(chunk);
-			
-			// Set location
-			rooms[i].setLocation(chunk.getX(), i, chunk.getZ());
 		}
 		
 		return rooms;

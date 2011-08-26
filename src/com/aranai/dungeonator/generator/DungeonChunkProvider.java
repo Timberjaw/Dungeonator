@@ -77,6 +77,9 @@ public class DungeonChunkProvider implements IChunkProvider {
 		{
 			for(int r = 0; r < rooms.length; r++)
 			{
+				// Set location
+				rooms[r].setLocation(arg0, r, arg1);
+				
 				byte[] tmpBlocks = rooms[r].getRawBlocks();
 				//byte[] tmpData = rooms[r].getRawBlockData();
 				
@@ -92,6 +95,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 				}
 		        
 		        // Save room to data store
+				//Dungeonator.getLogger().info("Saving "+rooms[r]+" ("+r+")");
 		        dungeonator.getDataManager().saveRoom(rooms[r]);
 			}
 			
