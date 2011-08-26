@@ -1,5 +1,7 @@
 package com.aranai.dungeonator.datastore;
 
+import java.util.Vector;
+
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
@@ -78,11 +80,11 @@ public interface IDungeonDataStore {
 	/**
 	 * Gets a DungeonRoom record from the Library.
 	 *
-	 * @param hash the DungeonRoom's hash
-	 * @return the DungeonRoom if the hash is valid, or null otherwise
+	 * @param the id of the room
+	 * @return the DungeonRoom if the id is valid, or null otherwise
 	 * @throws DataStoreGetException the data store get exception
 	 */
-	public DungeonRoom getLibraryRoom(String hash) throws DataStoreGetException;
+	public DungeonRoom getLibraryRoom(long id) throws DataStoreGetException;
 	
 	/**
 	 * Save a DungeonRoom record in the Library.
@@ -107,5 +109,5 @@ public interface IDungeonDataStore {
 	 * @return the room
 	 * @throws DataStoreGetException the data store get exception
 	 */
-	public DungeonRoom getLibraryRoomRandom() throws DataStoreGetException;
+	public DungeonRoom getLibraryRoomRandom(Vector<Byte> doorways) throws DataStoreGetException;
 }

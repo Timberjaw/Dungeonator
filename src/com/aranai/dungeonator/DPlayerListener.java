@@ -1,17 +1,13 @@
 package com.aranai.dungeonator;
 
 import java.util.LinkedList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 

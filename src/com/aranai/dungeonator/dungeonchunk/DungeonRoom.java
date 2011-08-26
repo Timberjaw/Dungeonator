@@ -2,6 +2,8 @@ package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 
+import org.bukkit.Location;
+
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.generator.DungeonMath;
 
@@ -18,6 +20,9 @@ public class DungeonRoom implements IDungeonRoom {
 	
 	/** The Z coordinate of the room. This coordinate should match the DungeonChunk Z coordinate. */
 	private int z;
+	
+	/** Loaded status */
+	private boolean loaded = false;
 	
 	/** Random seed used for procedural rooms. */
 	private long seed = 0;
@@ -52,17 +57,20 @@ public class DungeonRoom implements IDungeonRoom {
 	public DungeonRoom()
 	{
 		this.chunk = null;
-		this.x = 0;
-		this.y = 0;
-		this.z = 0;
+		this.setLocation(0, 0, 0);
 	}
 	
 	public DungeonRoom(DungeonChunk chunk, int y)
 	{
 		this.chunk = chunk;
-		this.x = chunk.getX();
-		this.z = chunk.getZ();
+		this.setLocation(chunk.getX(), y, chunk.getZ());
+	}
+	
+	public void setLocation(int x, int y, int z)
+	{
+		this.x = x;
 		this.y = y;
+		this.z = z;
 	}
 	
 	/* (non-Javadoc)
@@ -72,6 +80,30 @@ public class DungeonRoom implements IDungeonRoom {
 	public DungeonChunk getDungeonChunk() {
 		return chunk;
 	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#setDungeonChunk()
+	 */
+	@Override
+	public void setDungeonChunk(DungeonChunk chunk) {
+		this.chunk = chunk;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#isLoaded()
+	 */
+	public boolean isLoaded()
+	{
+		return loaded;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#setLoaded(boolean)
+	 */
+	public void setLoaded(boolean newLoaded)
+	{
+		loaded = newLoaded;
+	}
 
 	/* (non-Javadoc)
 	 * @see com.aranai.Dungeonator.IDungeonRoom#getX()
@@ -79,6 +111,14 @@ public class DungeonRoom implements IDungeonRoom {
 	@Override
 	public int getX() {
 		return x;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.Dungeonator.IDungeonRoom#getY()
+	 */
+	@Override
+	public int getY() {
+		return y;
 	}
 
 	/* (non-Javadoc)

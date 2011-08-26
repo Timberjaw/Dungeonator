@@ -1,5 +1,7 @@
 package com.aranai.dungeonator.datastore;
 
+import java.util.Vector;
+
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
@@ -100,7 +102,7 @@ public class DungeonDataStore implements IDungeonDataStore {
 	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getLibraryRoom(java.lang.String)
 	 */
 	@Override
-	public DungeonRoom getLibraryRoom(String hash) throws DataStoreGetException {
+	public DungeonRoom getLibraryRoom(long id) throws DataStoreGetException {
 		/* Throw a DataStoreGetException. In practice this should never
 		 * happen, because no one would be silly enough to attempt to use
 		 * this class directly.
@@ -139,9 +141,13 @@ public class DungeonDataStore implements IDungeonDataStore {
 	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getLibraryRoomRandom()
 	 */
 	@Override
-	public DungeonRoom getLibraryRoomRandom() throws DataStoreGetException {
-		// TODO Auto-generated method stub
-		return null;
+	public DungeonRoom getLibraryRoomRandom(Vector<Byte> doorways) throws DataStoreGetException {
+		/* Throw a DataStoreGetException. In practice this should never
+		 * happen, because no one would be silly enough to attempt to use
+		 * this class directly.
+		 */
+		
+		throw new DataStoreGetException("Using DungeonDataStore class directly accomplishes nothing.", "getLibraryRoomRandom");
 	}
 
 }

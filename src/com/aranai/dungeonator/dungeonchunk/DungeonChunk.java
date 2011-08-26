@@ -35,7 +35,7 @@ public class DungeonChunk {
 	 */
 	public DungeonChunk(Chunk chunk)
 	{
-		this(chunk, DungeonRoomType.BASIC_TILE, chunk.getX(), chunk.getZ());
+		this(chunk, DungeonRoomType.BASIC_TILE, (chunk != null) ? chunk.getX() : 0, (chunk != null) ? chunk.getZ() : 0);
 	}
 	
 	public DungeonChunk(Chunk chunk, DungeonRoomType type, int x, int z)
@@ -75,6 +75,14 @@ public class DungeonChunk {
 	public World getWorld()
 	{
 		return world;
+	}
+	
+	/**
+	 * Sets the chunk's parent world
+	 */
+	public void setWorld(World newWorld)
+	{
+		world = newWorld;
 	}
 	
 	/**

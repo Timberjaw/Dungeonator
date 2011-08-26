@@ -2,8 +2,9 @@ package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 
+// TODO: Auto-generated Javadoc
 /**
- * Specifies required methods for all dungeon chunk classes
+ * Specifies required methods for all dungeon chunk classes.
  */
 public interface IDungeonRoom {
 	
@@ -15,11 +16,39 @@ public interface IDungeonRoom {
 	public DungeonChunk getDungeonChunk();
 	
 	/**
+	 * Sets the parent dungeon chunk for the room.
+	 *
+	 * @param chunk the parent dungeon chunk
+	 */
+	public void setDungeonChunk(DungeonChunk chunk);
+	
+	/**
+	 * Checks if the room is loaded.
+	 *
+	 * @return true, if the room loaded
+	 */
+	public boolean isLoaded();
+	
+	/**
+	 * Sets whether the room is loaded.
+	 *
+	 * @param loaded the new loaded setting
+	 */
+	public void setLoaded(boolean loaded);
+	
+	/**
 	 * Gets the x coordinate for the chunk.
 	 *
 	 * @return the x coordinate for the chunk
 	 */
 	public int getX();
+	
+	/**
+	 * Gets the y coordinate for the chunk.
+	 *
+	 * @return the y coordinate for the chunk
+	 */
+	public int getY();
 	
 	/**
 	 * Gets the z coordinate for the chunk.
@@ -101,7 +130,7 @@ public interface IDungeonRoom {
 	/**
 	 * Checks for a doorway matching the specified direction.
 	 *
-	 * @param d the doorway direction to check
+	 * @param direction the direction
 	 * @return true, if the chunk has a matching doorway
 	 */
 	public boolean hasDoorway(byte direction);
@@ -117,7 +146,7 @@ public interface IDungeonRoom {
 	/**
 	 * Gets all of the doorways on the specified side.
 	 *
-	 * @param direction the direction of the side to get
+	 * @param side the side
 	 * @return the doorways on the specified side
 	 */
 	public Vector<DungeonRoomDoorway> getDoorwaysOnSide(byte[] side);
@@ -159,7 +188,7 @@ public interface IDungeonRoom {
 	/**
 	 * Checks for a neighboring chunk matching the specified direction.
 	 *
-	 * @param d the neighbor direction to check
+	 * @param direction the direction
 	 * @return true, if the chunk has a matching neighbor
 	 */
 	public boolean hasNeighbor(byte direction);

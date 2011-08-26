@@ -95,7 +95,8 @@ public class DungeonChunkManager {
 	 */
 	public DungeonChunk getChunk(String world, int x, int z)
 	{
-		return this.getChunk(world, x, z);
+		//return this.getChunk(world, x, z);
+		return null;
 	}
 	
 	/**
@@ -177,8 +178,7 @@ public class DungeonChunkManager {
 	 * @return true, if a DungeonChunk has already been generated
 	 */
 	public boolean isChunkGenerated(String world, int x, int z) {
-		// TODO Auto-generated method stub
-		return false;
+		return (dataManager.getChunk(world, x, z) != null);
 	}
 
 	/**
@@ -199,10 +199,12 @@ public class DungeonChunkManager {
 		DungeonChunk neighborS = null;
 		DungeonChunk neighborW = null;
 		
+		/*
 		if(this.isChunkGenerated(world, x+16, z)) { neighborN = this.getChunk(world, x+16, z); }
 		if(this.isChunkGenerated(world, x, z+16)) { neighborE = this.getChunk(world, x, z+16); }
 		if(this.isChunkGenerated(world, x-16, z)) { neighborS = this.getChunk(world, x-16, z); }
 		if(this.isChunkGenerated(world, x, z-16)) { neighborW = this.getChunk(world, x, z-16); }
+		*/
 		
 		// Add neighbors
 		newChunk.setNeighbor(Direction.N, neighborN);

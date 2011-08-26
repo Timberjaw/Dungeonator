@@ -53,13 +53,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 	@Override
 	public Chunk getOrCreateChunk(int arg0, int arg1) {
 		// Get 15 random rooms from the data manager
-		DungeonRoom[] rooms = dungeonator.getDataManager().getRoomsForNewChunk(new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1));
+		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
+		dc.setWorld(world);
+		DungeonRoom[] rooms = dungeonator.getDataManager().getRoomsForNewChunk(dc);
+		
+		int roomCount = (rooms != null) ? rooms.length : 0;
 		
 		// TODO: Hand control to DungeonChunkGenerator
 		
 		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
 		
-		System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+")");
+		System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+"), found "+roomCount+" rooms.");
 
 		byte[] blocks = new byte[32768];
 		
@@ -69,7 +73,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		 * Copy room data to chunk
 		 */
 		
-		if(rooms != null)
+		if(roomCount > 0)
 		{
 			for(int r = 0; r < rooms.length; r++)
 			{
@@ -86,7 +90,13 @@ public class DungeonChunkProvider implements IChunkProvider {
 						}
 					}
 				}
+		        
+		        // Save room to data store
+		        dungeonator.getDataManager().saveRoom(rooms[r]);
 			}
+			
+			// Save chunk to data store
+	        dungeonator.getDataManager().saveChunk(dc);
 		}
 		else
 		{

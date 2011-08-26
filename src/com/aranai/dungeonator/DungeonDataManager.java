@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import org.jnbt.ByteArrayTag;
 import org.jnbt.CompoundTag;
@@ -87,6 +88,28 @@ public class DungeonDataManager {
 		}
 	}
 	
+	public boolean saveChunk(DungeonChunk chunk)
+	{
+		try {
+			return dataStore.saveChunk(chunk);
+		} catch (DataStoreSaveException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	public boolean saveRoom(DungeonRoom room)
+	{
+		try {
+			return dataStore.saveRoom(room);
+		} catch (DataStoreSaveException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	public DungeonRoom[] getRoomsForNewChunk(DungeonChunk chunk)
 	{
 		String fullPath = "";
@@ -94,12 +117,17 @@ public class DungeonDataManager {
 		
 		for(int i = 0; i < 16; i++)
 		{
+			// Get surrounding doorways
+			Vector<Byte> doorways = this.getAdjacentDoorways(chunk.getWorldName(), chunk.getX(), chunk.getZ(), i);
+			
 			// Get a random room
 			try {
-				rooms[i] = dataStore.getLibraryRoomRandom();
+				rooms[i] = dataStore.getLibraryRoomRandom(doorways);
 				
+				// Make sure we actually got a result, and bail out if we didn't
 				if(rooms[i] == null) { return null; }
 				
+				// Get the full path to the source tile
 				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
 				
 				// Check cache
@@ -142,6 +170,89 @@ public class DungeonDataManager {
 			} catch (DataStoreGetException e) { e.printStackTrace(); return null; }
 		}
 		
+		// Second loop to do some cleanup and avoid cache issues
+		for(int i = 0; i < 16; i++)
+		{
+			// Set chunk
+			rooms[i].setDungeonChunk(chunk);
+			
+			// Set location
+			rooms[i].setLocation(chunk.getX(), i, chunk.getZ());
+		}
+		
 		return rooms;
+	}
+	
+	public Vector<Byte> getAdjacentDoorways(String world, int x, int z, int y)
+	{
+		Vector<Byte> doors = new Vector<Byte>();
+		
+		// We need to get doorway info from 0-6 rooms (N,E,S,W,U,D)
+		// +X is South, -X is North, +Z is West, -Z is East
+		try {
+			// Get northern neighbor
+			DungeonRoom neighborN = dataStore.getRoom(world, x-1, y, z);
+			
+			if(neighborN.isLoaded())
+			{
+				// Check southern doorways of northern neighbor
+				if(neighborN.hasDoorway(Direction.S)) { doors.add(Direction.S); }
+				if(neighborN.hasDoorway(Direction.SSE)) { doors.add(Direction.SSE); }
+				if(neighborN.hasDoorway(Direction.SSW)) { doors.add(Direction.SSW); }
+			}
+			
+			// Get eastern neighbor
+			DungeonRoom neighborE = dataStore.getRoom(world, x, y-1, z);
+			
+			if(neighborE.isLoaded())
+			{
+				// Check western doorways of eastern neighbor
+				if(neighborE.hasDoorway(Direction.W)) { doors.add(Direction.W); }
+				if(neighborE.hasDoorway(Direction.WNW)) { doors.add(Direction.WNW); }
+				if(neighborE.hasDoorway(Direction.WSW)) { doors.add(Direction.WSW); }
+			}
+			
+			// Get southern neighbor
+			DungeonRoom neighborS = dataStore.getRoom(world, x, x+1, z);
+			
+			if(neighborS.isLoaded())
+			{
+				// Check northern doorways of southern neighbor
+				if(neighborS.hasDoorway(Direction.N)) { doors.add(Direction.N); }
+				if(neighborS.hasDoorway(Direction.NNW)) { doors.add(Direction.NNW); }
+				if(neighborS.hasDoorway(Direction.NNE)) { doors.add(Direction.NNE); }
+			}
+			
+			// Get western neighbor
+			DungeonRoom neighborW = dataStore.getRoom(world, x, y+1, z);
+			
+			if(neighborW.isLoaded())
+			{
+				// Check eastern doorways of western neighbor
+				if(neighborW.hasDoorway(Direction.E)) { doors.add(Direction.E); }
+				if(neighborW.hasDoorway(Direction.ENE)) { doors.add(Direction.ENE); }
+				if(neighborW.hasDoorway(Direction.ESE)) { doors.add(Direction.ESE); }
+			}
+			
+			// Get upper neighbor
+			DungeonRoom neighborU = dataStore.getRoom(world, x, y+1, z);
+			
+			if(neighborU.isLoaded())
+			{
+				// Check lower doorway of upper neighbor
+				if(neighborU.hasDoorway(Direction.DOWN)) { doors.add(Direction.DOWN); }
+			}
+			
+			// Get lower neighbor
+			DungeonRoom neighborD = dataStore.getRoom(world, x, y+1, z);
+			
+			if(neighborD.isLoaded())
+			{
+				// Check upper doorway of lower neighbor
+				if(neighborD.hasDoorway(Direction.UP)) { doors.add(Direction.UP); }
+			}
+		} catch (DataStoreGetException e) { e.printStackTrace(); }
+		
+		return doors;
 	}
 }
