@@ -18,6 +18,11 @@ public interface IDungeonDataStore {
 	public void initialize(Dungeonator plugin);
 	
 	/**
+	 * Shut down the DataStore
+	 */
+	public void shutdown();
+	
+	/**
 	 * Gets a DungeonChunk from the data store.
 	 *
 	 * @param world the world

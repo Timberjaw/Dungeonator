@@ -80,6 +80,8 @@ public class Dungeonator extends JavaPlugin {
 	 */
 	@Override
 	public void onDisable() {
+		// Close DB connection
+		this.dataStore.shutdown();
 	}
 
 	/* (non-Javadoc)

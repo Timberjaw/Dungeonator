@@ -236,25 +236,29 @@ public class DungeonDataManager {
 			}
 			
 			// Get upper neighbor
-			DungeonRoom neighborU = dataStore.getRoom(world, x, y+1, z);
-			
-			if(neighborU.isLoaded())
+			if(y < 15)
 			{
-				// Check lower doorway of upper neighbor
-				if(neighborU.hasDoorway(Direction.DOWN)) { doors.add(Direction.DOWN); }
+				DungeonRoom neighborU = dataStore.getRoom(world, x, y+1, z);
+				
+				if(neighborU.isLoaded())
+				{
+					// Check lower doorway of upper neighbor
+					if(neighborU.hasDoorway(Direction.DOWN)) { doors.add(Direction.DOWN); }
+				}
 			}
 			
 			// Get lower neighbor
-			DungeonRoom neighborD = dataStore.getRoom(world, x, y-1, z);
-			
-			if(neighborD.isLoaded())
+			if(y > 0)
 			{
-				// Check upper doorway of lower neighbor
-				if(neighborD.hasDoorway(Direction.UP)) { doors.add(Direction.UP); }
+				DungeonRoom neighborD = dataStore.getRoom(world, x, y-1, z);
+				
+				if(neighborD.isLoaded())
+				{
+					// Check upper doorway of lower neighbor
+					if(neighborD.hasDoorway(Direction.UP)) { doors.add(Direction.UP); }
+				}
 			}
 		} catch (DataStoreGetException e) { e.printStackTrace(); }
-		
-		//log.info("Found "+doors.size()+" neighboring doors for "+world+"<"+x+","+y+","+z+">");
 		
 		return doors;
 	}

@@ -21,6 +21,15 @@ public class DungeonDataStore implements IDungeonDataStore {
 	}
 	
 	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#shutdown()
+	 */
+	@Override
+	public void shutdown()
+	{
+		Dungeonator.getLogger().warning("Basic DataStore shutdown.");
+	}
+	
+	/* (non-Javadoc)
 	 * @see com.aranai.dungeonator.IDungeonDataStore#getChunk(java.lang.String)
 	 */
 	@Override
