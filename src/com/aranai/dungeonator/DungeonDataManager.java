@@ -187,7 +187,6 @@ public class DungeonDataManager {
 	public Vector<Byte> getAdjacentDoorways(String world, int x, int z, int y)
 	{
 		Vector<Byte> doors = new Vector<Byte>();
-		Logger log = Dungeonator.getLogger();
 		
 		// We need to get doorway info from 0-6 rooms (N,E,S,W,U,D)
 		// +X is South, -X is North, +Z is West, -Z is East

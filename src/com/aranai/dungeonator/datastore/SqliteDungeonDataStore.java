@@ -283,13 +283,14 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         if(plugin.getChunkManager().isChunkGenerated(world, x, z))
         {
         	dc = this.getChunk(world, x, z);
-        	//Dungeonator.getLogger().info("Getting "+world+","+x+","+z+" from data store.");
         }
         else
         {
         	dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, x, z);
         	dc.setWorld(plugin.getServer().getWorld(world));
-        	//Dungeonator.getLogger().info("Getting "+world+","+x+","+z+" from void.");
+        	
+        	// Return a blank new room
+        	return new DungeonRoom(dc, y);
         }
         DungeonRoom dr = new DungeonRoom(dc, y);
 		
