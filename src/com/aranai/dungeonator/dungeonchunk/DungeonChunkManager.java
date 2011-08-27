@@ -19,6 +19,9 @@ public class DungeonChunkManager {
 	/** Local cache of dungeon chunk information. */
 	private ConcurrentHashMap<String,DungeonChunk> chunkCache;
 	
+	/** Local cache of generated chunks. */
+	private ConcurrentHashMap<String,Boolean> chunkGeneratedCache;
+	
 	/** DungeonDataManager instance */
 	private DungeonDataManager dataManager;
 	
@@ -32,6 +35,9 @@ public class DungeonChunkManager {
 	{
 		// Initialize the chunk cache
 		chunkCache = new ConcurrentHashMap<String,DungeonChunk>();
+		
+		// Initialize the chunk generated cache
+		chunkGeneratedCache = new ConcurrentHashMap<String,Boolean>();
 		
 		// Set the data manager
 		this.dataManager = dataManager;
@@ -178,7 +184,31 @@ public class DungeonChunkManager {
 	 * @return true, if a DungeonChunk has already been generated
 	 */
 	public boolean isChunkGenerated(String world, int x, int z) {
-		return (dataManager.getChunk(world, x, z) != null);
+		String hash = this.getChunkHash(world, x, z);
+		
+		if(chunkGeneratedCache.containsKey(hash))
+		{
+			return chunkGeneratedCache.get(hash);
+		}
+		
+		boolean generated = (dataManager.getChunk(world, x, z) != null);
+		
+		chunkGeneratedCache.put(hash, generated);
+		
+		return generated;
+	}
+	
+	/**
+	 * Sets the generation status of a chunk
+	 * @param world
+	 * @param x
+	 * @param z
+	 * @param generation status
+	 */
+	public void setChunkGenerated(String world, int x, int z, boolean generated)
+	{
+		String hash = this.getChunkHash(world, x, z);
+		chunkGeneratedCache.put(hash, generated);
 	}
 
 	/**

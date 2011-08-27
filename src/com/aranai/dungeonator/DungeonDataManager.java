@@ -95,7 +95,11 @@ public class DungeonDataManager {
 	public boolean saveChunk(DungeonChunk chunk)
 	{
 		try {
-			return dataStore.saveChunk(chunk);
+			boolean success = dataStore.saveChunk(chunk);
+			if(success)
+			{
+				plugin.getChunkManager().setChunkGenerated(chunk.getWorldName(), chunk.getX(), chunk.getZ(), true);
+			}
 		} catch (DataStoreSaveException e) {
 			e.printStackTrace();
 		}
