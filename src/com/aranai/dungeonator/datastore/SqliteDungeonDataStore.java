@@ -72,17 +72,17 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	{
 		// Initialize doorway column names
 		ColDoorways.put(Direction.N, "door_n");
-		ColDoorways.put(Direction.N, "door_nne");
-		ColDoorways.put(Direction.N, "door_ene");
-		ColDoorways.put(Direction.N, "door_e");
-		ColDoorways.put(Direction.N, "door_ese");
-		ColDoorways.put(Direction.N, "door_sse");
-		ColDoorways.put(Direction.N, "door_s");
-		ColDoorways.put(Direction.N, "door_ssw");
-		ColDoorways.put(Direction.N, "door_wsw");
-		ColDoorways.put(Direction.N, "door_w");
-		ColDoorways.put(Direction.N, "door_wnw");
-		ColDoorways.put(Direction.N, "door_nnw");
+		ColDoorways.put(Direction.NNE, "door_nne");
+		ColDoorways.put(Direction.ENE, "door_ene");
+		ColDoorways.put(Direction.E, "door_e");
+		ColDoorways.put(Direction.ESE, "door_ese");
+		ColDoorways.put(Direction.SSE, "door_sse");
+		ColDoorways.put(Direction.S, "door_s");
+		ColDoorways.put(Direction.SSW, "door_ssw");
+		ColDoorways.put(Direction.WSW, "door_wsw");
+		ColDoorways.put(Direction.W, "door_w");
+		ColDoorways.put(Direction.WNW, "door_wnw");
+		ColDoorways.put(Direction.NNW, "door_nnw");
 		ColDoorways.put(Direction.UP, "door_u");
 		ColDoorways.put(Direction.DOWN, "door_d");
 	}
@@ -455,6 +455,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		StringBuffer queryDoors = new StringBuffer();
 		if(doorways != null && doorways.size() > 0)
 		{
+			queryDoors.append("WHERE ");
 			for(int i = 0; i < doorways.size(); i++)
 			{
 				queryDoors.append("`"+ColDoorways.get(doorways.get(i))+"`='1'");
@@ -465,7 +466,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 			}
 		}
 		String query = "SELECT * FROM `"+TblLibraryRooms+"` "+queryDoors+" ORDER BY RANDOM() LIMIT 1;";
-		
 		
 		// Get random record
 		try

@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 import org.jnbt.ByteArrayTag;
 import org.jnbt.CompoundTag;
@@ -27,6 +29,7 @@ public class DungeonDataManager {
 	private IDungeonDataStore dataStore;
 	
 	private Hashtable<String,DungeonRoom> roomCache;
+	private HashMap<String,Vector<Byte>> adjacencyCache;
 	
 	/**
 	 * Instantiates the DungeonDataManager.
@@ -40,6 +43,7 @@ public class DungeonDataManager {
 		this.dataStore.initialize(plugin);
 		
 		this.roomCache = new Hashtable<String,DungeonRoom>();
+		this.adjacencyCache = new HashMap<String,Vector<Byte>>();
 	}
 	
 	/**
@@ -183,6 +187,7 @@ public class DungeonDataManager {
 	public Vector<Byte> getAdjacentDoorways(String world, int x, int z, int y)
 	{
 		Vector<Byte> doors = new Vector<Byte>();
+		Logger log = Dungeonator.getLogger();
 		
 		// We need to get doorway info from 0-6 rooms (N,E,S,W,U,D)
 		// +X is South, -X is North, +Z is West, -Z is East
@@ -199,7 +204,7 @@ public class DungeonDataManager {
 			}
 			
 			// Get eastern neighbor
-			DungeonRoom neighborE = dataStore.getRoom(world, x, y-1, z);
+			DungeonRoom neighborE = dataStore.getRoom(world, x, y, z-1);
 			
 			if(neighborE.isLoaded())
 			{
@@ -221,7 +226,7 @@ public class DungeonDataManager {
 			}
 			
 			// Get western neighbor
-			DungeonRoom neighborW = dataStore.getRoom(world, x, y+1, z);
+			DungeonRoom neighborW = dataStore.getRoom(world, x, y, z+1);
 			
 			if(neighborW.isLoaded())
 			{
@@ -241,7 +246,7 @@ public class DungeonDataManager {
 			}
 			
 			// Get lower neighbor
-			DungeonRoom neighborD = dataStore.getRoom(world, x, y+1, z);
+			DungeonRoom neighborD = dataStore.getRoom(world, x, y-1, z);
 			
 			if(neighborD.isLoaded())
 			{
@@ -249,6 +254,8 @@ public class DungeonDataManager {
 				if(neighborD.hasDoorway(Direction.UP)) { doors.add(Direction.UP); }
 			}
 		} catch (DataStoreGetException e) { e.printStackTrace(); }
+		
+		//log.info("Found "+doors.size()+" neighboring doors for "+world+"<"+x+","+y+","+z+">");
 		
 		return doors;
 	}
