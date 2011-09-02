@@ -282,6 +282,22 @@ public class DungeonRoomEditor {
 					}
 				}
 			}
+			
+			// Load doorways
+			int exitCount = 0;
+			this.room.resetDoorways();
+			byte[] exits = ((ByteArrayTag)schematic.getValue().get("exits")).getValue();
+			
+			for(byte i = 0; i < exits.length; i++)
+			{
+				if(exits[i] != 0)
+				{
+					this.room.setDoorway(i, true);
+					exitCount++;
+				}
+			}
+			
+			editor.sendMessage("Adding "+exitCount+" doorways.");
 		}
 	}
 	

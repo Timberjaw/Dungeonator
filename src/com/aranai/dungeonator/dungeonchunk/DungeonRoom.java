@@ -241,7 +241,7 @@ public class DungeonRoom implements IDungeonRoom {
 			{
 				// This DungeonChunk has a doorway at this side
 				// Add the doorway to the list
-				doorways[i] = this.getDoorway(i).getDirection();
+				doorways[i] = 1;
 			}
 		}
 		
