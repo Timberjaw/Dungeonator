@@ -3,6 +3,7 @@ package com.aranai.dungeonator.dungeonchunk;
 import java.util.Vector;
 
 import org.bukkit.Location;
+import org.bukkit.block.BlockState;
 
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.generator.DungeonMath;
@@ -441,6 +442,27 @@ public class DungeonRoom implements IDungeonRoom {
 	public void setRawBlockData(byte[] blockData)
 	{
 		this.tempRawBlockData = blockData;
+	}
+	
+	/**
+	 * Gets the tile entities for the room
+	 * 
+	 * @return BlockState[]
+	 */
+	public BlockState[] getTileEntities()
+	{
+		BlockState[] chunkTileEntities = this.chunk.getHandle().getTileEntities();
+		Vector<BlockState> roomTileEntities = new Vector<BlockState>();
+		
+		for(BlockState b : chunkTileEntities)
+		{
+			if(b.getY() >= (this.y*8) && b.getY() < (this.y*8)+15)
+			{
+				roomTileEntities.add(b);
+			}
+		}
+		
+		return roomTileEntities.toArray(chunkTileEntities);
 	}
 
 	/* (non-Javadoc)

@@ -9,22 +9,28 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Vector;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.block.Sign;
 import org.jnbt.ByteArrayTag;
 import org.jnbt.ByteTag;
 import org.jnbt.CompoundTag;
+import org.jnbt.IntTag;
 import org.jnbt.LongTag;
 import org.jnbt.NBTInputStream;
 import org.jnbt.NBTOutputStream;
 import org.jnbt.StringTag;
+import org.jnbt.Tag;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 import com.aranai.dungeonator.Direction;
@@ -271,6 +277,9 @@ public class DungeonRoomEditor {
 			// Get blocks
 			byte[] blocks = ((ByteArrayTag)schematic.getValue().get("blocks")).getValue();
 			
+			// Get block data
+			byte[] blockData = ((ByteArrayTag)schematic.getValue().get("blockData")).getValue();
+			
 			// Add blocks to chunk
 			for(int x = 0; x < 16; x++)
 			{
@@ -278,7 +287,54 @@ public class DungeonRoomEditor {
 				{
 					for(int y = 0; y < 8; y++)
 					{
-						this.chunk.getHandle().getBlock(x, y+8, z).setTypeId(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)]);
+						if(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)] > 0)
+						{
+							System.out.println("Val "+blockData[DungeonMath.getRoomPosFromCoords(x, y, z)]+ " for "+x+","+y+","+z+" of type "+blocks[DungeonMath.getRoomPosFromCoords(x, y, z)]);
+						}
+						// Set block type and basic data value
+						this.chunk.getHandle().getBlock(x, y+8, z).setTypeIdAndData(
+								blocks[DungeonMath.getRoomPosFromCoords(x, y, z)],
+								blockData[DungeonMath.getRoomPosFromCoords(x, y, z)],
+								false
+						);
+					}
+				}
+			}
+			
+			// Handle tile entities
+			if(schematic.getValue().containsKey("tileEntities"))
+			{
+				Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
+				
+				for(org.jnbt.Tag t : tileEntities.values())
+				{
+					Map<String,org.jnbt.Tag> ct = ((CompoundTag)t).getValue();
+					Map<String,org.jnbt.Tag> data = ((CompoundTag)ct.get("data")).getValue();
+					StringTag typeTag = (StringTag)ct.get("type");
+					String type = typeTag.getValue();
+					
+					if(type.equalsIgnoreCase("sign"))
+					{
+						// Debug info
+						editor.sendMessage("Found tile entity of type 'sign'");
+						
+						// Get block
+						int x = ((IntTag)data.get("x")).getValue();
+						int y = ((IntTag)data.get("y")).getValue();
+						int z = ((IntTag)data.get("z")).getValue();
+						Block b = this.chunk.getHandle().getBlock(x, y+8, z);
+						BlockState bs = b.getState();
+						
+						// Get lines
+						if(bs instanceof Sign)
+						{
+							Sign s = (Sign)bs;
+							s.setLine(0, ((StringTag)data.get("line1")).getValue());
+							s.setLine(1, ((StringTag)data.get("line2")).getValue());
+							s.setLine(2, ((StringTag)data.get("line3")).getValue());
+							s.setLine(3, ((StringTag)data.get("line4")).getValue());
+							s.update();
+						}
 					}
 				}
 			}
@@ -373,6 +429,41 @@ public class DungeonRoomEditor {
 		
 		// Meta compound tag
 		tags.put("meta", new CompoundTag("meta", metaTags));
+		
+		// Tile Entity tags
+		HashMap<String,org.jnbt.Tag> tileEntityTags = new HashMap<String,org.jnbt.Tag>();
+		
+		BlockState[] tileEntities = room.getTileEntities();
+		
+		for(BlockState b : tileEntities)
+		{
+			// Entity compound tag
+			HashMap<String,org.jnbt.Tag> entityTags = new HashMap<String,org.jnbt.Tag>();
+			
+			// Sign Entity
+			if(b instanceof Sign)
+			{
+				// Set type as sign
+				entityTags.put("type", new StringTag("type", "sign"));
+				
+				// Save text lines 1-4
+				Sign s = (Sign)b;
+				HashMap<String,org.jnbt.Tag> lineTags = new HashMap<String,org.jnbt.Tag>();
+				lineTags.put("x", new IntTag("x", s.getX() & 0xF));
+				lineTags.put("y", new IntTag("y", (s.getY() & 0x7)));
+				lineTags.put("z", new IntTag("z", s.getZ() & 0xF));
+				lineTags.put("line1", new StringTag("line1", s.getLine(0)));
+				lineTags.put("line2", new StringTag("line2", s.getLine(1)));
+				lineTags.put("line3", new StringTag("line3", s.getLine(2)));
+				lineTags.put("line4", new StringTag("line4", s.getLine(3)));
+				entityTags.put("data", new CompoundTag("data", lineTags));
+				
+				tileEntityTags.put(b.toString(), new CompoundTag(b.toString(), entityTags));
+			}
+		}
+		
+		// Tile Entity compound tag
+		tags.put("tileEntities", new CompoundTag("tileEntities", tileEntityTags));
 		
 		// Room type ID
 		tags.put("type", new ByteTag("type", (byte) 0));
