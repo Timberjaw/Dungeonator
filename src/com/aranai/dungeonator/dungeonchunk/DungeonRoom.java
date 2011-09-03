@@ -513,6 +513,10 @@ public class DungeonRoom implements IDungeonRoom {
 		return this.filename;
 	}
 	
+	/**
+	 * Return a string representation of the room
+	 * @return String
+	 */
 	public String toString()
 	{
 		return "{DungeonRoom<"+x+","+y+","+z+">}";

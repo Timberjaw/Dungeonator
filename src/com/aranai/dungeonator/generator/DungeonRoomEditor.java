@@ -294,16 +294,13 @@ public class DungeonRoomEditor {
 			}
 			
 			// Set data values
+			// This has to run after all the blocks have been added, to prevent weirdness with MC overriding the data values
 			for(int x = 0; x < 16; x++)
 			{
 				for(int z = 0; z < 16; z++)
 				{
 					for(int y = 0; y < 8; y++)
 					{
-						if(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)] > 0)
-						{
-							System.out.println("Val "+blockData[DungeonMath.getRoomPosFromCoords(x, y, z)]+ " for "+x+","+y+","+z+" of type "+blocks[DungeonMath.getRoomPosFromCoords(x, y, z)]);
-						}
 						this.chunk.getHandle().getBlock(x, y+8, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
 					}
 				}
@@ -316,6 +313,7 @@ public class DungeonRoomEditor {
 				
 				for(org.jnbt.Tag t : tileEntities.values())
 				{
+					// TODO: this.chunk.addTileEntityFromTag(t);
 					Map<String,org.jnbt.Tag> ct = ((CompoundTag)t).getValue();
 					Map<String,org.jnbt.Tag> data = ((CompoundTag)ct.get("data")).getValue();
 					StringTag typeTag = (StringTag)ct.get("type");
