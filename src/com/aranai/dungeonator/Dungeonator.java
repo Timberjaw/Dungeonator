@@ -159,6 +159,9 @@ public class Dungeonator extends JavaPlugin {
 		
 		PluginManager pm = this.getServer().getPluginManager();
 		
+		// World load
+		pm.registerEvent(Event.Type.WORLD_INIT, worldListener, Priority.Normal, this);
+		
 		// Chunk Load
 		pm.registerEvent(Event.Type.CHUNK_LOAD, worldListener, Priority.Normal, this);
 		

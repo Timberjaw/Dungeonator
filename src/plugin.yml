@@ -2,6 +2,7 @@ name: Dungeonator
 main: com.aranai.dungeonator.Dungeonator
 version: 0.0.2
 author: Timberjaw
+load: startup
 commands:
   edit:
     description: Use an edit command

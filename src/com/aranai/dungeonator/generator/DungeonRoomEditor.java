@@ -297,6 +297,11 @@ public class DungeonRoomEditor {
 				}
 			}
 			
+			// Set filename and path
+			activeFile = name;
+			activePath = path;
+			
+			// Semi-debug: notify the user of how many doorways were added
 			editor.sendMessage("Adding "+exitCount+" doorways.");
 		}
 	}

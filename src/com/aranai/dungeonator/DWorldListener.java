@@ -10,6 +10,7 @@ import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldListener;
 
 import com.aranai.dungeonator.generator.DungeonChunkProvider;
@@ -34,16 +35,6 @@ public class DWorldListener extends WorldListener {
 		this.plugin = plugin;
 		
 		plugin.py = 0;
-		
-		World world = plugin.getServer().getWorlds().get(0);
-		Chunk chunks[] = world.getLoadedChunks();
-		
-		String worldName = world.getName();
-		
-		// Initialize the DungeonChunkProvider and replace the world's current provider
-		this.dcp = new DungeonChunkProvider(world, 0);
-		this.dcp.setInstance(plugin);
-		((CraftWorld)world).getHandle().chunkProviderServer.chunkProvider = dcp;
 		
 		/*
 		 * Horrible hack. Necessary for now to regenerate the spawn chunks.
@@ -76,6 +67,22 @@ public class DWorldListener extends WorldListener {
 			e.remove();
 		}
 		*/
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.bukkit.event.world.WorldListener#onWorldInit(org.bukkit.event.world.WorldInitEvent)
+	 */
+	public void onWorldInit(WorldInitEvent e)
+	{
+		World world = e.getWorld();
+		Chunk chunks[] = world.getLoadedChunks();
+		
+		String worldName = world.getName();
+		
+		// Initialize the DungeonChunkProvider and replace the world's current provider
+		this.dcp = new DungeonChunkProvider(world, 0);
+		this.dcp.setInstance(plugin);
+		((CraftWorld)world).getHandle().chunkProviderServer.chunkProvider = dcp;
 	}
 	
 	/* (non-Javadoc)
