@@ -23,6 +23,10 @@ public class DungeonChunkProvider implements IChunkProvider {
 	private World world;
 	private Dungeonator dungeonator;
 	
+	// Generator temp variables
+	private byte[] blocks = new byte[32768];
+	private byte[] data = new byte[32768];
+	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
 	}
@@ -41,13 +45,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public void getChunkAt(IChunkProvider arg0, int arg1, int arg2) {
-		// TODO Auto-generated method stub
-		
-		// Seems to handle the second step of chunk generator: populating with foliage and such
+		/*
+		 * Chunk decoration phase
+		 */
 		
 		System.out.println("Call to getChunkAt("+arg0+","+arg1+","+arg2+")");
 		
-		//arg0.getChunkAt(arg1, arg2).initLighting();
+		// TODO Hand control to DungeonChunkGenerator
+		
+		// Get active rooms for chunk
+		// Set data values
+		// Add tile entities
 	}
 
 	@Override
@@ -64,10 +72,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
 		
 		System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+"), found "+roomCount+" rooms.");
-
-		byte[] blocks = new byte[32768];
-		
-		Arrays.fill(blocks, (byte)0);
 		
 		/*
 		 * Copy room data to chunk
@@ -81,7 +85,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 				rooms[r].setLocation(arg0, r, arg1);
 				
 				byte[] tmpBlocks = rooms[r].getRawBlocks();
-				//byte[] tmpData = rooms[r].getRawBlockData();
 				
 				for(int x = 0; x < 16; x++)
 				{
@@ -95,7 +98,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 				}
 		        
 		        // Save room to data store
-				//Dungeonator.getLogger().info("Saving "+rooms[r]+" ("+r+")");
 		        dungeonator.getDataManager().saveRoom(rooms[r]);
 			}
 			
@@ -164,7 +166,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public boolean canSave() {
-		// TODO Auto-generated method stub
+		// Does nothing in this implementation
 		return false;
 	}
 

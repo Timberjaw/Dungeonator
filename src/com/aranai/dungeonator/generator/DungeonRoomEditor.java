@@ -287,16 +287,24 @@ public class DungeonRoomEditor {
 				{
 					for(int y = 0; y < 8; y++)
 					{
+						// Set block type and basic data value
+						this.chunk.getHandle().getBlock(x, y+8, z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
+					}
+				}
+			}
+			
+			// Set data values
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+					for(int y = 0; y < 8; y++)
+					{
 						if(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)] > 0)
 						{
 							System.out.println("Val "+blockData[DungeonMath.getRoomPosFromCoords(x, y, z)]+ " for "+x+","+y+","+z+" of type "+blocks[DungeonMath.getRoomPosFromCoords(x, y, z)]);
 						}
-						// Set block type and basic data value
-						this.chunk.getHandle().getBlock(x, y+8, z).setTypeIdAndData(
-								blocks[DungeonMath.getRoomPosFromCoords(x, y, z)],
-								blockData[DungeonMath.getRoomPosFromCoords(x, y, z)],
-								false
-						);
+						this.chunk.getHandle().getBlock(x, y+8, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
 					}
 				}
 			}
