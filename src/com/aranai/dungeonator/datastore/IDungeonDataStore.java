@@ -51,6 +51,17 @@ public interface IDungeonDataStore {
 	public void deleteChunk(DungeonChunk chunk) throws DataStoreDeleteException;
 	
 	/**
+	 * Gets all active rooms for a chunk.
+	 *
+	 * @param world the world name
+	 * @param x the x coordinate of the chunk
+	 * @param z the z coordinate of the chunk
+	 * @return an array of the DungeonRooms, or null if the coordinates have not yet been populated
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public DungeonRoom[] getChunkRooms(String world, int x, int z) throws DataStoreGetException;
+	
+	/**
 	 * Gets an active room.
 	 *
 	 * @param world the world name
@@ -115,4 +126,13 @@ public interface IDungeonDataStore {
 	 * @throws DataStoreGetException the data store get exception
 	 */
 	public DungeonRoom getLibraryRoomRandom(Vector<Byte> doorways) throws DataStoreGetException;
+
+	/**
+	 * Saves multiple rooms simultaneously
+	 * 
+	 * @param the DungeonRooms to save
+	 * @return true, if successful
+	 * @throws DataStoreSaveException
+	 */
+	boolean saveRooms(DungeonRoom[] rooms) throws DataStoreSaveException;
 }

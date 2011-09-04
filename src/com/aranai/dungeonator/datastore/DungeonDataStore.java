@@ -159,4 +159,21 @@ public class DungeonDataStore implements IDungeonDataStore {
 		throw new DataStoreGetException("Using DungeonDataStore class directly accomplishes nothing.", "getLibraryRoomRandom");
 	}
 
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getChunkRooms(java.lang.String, int, int)
+	 */
+	@Override
+	public DungeonRoom[] getChunkRooms(String world, int x, int z) throws DataStoreGetException {
+		throw new DataStoreGetException("Using DungeonDataStore class directly accomplishes nothing.", "getChunkRooms");
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveRooms(com.aranai.dungeonator.dungeonchunk.DungeonRoom[])
+	 */
+	@Override
+	public boolean saveRooms(DungeonRoom[] rooms) throws DataStoreSaveException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

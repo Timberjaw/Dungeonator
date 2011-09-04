@@ -28,7 +28,7 @@ public class DungeonDataManager {
 	/** The dungeon data store. This may be a MySQL data store, a flatfile store, or whatever. */
 	private IDungeonDataStore dataStore;
 	
-	private Hashtable<String,DungeonRoom> roomCache;
+	private Hashtable<String,CompoundTag> roomCache;
 	private HashMap<String,Vector<Byte>> adjacencyCache;
 	
 	/**
@@ -42,7 +42,7 @@ public class DungeonDataManager {
 		this.dataStore = dataStore;
 		this.dataStore.initialize(plugin);
 		
-		this.roomCache = new Hashtable<String,DungeonRoom>();
+		this.roomCache = new Hashtable<String,CompoundTag>();
 		this.adjacencyCache = new HashMap<String,Vector<Byte>>();
 	}
 	
@@ -107,10 +107,10 @@ public class DungeonDataManager {
 		return false;
 	}
 	
-	public boolean saveRoom(DungeonRoom room)
+	public boolean saveRooms(DungeonRoom[] rooms)
 	{
 		try {
-			return dataStore.saveRoom(room);
+			return dataStore.saveRooms(rooms);
 		} catch (DataStoreSaveException e) {
 			e.printStackTrace();
 		}
@@ -118,19 +118,32 @@ public class DungeonDataManager {
 		return false;
 	}
 	
+	public boolean saveRoom(DungeonRoom room)
+	{
+		DungeonRoom[] rooms = {room};
+		return this.saveRooms(rooms);
+	}
+	
 	public DungeonRoom[] getRoomsForNewChunk(DungeonChunk chunk)
 	{
+		long startTime = System.currentTimeMillis();
+		long startDbTime = 0;
+		long dbTime = 0;
+		
 		String fullPath = "";
 		DungeonRoom[] rooms = new DungeonRoom[16];
 		
+		startDbTime = System.currentTimeMillis();
+		Vector<Byte>[] doorways = this.getAdjacentDoorways(chunk.getWorldName(), chunk.getX(), chunk.getZ());
+		dbTime += (System.currentTimeMillis()-startDbTime);
+		
 		for(int i = 0; i < 16; i++)
 		{
-			// Get surrounding doorways
-			Vector<Byte> doorways = this.getAdjacentDoorways(chunk.getWorldName(), chunk.getX(), chunk.getZ(), i);
-			
 			// Get a random room
 			try {
-				rooms[i] = dataStore.getLibraryRoomRandom(doorways);
+				startDbTime = System.currentTimeMillis();
+				rooms[i] = dataStore.getLibraryRoomRandom(doorways[i]);
+				dbTime += (System.currentTimeMillis()-startDbTime);
 				
 				// Make sure we actually got a result, and bail out if we didn't
 				if(rooms[i] == null) { return null; }
@@ -138,33 +151,35 @@ public class DungeonDataManager {
 				// Get the full path to the source tile
 				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
 				
+				CompoundTag schematic = null;
+				
 				// Check cache
 				if(roomCache.containsKey(fullPath))
 				{
-					rooms[i] = roomCache.get(fullPath);
-					//System.out.println("Cache hit for "+fullPath);
-					continue;
+					schematic = roomCache.get(fullPath);
 				}
 				
 				// Get schematic
-				CompoundTag schematic = null;
-				try {
-					// Open file input stream
-					FileInputStream fis = new FileInputStream(fullPath);
-					
+				if(schematic == null)
+				{
 					try {
-						// Open NBT input stream
-						NBTInputStream nis = new NBTInputStream(fis);
+						// Open file input stream
+						FileInputStream fis = new FileInputStream(fullPath);
 						
-						// Read NBT data
-						org.jnbt.Tag tag = nis.readTag();
-						
-						if(tag instanceof CompoundTag)
-						{
-							schematic = (CompoundTag)tag;
-						}
-					} catch (IOException e) { e.printStackTrace(); }
-				} catch (FileNotFoundException e) { e.printStackTrace(); }
+						try {
+							// Open NBT input stream
+							NBTInputStream nis = new NBTInputStream(fis);
+							
+							// Read NBT data
+							org.jnbt.Tag tag = nis.readTag();
+							
+							if(tag instanceof CompoundTag)
+							{
+								schematic = (CompoundTag)tag;
+							}
+						} catch (IOException e) { e.printStackTrace(); }
+					} catch (FileNotFoundException e) { e.printStackTrace(); }
+				}
 				
 				// Verify the data was loaded
 				if(schematic != null)
@@ -173,7 +188,7 @@ public class DungeonDataManager {
 					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
 					//rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
 					
-					roomCache.put(fullPath, rooms[i]);
+					roomCache.put(fullPath, schematic);
 				}
 			} catch (DataStoreGetException e) { e.printStackTrace(); return null; }
 		}
@@ -185,7 +200,96 @@ public class DungeonDataManager {
 			rooms[i].setDungeonChunk(chunk);
 		}
 		
+		//System.out.println("Elapsed getRooms Time for {"+chunk.getX()+","+chunk.getZ()+"}: "+((System.currentTimeMillis()-startTime))+" milliseconds");
+        //System.out.println("Elapsed getRooms DB Time for {"+chunk.getX()+","+chunk.getZ()+"}: "+dbTime+" milliseconds");
+		
 		return rooms;
+	}
+	
+	/**
+	 * Get all doorways for a specific chunk
+	 * @param world
+	 * @param x
+	 * @param z
+	 * @return
+	 */
+	public Vector<Byte>[] getAdjacentDoorways(String world, int x, int z)
+	{
+		@SuppressWarnings("unchecked")
+		Vector<Byte>[] doors = new Vector[16];
+		for(int i = 0; i < 16; i++)
+		{
+			doors[i] = new Vector<Byte>();
+		}
+		
+		try {
+			// Get northern neighbors
+			DungeonRoom[] neighborsN = dataStore.getChunkRooms(world, x-1, z);
+			
+			if(neighborsN != null)
+			{
+				for(int i = 0; i < 16; i++)
+				{
+					if(neighborsN[i] != null && neighborsN[i].isLoaded())
+					{
+						// Check southern doorways of northern neighbor
+						if(neighborsN[i].hasDoorway(Direction.S)) { doors[neighborsN[i].getY()].add(Direction.S); }
+						if(neighborsN[i].hasDoorway(Direction.SSE)) { doors[neighborsN[i].getY()].add(Direction.SSE); }
+						if(neighborsN[i].hasDoorway(Direction.SSW)) { doors[neighborsN[i].getY()].add(Direction.SSW); }
+					}
+				}
+			}
+			
+			DungeonRoom[] neighborsE = dataStore.getChunkRooms(world, x, z-1);
+			
+			if(neighborsE != null)
+			{
+				for(int i = 0; i < 16; i++)
+				{
+					if(neighborsE[i] != null && neighborsE[i].isLoaded())
+					{
+						// Check western doorways of eastern neighbor
+						if(neighborsE[i].hasDoorway(Direction.W)) { doors[neighborsE[i].getY()].add(Direction.W); }
+						if(neighborsE[i].hasDoorway(Direction.WNW)) { doors[neighborsE[i].getY()].add(Direction.WNW); }
+						if(neighborsE[i].hasDoorway(Direction.WSW)) { doors[neighborsE[i].getY()].add(Direction.WSW); }
+					}
+				}
+			}
+			
+			DungeonRoom[] neighborsS = dataStore.getChunkRooms(world, x+1, z);
+			
+			if(neighborsS != null)
+			{
+				for(int i = 0; i < 16; i++)
+				{
+					if(neighborsS[i] != null && neighborsS[i].isLoaded())
+					{
+						// Check northern doorways of southern neighbor
+						if(neighborsS[i].hasDoorway(Direction.N)) { doors[neighborsS[i].getY()].add(Direction.N); }
+						if(neighborsS[i].hasDoorway(Direction.NNE)) { doors[neighborsS[i].getY()].add(Direction.NNE); }
+						if(neighborsS[i].hasDoorway(Direction.NNW)) { doors[neighborsS[i].getY()].add(Direction.NNW); }
+					}
+				}
+			}
+			
+			DungeonRoom[] neighborsW = dataStore.getChunkRooms(world, x, z+1);
+			
+			if(neighborsW != null)
+			{
+				for(int i = 0; i < 16; i++)
+				{
+					if(neighborsW[i] != null && neighborsW[i].isLoaded())
+					{
+						// Check eastern doorways of western neighbor
+						if(neighborsW[i].hasDoorway(Direction.E)) { doors[neighborsW[i].getY()].add(Direction.E); }
+						if(neighborsW[i].hasDoorway(Direction.ESE)) { doors[neighborsW[i].getY()].add(Direction.ESE); }
+						if(neighborsW[i].hasDoorway(Direction.ENE)) { doors[neighborsW[i].getY()].add(Direction.ENE); }
+					}
+				}
+			}
+		} catch (DataStoreGetException e) { e.printStackTrace(); }
+		
+		return doors;
 	}
 	
 	public Vector<Byte> getAdjacentDoorways(String world, int x, int z, int y)

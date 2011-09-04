@@ -23,10 +23,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 	private World world;
 	private Dungeonator dungeonator;
 	
-	// Generator temp variables
-	private byte[] blocks = new byte[32768];
-	private byte[] data = new byte[32768];
-	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
 	}
@@ -49,7 +45,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		 * Chunk decoration phase
 		 */
 		
-		System.out.println("Call to getChunkAt("+arg0+","+arg1+","+arg2+")");
+		//System.out.println("Call to getChunkAt("+arg0+","+arg1+","+arg2+")");
 		
 		// TODO Hand control to DungeonChunkGenerator
 		
@@ -60,10 +56,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public Chunk getOrCreateChunk(int arg0, int arg1) {
+		long startTime = System.currentTimeMillis();
+		long startDbTime = 0;
+		long dbTime = 0;
+		
 		// Get 15 random rooms from the data manager
 		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
 		dc.setWorld(world);
+		
+		startDbTime = System.currentTimeMillis();
 		DungeonRoom[] rooms = dungeonator.getDataManager().getRoomsForNewChunk(dc);
+		dbTime += (System.currentTimeMillis()-startDbTime);
 		
 		int roomCount = (rooms != null) ? rooms.length : 0;
 		
@@ -71,7 +74,12 @@ public class DungeonChunkProvider implements IChunkProvider {
 		
 		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
 		
-		System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+"), found "+roomCount+" rooms.");
+		//System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+"), found "+roomCount+" rooms.");
+		
+		/*
+		 * Initialize
+		 */
+		byte[] blocks = new byte[32768];
 		
 		/*
 		 * Copy room data to chunk
@@ -96,13 +104,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 						}
 					}
 				}
-		        
-		        // Save room to data store
-		        dungeonator.getDataManager().saveRoom(rooms[r]);
 			}
 			
+			// Save rooms to data store
+			startDbTime = System.currentTimeMillis();
+	        dungeonator.getDataManager().saveRooms(rooms);
+	        dbTime += (System.currentTimeMillis()-startDbTime);
+			
 			// Save chunk to data store
+			startDbTime = System.currentTimeMillis();
 	        dungeonator.getDataManager().saveChunk(dc);
+	        dbTime += (System.currentTimeMillis()-startDbTime);
 		}
 		else
 		{
@@ -138,6 +150,9 @@ public class DungeonChunkProvider implements IChunkProvider {
         Chunk chunk = new Chunk(mw, blocks, arg0, arg1);
         
         chunk.initLighting();
+        
+        System.out.println("Elapsed Time for {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" milliseconds");
+        System.out.println("Elapsed DB Time for {"+arg0+","+arg1+"}: "+dbTime+" milliseconds");
         
         return chunk;
 	}

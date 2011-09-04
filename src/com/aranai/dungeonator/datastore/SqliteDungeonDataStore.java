@@ -8,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Vector;
 
 import com.aranai.dungeonator.Direction;
@@ -141,9 +140,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
     	
     	try
         {
-    		//Class.forName("org.sqlite.JDBC");
-        	//conn = DriverManager.getConnection(db);
-        	
         	DatabaseMetaData dbm = conn.getMetaData();
         	
 			// Active Chunk Table
@@ -204,17 +200,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         	System.out.println("Error: " + e.getMessage());
         	e.printStackTrace();
         }
-        finally
-        {
-        	/*if(conn != null)
-        	{
-        		try {
-					conn.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-        	}*/
-        }
 	}
 
 	/* (non-Javadoc)
@@ -222,7 +207,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	 */
 	@Override
 	public DungeonChunk getChunk(String world, int x, int z) throws DataStoreGetException {
-		Connection conn = null;
     	PreparedStatement ps = null;
         ResultSet rs = null;
         boolean loaded = false;
@@ -233,8 +217,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		// Get from database
 		try
         {
-    		Class.forName("org.sqlite.JDBC");
-        	conn = DriverManager.getConnection(db);
         	ps = conn.prepareStatement("SELECT * FROM `"+TblChunks+"` WHERE `world` = ? AND `x` = ? AND `z` = ?");
             ps.setString(1, world);
             ps.setInt(2, x);
@@ -246,7 +228,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             }
         }
         catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] " + e.getMessage()); }
-        finally { if(conn != null) { try { conn.close(); } catch(Exception e) { e.printStackTrace(); } } }
         
         if(!loaded)
         {
@@ -265,8 +246,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         
         try
         {
-	    	/*Class.forName("org.sqlite.JDBC");
-	    	Connection conn = DriverManager.getConnection(db);*/
 	    	conn.setAutoCommit(false);
 	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblChunks+"`" +
 	        		"(`world`,`x`,`z`,`type`)" +
@@ -278,7 +257,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        ps.setInt(4, 0);
 	        ps.execute();
 	        conn.commit();
-	        //conn.close();
 	        
 	        success = true;
         }
@@ -294,6 +272,64 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	public void deleteChunk(DungeonChunk chunk) throws DataStoreDeleteException {
 		// TODO Auto-generated method stub
 
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getChunkRooms(java.lang.String, int, int)
+	 */
+	@Override
+	public DungeonRoom[] getChunkRooms(String world, int x, int z) throws DataStoreGetException {
+		PreparedStatement ps = null;
+        ResultSet rs = null;
+        
+        DungeonChunk dc = null;
+        if(plugin.getChunkManager().isChunkGenerated(world, x, z))
+        {
+        	dc = this.getChunk(world, x, z);
+        }
+        else
+        {
+        	return null;
+        }
+        
+        DungeonRoom[] dr = new DungeonRoom[16];
+		
+		// Get from database
+		try
+        {
+        	ps = conn.prepareStatement("SELECT *,`"+TblRooms+"`.`name` AS 'roomname' FROM `"+TblRooms+"`" +
+        			" LEFT JOIN `"+TblLibraryRooms+"` ON(`"+TblRooms+"`.`library_id`=`"+TblLibraryRooms+"`.`id`)" +
+        			" WHERE `world` = ? AND `x` = ? AND `z` = ? LIMIT 16");
+            ps.setString(1, world);
+            ps.setInt(2, x);
+            ps.setInt(3, z);
+            rs = ps.executeQuery();
+            
+            int i = 0;
+            while (rs.next())
+            {
+            	i = rs.getInt("y");
+            	
+            	// Successfully retrieved the room
+            	dr[i] = new DungeonRoom(dc, i);
+            	dr[i].setLoaded(true);
+            	dr[i].setLibraryId(rs.getLong("library_id"));
+            	dr[i].setName(rs.getString("roomname"));
+            	
+            	// Set doorways
+            	for(byte d : Direction.directionValues.values())
+            	{
+            		String s = ColDoorways.get(d);
+            		if(s != null)
+            		{
+            			dr[i].setDoorway(d, rs.getBoolean(s));
+            		}
+            	}
+            }
+        }
+        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getChunkRooms: " + e.getMessage()); e.printStackTrace(); }
+        
+		return dr;
 	}
 
 	/* (non-Javadoc)
@@ -322,8 +358,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		// Get from database
 		try
         {
-    		/*Class.forName("org.sqlite.JDBC");
-        	conn = DriverManager.getConnection(db);*/
         	ps = conn.prepareStatement("SELECT *,`"+TblRooms+"`.`name` AS 'roomname' FROM `"+TblRooms+"`" +
         			" LEFT JOIN `"+TblLibraryRooms+"` ON(`"+TblRooms+"`.`library_id`=`"+TblLibraryRooms+"`.`id`)" +
         			" WHERE `world` = ? AND `x` = ? AND `y` = ? AND `z` = ?");
@@ -352,7 +386,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             }
         }
         catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getRoom: " + e.getMessage()); e.printStackTrace(); }
-        //finally { if(conn != null) { try { conn.close(); } catch(Exception e) { e.printStackTrace(); } } }
         
 		return dr;
 	}
@@ -366,8 +399,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         
         try
         {
-	    	/*Class.forName("org.sqlite.JDBC");
-	    	Connection conn = DriverManager.getConnection(db);*/
 	    	conn.setAutoCommit(false);
 	        PreparedStatement ps = conn.prepareStatement("INSERT INTO `"+TblRooms+"`" +
 	        		"(`world`,`x`,`y`,`z`,`library_id`,`name`)" +
@@ -385,9 +416,39 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         }
         catch(SQLException e) { Dungeonator.getLogger().warning(room.toString()); e.printStackTrace(); }
         catch(Exception e) { e.printStackTrace(); }
-        //finally { if(conn != null) { try { conn.close(); } catch(Exception e) { e.printStackTrace(); } } }
         
 		return success;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveRooms(com.aranai.dungeonator.dungeonchunk.DungeonRoom)
+	 */
+	@Override
+	public boolean saveRooms(DungeonRoom[] rooms) throws DataStoreSaveException {
+		Statement st = null;
+        
+        try
+        {
+	    	conn.setAutoCommit(false);
+	    	st = conn.createStatement();
+	        
+	    	for(int r = 0; r < rooms.length; r++)
+	    	{
+		        st.execute("INSERT INTO `"+TblRooms+"` (`world`,`x`,`y`,`z`,`library_id`,`name`) VALUES (" +
+		        		"'"+rooms[r].getDungeonChunk().getWorldName()+"'," +
+		        		"'"+rooms[r].getX()+"'," +
+		        		"'"+rooms[r].getY()+"'," +
+		        		"'"+rooms[r].getZ()+"'," +
+		        		"'"+rooms[r].getLibraryId()+"'," +
+		        		"'"+rooms[r].getName()+"');");
+	    	}
+	        
+	        conn.commit();
+        }
+        catch(SQLException e) { e.printStackTrace(); return false; }
+        catch(Exception e) { e.printStackTrace(); return false; }
+        
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -417,8 +478,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         
         try
         {
-	    	/*Class.forName("org.sqlite.JDBC");
-	    	Connection conn = DriverManager.getConnection(db);*/
 	    	conn.setAutoCommit(false);
 	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryRooms+"`" +
 	        		"(`id`,`filename`,`name`,`door_n`,`door_nne`,`door_ene`,`door_e`,`door_ese`," +
@@ -448,7 +507,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        ps.setBoolean(15, room.hasDoorway(Direction.DOWN));
 	        ps.execute();
 	        conn.commit();
-	        //conn.close();
 	        
 	        success = true;
         }
@@ -495,8 +553,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		// Get random record
 		try
         {
-	    	/*Class.forName("org.sqlite.JDBC");
-	    	Connection conn = DriverManager.getConnection(db);*/
 	    	conn.setAutoCommit(false);
 	        PreparedStatement ps = conn.prepareStatement(query);
 	        rs = ps.executeQuery();
@@ -522,12 +578,10 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        	
 	        	Dungeonator.getLogger().info("Random Room: No rows with matching doorways with query:\n"+query);
 	        	conn.commit();
-	        	//conn.close();
 	        	return getLibraryRoomRandom(null);
 	        }
 	        
 	        conn.commit();
-	        //conn.close();
 	        
 	        if(filename.equals("")) { return null; }
 	        
