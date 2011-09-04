@@ -16,6 +16,7 @@ import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 import net.minecraft.server.Chunk;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
+import net.minecraft.server.NibbleArray;
 
 /*
  * See: https://github.com/Bukkit/mc-dev/blob/master/net/minecraft/server/ChunkProviderHell.java
@@ -66,12 +67,12 @@ public class DungeonChunkProvider implements IChunkProvider {
 		DungeonRoom[] rooms = null;
 		if(roomCache.containsKey(hash))
 		{
-			System.out.println("Cache hit for "+hash);
+			//System.out.println("Cache hit for "+hash);
 			rooms = roomCache.get(hash);
 		}
 		else
 		{
-			System.out.println("Not in cache for "+hash);
+			//System.out.println("Not in cache for "+hash);
 			rooms = dungeonator.getDataManager().getRoomsForChunk(dc);
 			
 			if(rooms == null)
@@ -97,7 +98,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
 						if(DungeonChunkProvider.blocksWithData.contains(blocks[pos]))
 						{
-							dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos]);
+							//dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos]);
 						}
 					}
 				}
@@ -141,6 +142,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		 * Initialize
 		 */
 		byte[] blocks = new byte[32768];
+		NibbleArray dataNibble = new NibbleArray(32768);
 		
 		/*
 		 * Copy room data to chunk
@@ -154,6 +156,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 				rooms[r].setLocation(arg0, r, arg1);
 				
 				byte[] tmpBlocks = rooms[r].getRawBlocks();
+				byte[] tmpData = rooms[r].getRawBlockData();
 				
 				for(int x = 0; x < 16; x++)
 				{
@@ -162,6 +165,10 @@ public class DungeonChunkProvider implements IChunkProvider {
 						for(int y = 0; y < 8; y++)
 						{
 							blocks[DungeonMath.getPosFromCoords(x, y+(8*r), z)] = tmpBlocks[DungeonMath.getRoomPosFromCoords(x, y, z)];
+							
+							// HACK: Add block data value to nibble array
+							// Likely to break on MC update
+							dataNibble.a(x, y+(8*r), z, tmpData[DungeonMath.getRoomPosFromCoords(x, y, z)]);
 						}
 					}
 				}
@@ -176,7 +183,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 			startDbTime = System.currentTimeMillis();
 	        dungeonator.getDataManager().saveRooms(rooms);
 	        String hash = "stack-"+arg0+"-"+arg1;
-	        System.out.println("Adding hash "+hash);
+	        //System.out.println("Adding hash "+hash);
 	        roomCache.put(hash, rooms);
 	        dbTime += (System.currentTimeMillis()-startDbTime);
 		}
@@ -212,6 +219,11 @@ public class DungeonChunkProvider implements IChunkProvider {
 		}
 		
         Chunk chunk = new Chunk(mw, blocks, arg0, arg1);
+        
+        // HACK: Set chunk block data
+        // 'e' is a NibbleArray in the chunk; it holds the chunk's block data values
+        // Likely to break on MC updates, but what else is new
+        chunk.e = dataNibble;
         
         chunk.initLighting();
         
