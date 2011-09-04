@@ -315,6 +315,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	dr[i].setLoaded(true);
             	dr[i].setLibraryId(rs.getLong("library_id"));
             	dr[i].setName(rs.getString("roomname"));
+            	dr[i].setFilename(rs.getString("filename"));
             	
             	// Set doorways
             	for(byte d : Direction.directionValues.values())

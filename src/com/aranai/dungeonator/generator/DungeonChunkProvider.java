@@ -45,13 +45,41 @@ public class DungeonChunkProvider implements IChunkProvider {
 		 * Chunk decoration phase
 		 */
 		
-		//System.out.println("Call to getChunkAt("+arg0+","+arg1+","+arg2+")");
+		long startTime = System.currentTimeMillis();
 		
 		// TODO Hand control to DungeonChunkGenerator
 		
 		// Get active rooms for chunk
-		// Set data values
-		// Add tile entities
+		DungeonChunk dc = dungeonator.getDataManager().getChunk(this.world.getName(), arg1, arg2);
+		dc.setHandle(this.world.getChunkAt(arg1, arg2));
+		DungeonRoom[] rooms = dungeonator.getDataManager().getRoomsForChunk(dc);
+		
+		int pos = 0;
+		for(int r = 0; r < rooms.length; r++)
+		{
+			byte[] blocks = rooms[r].getRawBlocks();
+			byte[] data = rooms[r].getRawBlockData();
+			
+			// Set data values
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+					for(int y = 0; y < 8; y++)
+					{
+						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
+						if(blocks[pos] > 0)
+						{
+							dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos]);
+						}
+					}
+				}
+			}
+			
+			// TODO: Add tile entities
+		}
+		
+		System.out.println("Decoration Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms");
 	}
 
 	@Override
@@ -60,7 +88,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		long startDbTime = 0;
 		long dbTime = 0;
 		
-		// Get 15 random rooms from the data manager
+		// Get random rooms from the data manager
 		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
 		dc.setWorld(world);
 		
@@ -151,8 +179,7 @@ public class DungeonChunkProvider implements IChunkProvider {
         
         chunk.initLighting();
         
-        System.out.println("Elapsed Time for {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" milliseconds");
-        System.out.println("Elapsed DB Time for {"+arg0+","+arg1+"}: "+dbTime+" milliseconds");
+        System.out.println("Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms, DB Time "+dbTime+" milliseconds");
         
         return chunk;
 	}

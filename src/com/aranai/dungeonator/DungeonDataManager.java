@@ -124,6 +124,41 @@ public class DungeonDataManager {
 		return this.saveRooms(rooms);
 	}
 	
+	public DungeonRoom[] getRoomsForChunk(DungeonChunk chunk)
+	{
+		String fullPath = "";
+		DungeonRoom[] rooms = null;
+		
+		try {
+			// Get the rooms for the specified chunk
+			rooms = dataStore.getChunkRooms(chunk.getWorldName(), chunk.getX(), chunk.getZ());
+			
+			// Check for existing schematics or load schematics from file
+			for(int i = 0; i < 16; i++)
+			{
+				if(rooms[i] == null)
+				{
+					System.out.println("No room for {"+chunk.getWorldName()+","+chunk.getX()+","+chunk.getZ()+"}");
+					continue;
+				}
+				// Get the full path to the source tile
+				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
+				
+				CompoundTag schematic = this.getSchematic(fullPath);
+				
+				// Verify the data was loaded
+				if(schematic != null)
+				{
+					// Set blocks and block data
+					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
+					rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
+				}
+			}
+		} catch (DataStoreGetException e) { e.printStackTrace(); }
+		
+		return rooms;
+	}
+	
 	public DungeonRoom[] getRoomsForNewChunk(DungeonChunk chunk)
 	{
 		long startTime = System.currentTimeMillis();
@@ -151,35 +186,7 @@ public class DungeonDataManager {
 				// Get the full path to the source tile
 				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
 				
-				CompoundTag schematic = null;
-				
-				// Check cache
-				if(roomCache.containsKey(fullPath))
-				{
-					schematic = roomCache.get(fullPath);
-				}
-				
-				// Get schematic
-				if(schematic == null)
-				{
-					try {
-						// Open file input stream
-						FileInputStream fis = new FileInputStream(fullPath);
-						
-						try {
-							// Open NBT input stream
-							NBTInputStream nis = new NBTInputStream(fis);
-							
-							// Read NBT data
-							org.jnbt.Tag tag = nis.readTag();
-							
-							if(tag instanceof CompoundTag)
-							{
-								schematic = (CompoundTag)tag;
-							}
-						} catch (IOException e) { e.printStackTrace(); }
-					} catch (FileNotFoundException e) { e.printStackTrace(); }
-				}
+				CompoundTag schematic = this.getSchematic(fullPath);
 				
 				// Verify the data was loaded
 				if(schematic != null)
@@ -187,8 +194,6 @@ public class DungeonDataManager {
 					// Set blocks and block data
 					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
 					//rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
-					
-					roomCache.put(fullPath, schematic);
 				}
 			} catch (DataStoreGetException e) { e.printStackTrace(); return null; }
 		}
@@ -204,6 +209,39 @@ public class DungeonDataManager {
         //System.out.println("Elapsed getRooms DB Time for {"+chunk.getX()+","+chunk.getZ()+"}: "+dbTime+" milliseconds");
 		
 		return rooms;
+	}
+	
+	public CompoundTag getSchematic(String fullPath)
+	{
+		// Check cache
+		if(roomCache.containsKey(fullPath))
+		{
+			return roomCache.get(fullPath);
+		}
+		
+		// Get schematic
+		CompoundTag schematic = null;
+		try {
+			// Open file input stream
+			FileInputStream fis = new FileInputStream(fullPath);
+			
+			try {
+				// Open NBT input stream
+				NBTInputStream nis = new NBTInputStream(fis);
+				
+				// Read NBT data
+				org.jnbt.Tag tag = nis.readTag();
+				
+				if(tag instanceof CompoundTag)
+				{
+					schematic = (CompoundTag)tag;
+					roomCache.put(fullPath, schematic);
+					return schematic;
+				}
+			} catch (IOException e) { e.printStackTrace(); }
+		} catch (FileNotFoundException e) { e.printStackTrace(); }
+		
+		return null;
 	}
 	
 	/**
