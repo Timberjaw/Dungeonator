@@ -13,6 +13,7 @@ import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 
+import net.minecraft.server.Block;
 import net.minecraft.server.Chunk;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
@@ -99,6 +100,13 @@ public class DungeonChunkProvider implements IChunkProvider {
 						if(DungeonChunkProvider.blocksWithData.contains(blocks[pos]))
 						{
 							//dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos]);
+						}
+						
+						// Torches
+						if(blocks[pos] == Block.TORCH.id)
+						{
+							dc.getHandle().getBlock(x, y + (r * 8), z).setTypeId(0);
+							dc.getHandle().getBlock(x, y + (r * 8), z).setTypeIdAndData(Block.TORCH.id, data[pos], true);
 						}
 					}
 				}
