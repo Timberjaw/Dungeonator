@@ -1,6 +1,9 @@
 package com.aranai.dungeonator.generator;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -23,8 +26,14 @@ public class DungeonChunkProvider implements IChunkProvider {
 	private World world;
 	private Dungeonator dungeonator;
 	
+	private HashMap<String,DungeonRoom[]> roomCache = new HashMap<String,DungeonRoom[]>();
+	
+	private static HashSet<Byte> blocksWithData;
+	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
+		byte[] blocks = {6,17,18,23,25,27,28,29,31,33,34,35,43,44,50,53,54,61,62,64,65,66,67,69,71,75,76,77,84,86,90,91,92,95,96};
+		DungeonChunkProvider.blocksWithData = new HashSet(Arrays.asList(blocks));
 	}
 	
 	public void setInstance(Dungeonator instance)
@@ -45,14 +54,32 @@ public class DungeonChunkProvider implements IChunkProvider {
 		 * Chunk decoration phase
 		 */
 		
+		String hash = "stack-"+arg1+"-"+arg2;
+		
 		long startTime = System.currentTimeMillis();
 		
 		// TODO Hand control to DungeonChunkGenerator
 		
 		// Get active rooms for chunk
-		DungeonChunk dc = dungeonator.getDataManager().getChunk(this.world.getName(), arg1, arg2);
-		dc.setHandle(this.world.getChunkAt(arg1, arg2));
-		DungeonRoom[] rooms = dungeonator.getDataManager().getRoomsForChunk(dc);
+		DungeonChunk dc = new DungeonChunk(this.world.getChunkAt(arg1, arg2), DungeonRoomType.BASIC_TILE, arg1, arg2);
+		
+		DungeonRoom[] rooms = null;
+		if(roomCache.containsKey(hash))
+		{
+			System.out.println("Cache hit for "+hash);
+			rooms = roomCache.get(hash);
+		}
+		else
+		{
+			System.out.println("Not in cache for "+hash);
+			rooms = dungeonator.getDataManager().getRoomsForChunk(dc);
+			
+			if(rooms == null)
+			{
+				System.out.println("No rooms for "+arg1+","+arg2);
+				return;
+			}
+		}
 		
 		int pos = 0;
 		for(int r = 0; r < rooms.length; r++)
@@ -68,7 +95,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 					for(int y = 0; y < 8; y++)
 					{
 						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
-						if(blocks[pos] > 0)
+						if(DungeonChunkProvider.blocksWithData.contains(blocks[pos]))
 						{
 							dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos]);
 						}
@@ -77,6 +104,12 @@ public class DungeonChunkProvider implements IChunkProvider {
 			}
 			
 			// TODO: Add tile entities
+		}
+		
+		// Remove from cache; we shouldn't need it again
+		if(roomCache.containsKey(hash))
+		{
+			roomCache.remove(hash);
 		}
 		
 		System.out.println("Decoration Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms");
@@ -134,14 +167,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 				}
 			}
 			
-			// Save rooms to data store
-			startDbTime = System.currentTimeMillis();
-	        dungeonator.getDataManager().saveRooms(rooms);
-	        dbTime += (System.currentTimeMillis()-startDbTime);
-			
 			// Save chunk to data store
 			startDbTime = System.currentTimeMillis();
 	        dungeonator.getDataManager().saveChunk(dc);
+	        dbTime += (System.currentTimeMillis()-startDbTime);
+			
+			// Save rooms to data store
+			startDbTime = System.currentTimeMillis();
+	        dungeonator.getDataManager().saveRooms(rooms);
+	        String hash = "stack-"+arg0+"-"+arg1;
+	        System.out.println("Adding hash "+hash);
+	        roomCache.put(hash, rooms);
 	        dbTime += (System.currentTimeMillis()-startDbTime);
 		}
 		else

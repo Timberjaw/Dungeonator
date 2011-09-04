@@ -133,6 +133,11 @@ public class DungeonDataManager {
 			// Get the rooms for the specified chunk
 			rooms = dataStore.getChunkRooms(chunk.getWorldName(), chunk.getX(), chunk.getZ());
 			
+			if(rooms == null)
+			{
+				return null;
+			}
+			
 			// Check for existing schematics or load schematics from file
 			for(int i = 0; i < 16; i++)
 			{
@@ -193,7 +198,7 @@ public class DungeonDataManager {
 				{
 					// Set blocks and block data
 					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
-					//rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
+					rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
 				}
 			} catch (DataStoreGetException e) { e.printStackTrace(); return null; }
 		}
