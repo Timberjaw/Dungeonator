@@ -396,29 +396,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	 */
 	@Override
 	public boolean saveRoom(DungeonRoom room) throws DataStoreSaveException {
-		boolean success = false;
-        
-        try
-        {
-	    	conn.setAutoCommit(false);
-	        PreparedStatement ps = conn.prepareStatement("INSERT INTO `"+TblRooms+"`" +
-	        		"(`world`,`x`,`y`,`z`,`library_id`,`name`)" +
-	        		"VALUES (?, ?, ?, ?, ?, ?);");
-	        
-	        ps.setString(1, room.getDungeonChunk().getWorldName());
-	        ps.setInt(2, room.getX());
-	        ps.setInt(3, room.getY());
-	        ps.setInt(4, room.getZ());
-	        ps.setLong(5, room.getLibraryId());
-	        ps.setString(6, room.getName());
-	        success = ps.execute();
-	        
-	        conn.commit();
-        }
-        catch(SQLException e) { Dungeonator.getLogger().warning(room.toString()); e.printStackTrace(); }
-        catch(Exception e) { e.printStackTrace(); }
-        
-		return success;
+		DungeonRoom[] rooms = {room};
+		return saveRooms(rooms);
 	}
 	
 	/* (non-Javadoc)

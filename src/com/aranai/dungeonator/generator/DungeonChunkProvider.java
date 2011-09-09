@@ -1,9 +1,8 @@
 package com.aranai.dungeonator.generator;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -19,10 +18,6 @@ import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
 import net.minecraft.server.NibbleArray;
 
-/*
- * See: https://github.com/Bukkit/mc-dev/blob/master/net/minecraft/server/ChunkProviderHell.java
- */
-
 public class DungeonChunkProvider implements IChunkProvider {
 
 	private World world;
@@ -34,8 +29,13 @@ public class DungeonChunkProvider implements IChunkProvider {
 	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
+		
+		// Build the list of special blocks (blocks with data values) that require special attention
+		// This includes things like torches, furnaces, steps, wool; anything with an orientation or multiple states
 		byte[] blocks = {6,17,18,23,25,27,28,29,31,33,34,35,43,44,50,53,54,61,62,64,65,66,67,69,71,75,76,77,84,86,90,91,92,95,96};
-		DungeonChunkProvider.blocksWithData = new HashSet(Arrays.asList(blocks));
+		ArrayList<Byte> tmpList = new ArrayList<Byte>();
+		for(byte b : blocks) { tmpList.add(b); }
+		DungeonChunkProvider.blocksWithData = new HashSet<Byte>(tmpList);
 	}
 	
 	public void setInstance(Dungeonator instance)
@@ -43,6 +43,9 @@ public class DungeonChunkProvider implements IChunkProvider {
 		this.dungeonator = instance;
 	}
 
+	/* (non-Javadoc)
+	 * @see net.minecraft.server.IChunkProvider#getChunkAt(int, int)
+	 */
 	@Override
 	public Chunk getChunkAt(int x, int y) {
 		// Purpose is unclear. Passes control to another method with identical args.
@@ -50,6 +53,9 @@ public class DungeonChunkProvider implements IChunkProvider {
 		return this.getOrCreateChunk(x, y);
 	}
 
+	/* (non-Javadoc)
+	 * @see net.minecraft.server.IChunkProvider#getChunkAt(net.minecraft.server.IChunkProvider, int, int)
+	 */
 	@Override
 	public void getChunkAt(IChunkProvider arg0, int arg1, int arg2) {
 		/*

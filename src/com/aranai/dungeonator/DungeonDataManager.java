@@ -1,13 +1,10 @@
 package com.aranai.dungeonator;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.logging.Logger;
 
 import org.jnbt.ByteArrayTag;
 import org.jnbt.CompoundTag;
@@ -29,7 +26,6 @@ public class DungeonDataManager {
 	private IDungeonDataStore dataStore;
 	
 	private Hashtable<String,CompoundTag> roomCache;
-	private HashMap<String,Vector<Byte>> adjacencyCache;
 	
 	/**
 	 * Instantiates the DungeonDataManager.
@@ -43,7 +39,6 @@ public class DungeonDataManager {
 		this.dataStore.initialize(plugin);
 		
 		this.roomCache = new Hashtable<String,CompoundTag>();
-		this.adjacencyCache = new HashMap<String,Vector<Byte>>();
 	}
 	
 	/**
@@ -164,26 +159,30 @@ public class DungeonDataManager {
 		return rooms;
 	}
 	
+	/**
+	 * Gets a list of random rooms for a new chunk.
+	 *
+	 * @param chunk the chunk
+	 * @return the rooms for the new chunk
+	 */
 	public DungeonRoom[] getRoomsForNewChunk(DungeonChunk chunk)
 	{
-		long startTime = System.currentTimeMillis();
-		long startDbTime = 0;
-		long dbTime = 0;
-		
 		String fullPath = "";
 		DungeonRoom[] rooms = new DungeonRoom[16];
 		
-		startDbTime = System.currentTimeMillis();
 		Vector<Byte>[] doorways = this.getAdjacentDoorways(chunk.getWorldName(), chunk.getX(), chunk.getZ());
-		dbTime += (System.currentTimeMillis()-startDbTime);
 		
 		for(int i = 0; i < 16; i++)
 		{
+			// If room is not lowest, check for UP door from below (previous i)
+			if(i > 0 && rooms[i-1].hasDoorway(Direction.UP))
+			{
+				doorways[i].add(Direction.DOWN);
+			}
+			
 			// Get a random room
 			try {
-				startDbTime = System.currentTimeMillis();
 				rooms[i] = dataStore.getLibraryRoomRandom(doorways[i]);
-				dbTime += (System.currentTimeMillis()-startDbTime);
 				
 				// Make sure we actually got a result, and bail out if we didn't
 				if(rooms[i] == null) { return null; }
@@ -209,9 +208,6 @@ public class DungeonDataManager {
 			// Set chunk
 			rooms[i].setDungeonChunk(chunk);
 		}
-		
-		//System.out.println("Elapsed getRooms Time for {"+chunk.getX()+","+chunk.getZ()+"}: "+((System.currentTimeMillis()-startTime))+" milliseconds");
-        //System.out.println("Elapsed getRooms DB Time for {"+chunk.getX()+","+chunk.getZ()+"}: "+dbTime+" milliseconds");
 		
 		return rooms;
 	}

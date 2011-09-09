@@ -2,7 +2,6 @@ package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.Vector;
 
-import org.bukkit.Location;
 import org.bukkit.block.BlockState;
 
 import com.aranai.dungeonator.Direction;
