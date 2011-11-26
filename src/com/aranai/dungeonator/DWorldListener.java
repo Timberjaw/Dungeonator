@@ -24,12 +24,6 @@ public class DWorldListener extends WorldListener {
 	public DWorldListener(Dungeonator plugin)
 	{
 		this.plugin = plugin;
-		
-		// This defines the y value when flattening chunks
-		// This includes the base height for the room editor
-		// We use a default value of 70 so the player doesn't
-		// have to climb so far out of the hole we put them in
-		plugin.py = 70;
 	}
 	
 	/* (non-Javadoc)

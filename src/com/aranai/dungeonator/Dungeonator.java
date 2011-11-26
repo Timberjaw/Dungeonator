@@ -56,9 +56,6 @@ public class Dungeonator extends JavaPlugin {
 	/** Debug field: flattenOn: to flatten, or not to flatten */
 	public boolean flattenOn = false;
 	
-	/** Debug field: py: player y at time of flattening */
-	public int py = 1000;
-	
 	/** Base data folder path */
 	public static String BaseFolderPath;
 	

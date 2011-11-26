@@ -3,6 +3,7 @@ package com.aranai.dungeonator.generator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -14,6 +15,8 @@ import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 
 import net.minecraft.server.Block;
 import net.minecraft.server.Chunk;
+import net.minecraft.server.ChunkPosition;
+import net.minecraft.server.EnumCreatureType;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
 import net.minecraft.server.NibbleArray;
@@ -156,7 +159,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		 * Initialize
 		 */
 		byte[] blocks = new byte[32768];
-		NibbleArray dataNibble = new NibbleArray(32768);
+		NibbleArray dataNibble = new NibbleArray(32768, 7);	// No idea what that second parameter does
 		
 		/*
 		 * Copy room data to chunk
@@ -235,9 +238,9 @@ public class DungeonChunkProvider implements IChunkProvider {
         Chunk chunk = new Chunk(mw, blocks, arg0, arg1);
         
         // HACK: Set chunk block data
-        // 'e' is a NibbleArray in the chunk; it holds the chunk's block data values
+        // 'g' is a NibbleArray in the chunk; it holds the chunk's block data values
         // Likely to break on MC updates, but what else is new
-        chunk.e = dataNibble;
+        chunk.g = dataNibble;
         
         chunk.initLighting();
         
@@ -272,6 +275,19 @@ public class DungeonChunkProvider implements IChunkProvider {
 	public boolean canSave() {
 		// Does nothing in this implementation
 		return false;
+	}
+
+	@Override
+	public List<?> a(EnumCreatureType arg0, int arg1, int arg2, int arg3) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ChunkPosition a(net.minecraft.server.World arg0, String arg1,
+			int arg2, int arg3, int arg4) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

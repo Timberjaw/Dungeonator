@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
@@ -73,6 +72,9 @@ public class DungeonRoomEditor {
 	
 	/** The editing player. */
 	private Player editor;
+	
+	/** The floor height for the editor. This will be set to the player's y coordinate when starting the editor. */
+	private int editor_y = -1;
 	
 	/** Test library */
 	private Vector<String> testLibrary;
@@ -248,7 +250,7 @@ public class DungeonRoomEditor {
 		// If the editor is not started, start it
 		if(!this.isActive)
 		{
-			this.start(true, true);
+			this.cmdNew(new DCommandEvent(editor, "new", new String[]{"flatten:true", "hint:true"}));
 		}
 		
 		// Load the file
@@ -287,7 +289,7 @@ public class DungeonRoomEditor {
 					for(int y = 0; y < 8; y++)
 					{
 						// Set block type and basic data value
-						this.chunk.getHandle().getBlock(x, y+8, z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
+						this.chunk.getHandle().getBlock(x, y+this.editor_y, z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
 					}
 				}
 			}
@@ -300,7 +302,7 @@ public class DungeonRoomEditor {
 				{
 					for(int y = 0; y < 8; y++)
 					{
-						this.chunk.getHandle().getBlock(x, y+8, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
+						this.chunk.getHandle().getBlock(x, y+this.editor_y, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
 					}
 				}
 			}
@@ -327,7 +329,7 @@ public class DungeonRoomEditor {
 						int x = ((IntTag)data.get("x")).getValue();
 						int y = ((IntTag)data.get("y")).getValue();
 						int z = ((IntTag)data.get("z")).getValue();
-						Block b = this.chunk.getHandle().getBlock(x, y+8, z);
+						Block b = this.chunk.getHandle().getBlock(x, y+this.editor_y, z);
 						BlockState bs = b.getState();
 						
 						// Get lines
@@ -552,10 +554,6 @@ public class DungeonRoomEditor {
 		{
 			this.cmdExits(cmd);
 		}
-		else if(cmd.getCmd().equals("teststack"))
-		{
-			this.cmdTestStack(cmd);
-		}
 	}
 	
 	/**
@@ -579,6 +577,9 @@ public class DungeonRoomEditor {
 		 * Start the editor
 		 */
 		
+		int playerY = cmd.getPlayer().getLocation().getBlockY();
+		int roundedY = playerY - (playerY % 8); // Round the player's y coordinate to the nearest multiple of 8
+		this.editor_y = Math.max(Math.min(roundedY, 112), 8); // Force the floor to be placed no lower than 8 and no higher than 112
 		this.chunk = new DungeonChunk(cmd.getChunk());
 		this.start(flatten, hint);
 		
@@ -744,80 +745,6 @@ public class DungeonRoomEditor {
 		editor.sendMessage(sb.toString());
 	}
 	
-	public void cmdTestStack(DCommandEvent cmd)
-	{
-		// Test the active room library by generating a chunk (stack) of rooms near the player
-		int x = cmd.getChunk().getX();
-		int z = cmd.getChunk().getZ()+1;
-		int y = 8;
-		
-		Chunk tmpChunk = cmd.getPlayer().getWorld().getChunkAt(x, z);
-		
-		this.flattenChunk(tmpChunk, Material.SAND);
-		
-		byte[] blocks;
-		//byte[] blockData;
-		
-		Hashtable<String,byte[]> tmpRoomBlocks = new Hashtable<String,byte[]>();
-		
-		for(String s : this.testLibrary)
-		{
-			// Load the file
-			CompoundTag schematic = null;
-			try {
-				// Open file input stream
-				FileInputStream fis = new FileInputStream(Dungeonator.TileFolderPath+File.separator+s+".nbt");
-				
-				try {
-					// Open NBT input stream
-					NBTInputStream nis = new NBTInputStream(fis);
-					
-					// Read NBT data
-					org.jnbt.Tag tag = nis.readTag();
-					
-					if(tag instanceof CompoundTag)
-					{
-						schematic = (CompoundTag)tag;
-					}
-				} catch (IOException e) { e.printStackTrace(); }
-			} catch (FileNotFoundException e) { e.printStackTrace(); }
-			
-			// Verify the data was loaded
-			if(schematic != null)
-			{
-				// Get blocks
-				tmpRoomBlocks.put(s, ((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
-			}
-		}
-		
-		for(int i = 0; i < 15; i++)
-		{
-			// Get a room from the active library
-			String roomName = this.testLibrary.get(
-					(int) (Math.random() * this.testLibrary.size())
-			);
-			cmd.getPlayer().sendMessage("Selecting room '" + roomName + "' for Y:"+y);
-			
-			blocks = tmpRoomBlocks.get(roomName);
-			//blockData = tmpRoom.getRawBlockData();
-			
-			// Copy blocks to chunk
-			for(int x2 = 0; x2 < 16; x2++)
-			{
-				for(int z2 = 0; z2 < 16; z2++)
-				{
-					for(int y2 = 0; y2 < 8; y2++)
-					{
-						tmpChunk.getBlock(x2, y2+y, z2).setTypeId(blocks[DungeonMath.getRoomPosFromCoords(x2, y2, z2)]);
-					}
-				}
-			}
-			
-			// Update y coordinate
-			y += 8;
-		}
-	}
-	
 	/**
 	 * Flatten the specified chunk.
 	 *
@@ -834,9 +761,11 @@ public class DungeonRoomEditor {
 		{
 			for(int z = 0; z < 16; z++)
 			{
-				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (7 & 0x7F);
+				// Add layer below floor
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (this.editor_y-1 & 0x7F);
 				blocks[pos] = 7;
-				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (8 & 0x7F);
+				// Add floor layer
+				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (this.editor_y & 0x7F);
 				blocks[pos] = (byte)(floorMaterial.getId() & 0xFF);
 			}
 		}
