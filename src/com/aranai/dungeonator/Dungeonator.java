@@ -13,6 +13,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.aranai.dungeonator.amt.ThemeManager;
 import com.aranai.dungeonator.datastore.IDungeonDataStore;
 import com.aranai.dungeonator.datastore.SqliteDungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
@@ -43,6 +44,9 @@ public class Dungeonator extends JavaPlugin {
 	
 	/** The dungeon data manager. */
 	private DungeonDataManager dataManager;
+	
+	/** The theme manager. */
+	private ThemeManager themeManager;
 	
 	/** The dungeon chunk manager. */
 	private DungeonChunkManager chunkManager;
@@ -128,6 +132,9 @@ public class Dungeonator extends JavaPlugin {
 		// Initialize data manager
 		dataManager = new DungeonDataManager(this, dataStore);
 		
+		// Initialize theme manager
+		themeManager = new ThemeManager();
+		
 		// Initialize chunk manager
 		chunkManager = new DungeonChunkManager(dataManager);
 		
@@ -182,6 +189,16 @@ public class Dungeonator extends JavaPlugin {
 	public static Logger getLogger()
 	{
 		return Dungeonator.log;
+	}
+	
+	/**
+	 * Gets the theme manager.
+	 *
+	 * @return the theme manager
+	 */
+	public ThemeManager getThemeManager()
+	{
+		return themeManager;
 	}
 	
 	/**

@@ -33,6 +33,8 @@ import org.jnbt.StringTag;
 import com.aranai.dungeonator.event.DCommandEvent;
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.Dungeonator;
+import com.aranai.dungeonator.amt.ThemeManager;
+import com.aranai.dungeonator.amt.ThemeMaterialTranslation;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
@@ -70,6 +72,9 @@ public class DungeonRoomEditor {
 	/** The active file. */
 	private String activeFile;
 	
+	/** The current room's theme. */
+	private String activeTheme;
+	
 	/** The editing player. */
 	private Player editor;
 	
@@ -78,6 +83,9 @@ public class DungeonRoomEditor {
 	
 	/** Test library */
 	private Vector<String> testLibrary;
+	
+	/** The theme manager */
+	private ThemeManager themeManager;
 	
 	/**
 	 * Instantiates the dungeon chunk editor.
@@ -90,7 +98,9 @@ public class DungeonRoomEditor {
 		hasUnsavedChanges = false;
 		activeFile = "";
 		activePath = "";
+		activeTheme = "DEFAULT";
 		testLibrary = new Vector<String>();
+		themeManager = d.getThemeManager();
 	}
 	
 	/**
@@ -554,6 +564,10 @@ public class DungeonRoomEditor {
 		{
 			this.cmdExits(cmd);
 		}
+		else if(cmd.getCmd().equals("theme"))
+		{
+			this.cmdTheme(cmd);
+		}
 	}
 	
 	/**
@@ -743,6 +757,62 @@ public class DungeonRoomEditor {
 		sb.setLength(Math.max(sb.length()-1, 0));
 		
 		editor.sendMessage(sb.toString());
+	}
+	
+	/**
+	 * Manage theme setting and previewing for the room
+	 * 
+	 * @param cmd
+	 */
+	public void cmdTheme(DCommandEvent cmd)
+	{
+		String newThemeName = cmd.getNamedArgString("set", "default");
+		
+		// Make sure the theme exists before we proceed
+		if(!themeManager.themeExists(newThemeName))
+		{
+			editor.sendMessage("The specified theme does not exist.");
+			return;
+		}
+		
+		// Don't waste time converting to the currently active theme
+		if(newThemeName.equals(activeTheme))
+		{
+			editor.sendMessage("Theme is already active.");
+			return;
+		}
+		
+		// Notify the editor
+		editor.sendMessage("Converting room from theme '"+activeTheme+"' to '"+newThemeName);
+		
+		// Convert blocks
+		Block b = null;
+		ThemeMaterialTranslation mt = null;
+		int i = 0;
+		for(int x = 0; x < 16; x++)
+		{
+			for(int z = 0; z < 16; z++)
+			{
+				for(int y = 0; y < 8; y++)
+				{
+					// Get the block handle
+					b = this.chunk.getHandle().getBlock(x, y+this.editor_y, z);
+					// Get the new material, if any
+					mt = themeManager.getFullTranslation(activeTheme, newThemeName, new ThemeMaterialTranslation(b.getTypeId(), b.getData()));
+					if(mt != null && mt.type > 0)
+					{
+						// Set block type and basic data value
+						b.setTypeIdAndData(mt.type, (byte)mt.sub, false);
+						i++;
+					}
+				}
+			}
+		}
+		
+		// Set active theme
+		activeTheme = newThemeName;
+		
+		editor.sendMessage("Material translation complete, "+i+" blocks converted.");
 	}
 	
 	/**
