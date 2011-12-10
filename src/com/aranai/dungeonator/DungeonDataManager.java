@@ -188,7 +188,12 @@ public class DungeonDataManager {
 				if(rooms[i] == null) { return null; }
 				
 				// Determine which room theme we're using
-				String theme = rooms[i].getRandomTheme();
+				int index = (int)(Math.abs(plugin.getDCP().getNoise(chunk.getX(), i, chunk.getZ())) * plugin.getThemeManager().getThemeCount());
+				String theme = plugin.getThemeManager().getThemeNameByIndex(index);
+				if(!rooms[i].getThemes().contains(theme))
+				{
+					theme = rooms[i].getRandomTheme();
+				}
 				
 				// Determine which folder we're drawing from
 				String folderPath = Dungeonator.TileFolderPath;

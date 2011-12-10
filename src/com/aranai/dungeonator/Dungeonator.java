@@ -18,6 +18,7 @@ import com.aranai.dungeonator.datastore.IDungeonDataStore;
 import com.aranai.dungeonator.datastore.SqliteDungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
 import com.aranai.dungeonator.dungeonmaster.DungeonMaster;
+import com.aranai.dungeonator.generator.DungeonChunkProvider;
 import com.aranai.dungeonator.generator.DungeonRoomEditor;
 
 /**
@@ -53,6 +54,9 @@ public class Dungeonator extends JavaPlugin {
 	
 	/** The dungeon room editor. */
 	private DungeonRoomEditor roomEditor;
+	
+	/** The dungeon chunk provider. */
+	private DungeonChunkProvider dcp;
 	
 	/** The DM handler */
 	private DungeonMaster dungeonMaster;
@@ -239,5 +243,15 @@ public class Dungeonator extends JavaPlugin {
 	public DungeonMaster getDungeonMaster()
 	{
 		return dungeonMaster;
+	}
+	
+	public DungeonChunkProvider getDCP()
+	{
+		return dcp;
+	}
+	
+	public void setDCP(DungeonChunkProvider dcp)
+	{
+		this.dcp = dcp;
 	}
 }

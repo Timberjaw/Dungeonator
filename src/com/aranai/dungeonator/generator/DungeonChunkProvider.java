@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.util.noise.SimplexOctaveGenerator;
 
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
@@ -30,6 +31,12 @@ public class DungeonChunkProvider implements IChunkProvider {
 	
 	private static HashSet<Byte> blocksWithData;
 	
+	// Noise generator attributes
+	private SimplexOctaveGenerator octave;
+	private double amplitude;
+	private double frequency;
+	private int octaves;
+	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
 		
@@ -39,11 +46,22 @@ public class DungeonChunkProvider implements IChunkProvider {
 		ArrayList<Byte> tmpList = new ArrayList<Byte>();
 		for(byte b : blocks) { tmpList.add(b); }
 		DungeonChunkProvider.blocksWithData = new HashSet<Byte>(tmpList);
+		
+		// Set up the simplex octave generator for themes and biomes
+		octaves = 10;
+		amplitude = 1.0;
+		frequency = 1.0;
+		octave = new SimplexOctaveGenerator(world, octaves);
 	}
 	
 	public void setInstance(Dungeonator instance)
 	{
 		this.dungeonator = instance;
+	}
+	
+	public double getNoise(int x, int y, int z)
+	{
+		return octave.noise(x, y, z, amplitude, frequency);
 	}
 
 	/* (non-Javadoc)

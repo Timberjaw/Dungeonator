@@ -1,6 +1,7 @@
 package com.aranai.dungeonator.amt;
 
 import java.util.HashMap;
+import java.util.Vector;
 
 import net.minecraft.server.Block;
 
@@ -15,12 +16,40 @@ public class ThemeManager {
 	/** The theme library */
 	private HashMap<String,Theme> themes;
 	
+	/** The indexed view of the library */
+	private Vector<String> themeIndex;
+	
 	public ThemeManager()
 	{
 		themes = new HashMap<String,Theme>();
+		themeIndex = new Vector<String>();
 		
 		// Build the starting theme library
 		this.buildThemes();
+	}
+	
+	/**
+	 * Get the number of themes loaded
+	 * @return the number of themes
+	 */
+	public int getThemeCount()
+	{
+		return themes.size();
+	}
+	
+	/**
+	 * Get the name of the theme matching the specified index value
+	 * @param the index
+	 * @return the name of the theme
+	 */
+	public String getThemeNameByIndex(int index)
+	{
+		if(themes.size() > index)
+		{
+			return themeIndex.elementAt(index);
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -85,7 +114,8 @@ public class ThemeManager {
 	 */
 	public void registerTheme(Theme theme)
 	{
-		this.themes.put(theme.getName().toUpperCase(), theme);
+		themes.put(theme.getName().toUpperCase(), theme);
+		themeIndex.add(theme.getName().toUpperCase());
 	}
 
 	/**
