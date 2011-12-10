@@ -62,7 +62,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64), `name` varchar(64)," +
 			"`door_n` BIT, `door_nne` BIT, `door_ene` BIT, `door_e` BIT, `door_ese` BIT, `door_sse` BIT, " +
 			"`door_s` BIT, `door_ssw` BIT, `door_wsw` BIT, `door_w` BIT, `door_wnw` BIT, `door_nnw` BIT, " +
-			"`door_u` BIT, `door_d` BIT);";
+			"`door_u` BIT, `door_d` BIT, `theme_default` varchar(16), `themes` varchar(300));";
 	
 	/*
 	 * Static initializer
@@ -462,8 +462,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryRooms+"`" +
 	        		"(`id`,`filename`,`name`,`door_n`,`door_nne`,`door_ene`,`door_e`,`door_ese`," +
 	        		"`door_sse`,`door_s`,`door_ssw`,`door_wsw`,`door_w`,`door_wnw`,`door_nnw`," +
-	        		"`door_u`,`door_d`)" +
-	        		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	        		"`door_u`,`door_d`, `theme_default`, `themes`)" +
+	        		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	        
 	        // Handle library id
 	        long libraryId = room.getLibraryId();
@@ -484,7 +484,9 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        ps.setBoolean(14, room.hasDoorway(Direction.WNW));
 	        ps.setBoolean(15, room.hasDoorway(Direction.NNW));
 	        ps.setBoolean(16, room.hasDoorway(Direction.UP));
-	        ps.setBoolean(15, room.hasDoorway(Direction.DOWN));
+	        ps.setBoolean(17, room.hasDoorway(Direction.DOWN));
+	        ps.setString(19, room.getDefaultTheme());
+	        ps.setString(20, room.getThemeCSV());
 	        ps.execute();
 	        conn.commit();
 	        
@@ -512,6 +514,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		ResultSet rs = null;
 		String filename = "";
 		long libraryId = 0;
+		String themes = "DEFAULT";
+		String theme_default = "DEFAULT";
 		DungeonRoom room = new DungeonRoom();
 		
 		// Build query string
@@ -545,6 +549,19 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	filename = rs.getString("filename");
             	libraryId = rs.getLong("id");
             	
+            	// Get theme info
+            	String tmpThemes = rs.getString("themes");
+    	        String tmpTheme_default = rs.getString("theme_default");
+    	        
+    	        if(tmpThemes != null && !tmpThemes.equals(""))
+    	        {
+    	        	themes = tmpThemes;
+    	        }
+    	        if(tmpTheme_default != null && !tmpTheme_default.equals(""))
+    	        {
+    	        	theme_default = tmpTheme_default;
+    	        }
+            	
             	counter++;
             }
 	        
@@ -568,6 +585,10 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        // Initialize DungeonRoom
 	        room.setFilename(filename);
 	        room.setLibraryId(libraryId);
+	        
+	        // Set theme information
+        	room.setThemeCSV(themes);
+        	room.setDefaultTheme(theme_default);
 	        
 	        return room;
         }

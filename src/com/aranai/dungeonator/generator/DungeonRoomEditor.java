@@ -543,6 +543,11 @@ public class DungeonRoomEditor {
 						tmpBlocks[i] = mt.type;
 						tmpBlockData[i] = mt.sub;
 					}
+					else
+					{
+						tmpBlocks[i] = blocks[i];
+						tmpBlockData[i] = blockData[i];
+					}
 				}
 				
 				// Blocks

@@ -194,13 +194,16 @@ public class DungeonDataManager {
 				String folderPath = Dungeonator.TileFolderPath;
 				
 				// If we're not using the default theme, pull from the processed folder
+				String tmpTheme = "";
 				if(!theme.equals("DEFAULT"))
 				{
 					folderPath = Dungeonator.ProcessedTileFolderPath;
+					tmpTheme = "."+theme;
+					Dungeonator.getLogger().info("Selected theme "+theme+" for room.");
 				}
 				
 				// Get the full path to the source tile
-				fullPath = folderPath+rooms[i].getFilename()+".nbt";
+				fullPath = folderPath+rooms[i].getFilename()+tmpTheme+".nbt";
 				
 				CompoundTag schematic = this.getSchematic(fullPath);
 				

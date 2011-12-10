@@ -596,6 +596,15 @@ public class DungeonRoom implements IDungeonRoom {
 		return csv;
 	}
 	
+	public void setThemeCSV(String themes)
+	{
+		String[] t = themes.split(",");
+		for(String s : t)
+		{
+			addTheme(s);
+		}
+	}
+	
 	/**
 	 * Return a string representation of the room
 	 * @return String

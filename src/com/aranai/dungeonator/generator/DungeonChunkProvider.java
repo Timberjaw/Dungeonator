@@ -35,7 +35,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		
 		// Build the list of special blocks (blocks with data values) that require special attention
 		// This includes things like torches, furnaces, steps, wool; anything with an orientation or multiple states
-		byte[] blocks = {6,17,18,23,25,27,28,29,31,33,34,35,43,44,50,53,54,61,62,64,65,66,67,69,71,75,76,77,84,86,90,91,92,95,96};
+		byte[] blocks = {6,17,18,23,25,27,28,29,31,33,34,35,43,44,50,53,54,61,62,64,65,66,67,69,71,75,76,77,84,86,90,91,92,95,96,97,98};
 		ArrayList<Byte> tmpList = new ArrayList<Byte>();
 		for(byte b : blocks) { tmpList.add(b); }
 		DungeonChunkProvider.blocksWithData = new HashSet<Byte>(tmpList);
