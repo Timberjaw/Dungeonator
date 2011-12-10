@@ -194,7 +194,7 @@ public class DungeonDataManager {
 				String folderPath = Dungeonator.TileFolderPath;
 				
 				// If we're not using the default theme, pull from the processed folder
-				if(!theme.equals("default"))
+				if(!theme.equals("DEFAULT"))
 				{
 					folderPath = Dungeonator.ProcessedTileFolderPath;
 				}
