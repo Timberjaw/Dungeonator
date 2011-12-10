@@ -370,6 +370,25 @@ public class DungeonRoomEditor {
 				}
 			}
 			
+			// Load themes
+			StringTag themeTag = (StringTag)schematic.getValue().get("themes");
+			if(themeTag != null)
+			{
+				room.resetThemes();
+				String themes = themeTag.getValue();
+				for(String s : themes.split(","))
+				{
+					room.addTheme(s);
+				}
+			}
+			
+			// Load default theme
+			StringTag defaultThemeTag = (StringTag)schematic.getValue().get("defaultTheme");
+			if(defaultThemeTag != null)
+			{
+				room.setDefaultTheme(defaultThemeTag.getValue());
+			}
+			
 			// Set filename and path
 			activeFile = name;
 			activePath = path;
@@ -417,10 +436,11 @@ public class DungeonRoomEditor {
 		/*
 		 * Example NBT Format:
 		 * 
-		 * CompoundTag("DungeonChunkSchematic"):
-		 *  - ByteTag("type"): byte								Type ID for the DungeonChunk
-		 * 	- ByteArrayTag("exits"): byte[]						Exits from the chunk
-		 * 	- CompoundTag("widgetSpawns"):						Potential widget spawn locations for the chunk
+		 * CompoundTag("DungeonRoomSchematic"):
+		 *  - ByteTag("type"): byte								Type ID for the DungeonRoom
+		 * 	- ByteArrayTag("exits"): byte[]						Exits from the room
+		 *  - StringTag("themes"): string[]					Valid themes for the room
+		 * 	- CompoundTag("widgetSpawns"):						Potential widget spawn locations for the room
 		 * 		- CompoundTag("widget"): 						A single widget spawn location (origin is at NW corner of the widget to be placed)
 		 * 			- ByteTag("type") : byte						Type ID for the widget spawn location, or 0 if any widget type is acceptable
 		 * 			- ShortTag("locX") : short						X coordinate for the widget spawn location
@@ -488,34 +508,75 @@ public class DungeonRoomEditor {
 		// Room exits
 		tags.put("exits", new ByteArrayTag("exits", room.getDoorwaysRaw()));
 		
-		// Blocks
-		tags.put("blocks", new ByteArrayTag("blocks", this.room.getRawBlocks()));
+		// Room themes
+		tags.put("themes", new StringTag("themes", room.getThemeCSV()));
 		
-		// Block data values
-		tags.put("blockData", new ByteArrayTag("blockData", this.room.getRawBlockData()));
+		// Room default theme
+		tags.put("defaultTheme", new StringTag("defaultTheme", room.getDefaultTheme()));
 		
-		CompoundTag schematic = new CompoundTag("DungeonRoomSchematic", tags);
+		// Loop through themes and save cached copies of the translated versions
+		byte[] blockData = this.room.getRawBlockData();
+		byte[] blocks = this.room.getRawBlocks();
 		
 		try {
-			// Create file output stream
-			OutputStream output = new FileOutputStream(path+name+".nbt");
-			
-			// Create NBT output stream
-			NBTOutputStream os = new NBTOutputStream(output);
-			
-			// Write the room to the file
-			os.writeTag(schematic);
-			
-			// Close the NBT output stream
-			os.close();
-			
-			// Close the file output stream
-			output.flush();
-			output.close();
-			
-			// Set active file and path
-			activeFile = name;
-			activePath = path;
+			for(String s : this.room.getThemes())
+			{
+				// Handle path and filename for processed versions
+				String tmpPath = path;
+				String tmpName = name;
+				if(!s.equals(room.getDefaultTheme()))
+				{
+					path = path.concat("processed"+File.separator);
+					name = name.concat("."+s.toUpperCase());
+				}
+				
+				ThemeMaterialTranslation mt = null;
+				byte[] tmpBlocks = new byte[blocks.length];
+				byte[] tmpBlockData = new byte[blockData.length];
+				
+				// Translate the block data
+				for(int i = 0; i < blocks.length; i++)
+				{
+					mt = themeManager.getFullTranslation(room.getDefaultTheme(), s, new ThemeMaterialTranslation(blocks[i], blockData[i]));
+					if(mt != null && mt.type > 0)
+					{
+						tmpBlocks[i] = mt.type;
+						tmpBlockData[i] = mt.sub;
+					}
+				}
+				
+				// Blocks
+				tags.put("blocks", new ByteArrayTag("blocks", tmpBlocks));
+				
+				// Block data values
+				tags.put("blockData", new ByteArrayTag("blockData", tmpBlockData));
+				
+				CompoundTag schematic = new CompoundTag("DungeonRoomSchematic", tags);
+				
+				// Create file output stream
+				OutputStream output = new FileOutputStream(path+name+".nbt");
+				
+				// Create NBT output stream
+				NBTOutputStream os = new NBTOutputStream(output);
+				
+				// Write the room to the file
+				os.writeTag(schematic);
+				
+				// Close the NBT output stream
+				os.close();
+				
+				// Close the file output stream
+				output.flush();
+				output.close();
+				
+				// Reset path and name
+				path = tmpPath;
+				name = tmpName;
+				
+				// Set active file and path
+				activeFile = name;
+				activePath = path;
+			}
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		// Save to test library
@@ -766,53 +827,101 @@ public class DungeonRoomEditor {
 	 */
 	public void cmdTheme(DCommandEvent cmd)
 	{
-		String newThemeName = cmd.getNamedArgString("set", "default");
-		
-		// Make sure the theme exists before we proceed
-		if(!themeManager.themeExists(newThemeName))
+		// Handle set theme list
+		String[] themes = cmd.getNamedArgStringList("set", null);
+		if(themes != null)
 		{
-			editor.sendMessage("The specified theme does not exist.");
-			return;
-		}
-		
-		// Don't waste time converting to the currently active theme
-		if(newThemeName.equals(activeTheme))
-		{
-			editor.sendMessage("Theme is already active.");
-			return;
-		}
-		
-		// Notify the editor
-		editor.sendMessage("Converting room from theme '"+activeTheme+"' to '"+newThemeName);
-		
-		// Convert blocks
-		Block b = null;
-		ThemeMaterialTranslation mt = null;
-		int i = 0;
-		for(int x = 0; x < 16; x++)
-		{
-			for(int z = 0; z < 16; z++)
+			// Set theme list
+			room.resetThemes();
+			for(String s : themes)
 			{
-				for(int y = 0; y < 8; y++)
-				{
-					// Get the block handle
-					b = this.chunk.getHandle().getBlock(x, y+this.editor_y, z);
-					// Get the new material, if any
-					mt = themeManager.getFullTranslation(activeTheme, newThemeName, new ThemeMaterialTranslation(b.getTypeId(), b.getData()));
-					if(mt != null && mt.type > 0)
-					{
-						// Set block type and basic data value
-						b.setTypeIdAndData(mt.type, (byte)mt.sub, false);
-						i++;
-					}
-				}
+				room.addTheme(s);
 			}
 		}
 		
-		// Set active theme
-		activeTheme = newThemeName;
+		// Handle add themes
+		themes = cmd.getNamedArgStringList("add", null);
+		if(themes != null)
+		{
+			// Add themes to list
+			for(String s : themes)
+			{
+				room.addTheme(s);
+			}
+		}
 		
-		editor.sendMessage("Material translation complete, "+i+" blocks converted.");
+		// Handle remove themes
+		themes = cmd.getNamedArgStringList("remove", null);
+		if(themes != null)
+		{
+			// Remove themes from list
+			for(String s : themes)
+			{
+				room.removeTheme(s);
+			}
+		}
+		
+		// Handle set default theme
+		String defaultTheme = cmd.getNamedArgString("default", null);
+		if(themes != null)
+		{
+			// Set default theme
+			room.setDefaultTheme(defaultTheme);
+		}
+		
+		// Handle preview
+		String newThemeName = cmd.getNamedArgString("preview", null);
+		if(newThemeName != null)
+		{
+			// Make sure the theme exists before we proceed
+			if(!themeManager.themeExists(newThemeName))
+			{
+				editor.sendMessage("The specified theme does not exist.");
+				return;
+			}
+			
+			// Don't waste time converting to the currently active theme
+			if(newThemeName.equals(activeTheme))
+			{
+				editor.sendMessage("Theme is already active.");
+				return;
+			}
+			
+			// Notify the editor
+			editor.sendMessage("Converting room from theme '"+activeTheme+"' to '"+newThemeName);
+			
+			// Convert blocks
+			Block b = null;
+			ThemeMaterialTranslation mt = null;
+			int i = 0;
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+					for(int y = 0; y < 8; y++)
+					{
+						// Get the block handle
+						b = this.chunk.getHandle().getBlock(x, y+this.editor_y, z);
+						// Get the new material, if any
+						mt = themeManager.getFullTranslation(activeTheme, newThemeName, new ThemeMaterialTranslation((byte) b.getTypeId(), b.getData()));
+						if(mt != null && mt.type > 0)
+						{
+							// Set block type and basic data value
+							b.setTypeIdAndData(mt.type, (byte)mt.sub, false);
+							i++;
+						}
+					}
+				}
+			}
+			
+			// Set active theme
+			activeTheme = newThemeName;
+			
+			editor.sendMessage("Material translation complete, "+i+" blocks converted.");
+		}
+		
+		// List the final themes
+		editor.sendMessage("Allowed Themes: "+room.getThemeCSV());
 	}
 	
 	/**

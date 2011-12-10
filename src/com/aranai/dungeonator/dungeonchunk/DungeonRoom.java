@@ -54,16 +54,26 @@ public class DungeonRoom implements IDungeonRoom {
 	/** Doorways */
 	private DungeonRoomDoorway[] doorways = new DungeonRoomDoorway[14];
 	
+	/** Allowed themes */
+	private Vector<String> allowedThemes;
+	
+	/** Default theme */
+	private String defaultTheme;
+	
 	public DungeonRoom()
 	{
-		this.chunk = null;
-		this.setLocation(0, 0, 0);
+		chunk = null;
+		setLocation(0, 0, 0);
+		allowedThemes = new Vector<String>();
+		defaultTheme = "DEFAULT";
+		allowedThemes.add(defaultTheme);
 	}
 	
 	public DungeonRoom(DungeonChunk chunk, int y)
 	{
+		this();
 		this.chunk = chunk;
-		this.setLocation(chunk.getX(), y, chunk.getZ());
+		setLocation(chunk.getX(), y, chunk.getZ());
 	}
 	
 	public void setLocation(int x, int y, int z)
@@ -510,6 +520,80 @@ public class DungeonRoom implements IDungeonRoom {
 	@Override
 	public String getFilename() {
 		return this.filename;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.dungeonchunk.IDungeonRoom#getRandomTheme()
+	 */
+	public String getRandomTheme()
+	{
+		return allowedThemes.get(Math.min((int) (Math.random() * allowedThemes.size()), allowedThemes.size()));
+	}
+	
+	public void addTheme(String theme)
+	{
+		theme = theme.toUpperCase();
+		if(!allowedThemes.contains(theme))
+		{
+			allowedThemes.add(theme);
+		}
+	}
+	
+	public void removeTheme(String theme)
+	{
+		allowedThemes.remove(theme);
+		
+		if(theme.equals(defaultTheme))
+		{
+			if(allowedThemes.size() > 0)
+			{
+				defaultTheme = allowedThemes.get(0);
+			}
+		}
+	}
+	
+	public void setThemes(Vector<String> themes)
+	{
+		allowedThemes = themes;
+	}
+	
+	public void resetThemes()
+	{
+		allowedThemes = new Vector<String>();
+		addTheme("default");
+		setDefaultTheme("default");
+	}
+	
+	public void setDefaultTheme(String theme)
+	{
+		if(allowedThemes.contains(theme))
+		{
+			defaultTheme = theme.toUpperCase();
+		}
+	}
+	
+	public String getDefaultTheme()
+	{
+		return defaultTheme;
+	}
+	
+	public Vector<String> getThemes()
+	{
+		return allowedThemes;
+	}
+	
+	public String getThemeCSV()
+	{
+		String csv = "";
+		
+		for(String s : allowedThemes)
+		{
+			csv = csv.concat(s).concat(",");
+		}
+		
+		csv = csv.substring(0, csv.length()-1);
+		
+		return csv;
 	}
 	
 	/**

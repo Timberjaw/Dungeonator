@@ -30,7 +30,7 @@ public class ThemeManager {
 	 */
 	public boolean themeExists(String theme)
 	{
-		return themes.containsKey(theme);
+		return themes.containsKey(theme.toUpperCase());
 	}
 	
 	/**
@@ -59,8 +59,8 @@ public class ThemeManager {
 	public ThemeMaterialTranslation getFullTranslation(String fromTheme, String toTheme, ThemeMaterialTranslation fromMaterial)
 	{
 		// Get themes
-		Theme from = themes.get(fromTheme);
-		Theme to = themes.get(toTheme);
+		Theme from = themes.get(fromTheme.toUpperCase());
+		Theme to = themes.get(toTheme.toUpperCase());
 		if(from == null || to == null) { return null; }
 		
 		// Get material from starting translation
@@ -73,7 +73,7 @@ public class ThemeManager {
 	public ThemeMaterial getMaterial(String theme, ThemeMaterialTranslation translation)
 	{
 		// Get theme
-		Theme t = themes.get(theme);
+		Theme t = themes.get(theme.toUpperCase());
 		if(t == null) { return null; }
 		
 		return t.getMaterial(translation);
@@ -85,7 +85,7 @@ public class ThemeManager {
 	 */
 	public void registerTheme(Theme theme)
 	{
-		this.themes.put(theme.getName(), theme);
+		this.themes.put(theme.getName().toUpperCase(), theme);
 	}
 
 	/**

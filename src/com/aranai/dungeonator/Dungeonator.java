@@ -66,6 +66,9 @@ public class Dungeonator extends JavaPlugin {
 	/** Tile folder path */
 	public static String TileFolderPath;
 	
+	/** Processed Tile folder path */
+	public static String ProcessedTileFolderPath;
+	
 	/** Widget folder path */
 	public static String WidgetFolderPath;
 
@@ -99,6 +102,8 @@ public class Dungeonator extends JavaPlugin {
 			Dungeonator.BaseFolderPath = this.getDataFolder().getCanonicalPath().toString()+File.separator;
 			// Tile folder path
 			Dungeonator.TileFolderPath = Dungeonator.BaseFolderPath+"tiles"+File.separator;
+			// Processed Tile folder path
+			Dungeonator.ProcessedTileFolderPath = Dungeonator.TileFolderPath+"processed"+File.separator;
 			// Widget folder path
 			Dungeonator.WidgetFolderPath = Dungeonator.BaseFolderPath+"widgets"+File.separator;
 			
@@ -127,7 +132,7 @@ public class Dungeonator extends JavaPlugin {
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		// Initialize data store
-		dataStore = new SqliteDungeonDataStore(); // TODO: Use a real data store so we can actually, y'know, store data
+		dataStore = new SqliteDungeonDataStore();
 		
 		// Initialize data manager
 		dataManager = new DungeonDataManager(this, dataStore);

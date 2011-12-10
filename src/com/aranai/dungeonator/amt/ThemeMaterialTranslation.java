@@ -10,15 +10,20 @@ package com.aranai.dungeonator.amt;
 public final class ThemeMaterialTranslation {
 	
 	/** The translation's type id */
-	public final int type;
+	public final byte type;
 	
 	/** The translation's subtype id */
-	public final int sub;
+	public final byte sub;
 	
-	public ThemeMaterialTranslation(int type, int sub)
+	public ThemeMaterialTranslation(byte type, byte sub)
 	{
 		this.type = type;
 		this.sub = sub;
+	}
+	
+	public ThemeMaterialTranslation(int type, int sub)
+	{
+		this((byte)type, (byte)sub);
 	}
 	
 	public String toString()

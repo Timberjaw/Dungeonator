@@ -187,8 +187,20 @@ public class DungeonDataManager {
 				// Make sure we actually got a result, and bail out if we didn't
 				if(rooms[i] == null) { return null; }
 				
+				// Determine which room theme we're using
+				String theme = rooms[i].getRandomTheme();
+				
+				// Determine which folder we're drawing from
+				String folderPath = Dungeonator.TileFolderPath;
+				
+				// If we're not using the default theme, pull from the processed folder
+				if(!theme.equals("default"))
+				{
+					folderPath = Dungeonator.ProcessedTileFolderPath;
+				}
+				
 				// Get the full path to the source tile
-				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
+				fullPath = folderPath+rooms[i].getFilename()+".nbt";
 				
 				CompoundTag schematic = this.getSchematic(fullPath);
 				

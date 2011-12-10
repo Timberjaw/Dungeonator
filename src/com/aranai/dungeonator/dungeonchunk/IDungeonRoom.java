@@ -208,4 +208,11 @@ public interface IDungeonRoom {
 	 * @param neighbor the room to set as a neighbor
 	 */
 	public void setNeighbor(byte direction, IDungeonRoom neighbor);
+	
+	/**
+	 * Gets a random allowed theme.
+	 *
+	 * @return the theme name
+	 */
+	public String getRandomTheme();
 }
