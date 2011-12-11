@@ -1,7 +1,20 @@
 package com.aranai.dungeonator.dungeonchunk;
 
+import java.util.List;
+import java.util.Map;
+
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.block.Sign;
+import org.bukkit.inventory.ItemStack;
+import org.jnbt.CompoundTag;
+import org.jnbt.IntTag;
+import org.jnbt.ListTag;
+import org.jnbt.StringTag;
+import org.jnbt.Tag;
 
 import com.aranai.dungeonator.Direction;
 
@@ -169,6 +182,74 @@ public class DungeonChunk {
 	public boolean isValidChunkDirection(byte direction)
 	{
 		return (direction == Direction.N || direction == Direction.S || direction == Direction.E || direction == Direction.W);
+	}
+	
+	public void addTileEntityFromTag(Tag t, int editor_y)
+	{
+		Map<String,org.jnbt.Tag> ct = ((CompoundTag)t).getValue();
+		Map<String,org.jnbt.Tag> data = ((CompoundTag)ct.get("data")).getValue();
+		StringTag typeTag = (StringTag)ct.get("type");
+		String type = typeTag.getValue();
+		
+		// Get block
+		int x = ((IntTag)data.get("x")).getValue();
+		int y = ((IntTag)data.get("y")).getValue();
+		int z = ((IntTag)data.get("z")).getValue();
+		Block b = this.getHandle().getBlock(x, y+editor_y, z);
+		BlockState bs = b.getState();
+		
+		int i = 0;
+		
+		if(type.equalsIgnoreCase("sign"))
+		{
+			// Get lines
+			if(bs instanceof Sign)
+			{
+				Sign s = (Sign)bs;
+				s.setLine(0, ((StringTag)data.get("line1")).getValue());
+				s.setLine(1, ((StringTag)data.get("line2")).getValue());
+				s.setLine(2, ((StringTag)data.get("line3")).getValue());
+				s.setLine(3, ((StringTag)data.get("line4")).getValue());
+				s.update();
+			}
+		}
+		
+		i = 0;
+		if(type.equalsIgnoreCase("chest"))
+		{
+			// Get item stacks
+			if(bs instanceof Chest)
+			{
+				Chest s = (Chest)bs;
+				List<Tag> list = ((ListTag)data.get("stacks")).getValue();
+				//ItemStack[] stacks = new ItemStack[list.size()];
+				for(Tag e : list)
+				{
+					Map<String, Tag> c = ((CompoundTag)e).getValue();
+					
+					// Type
+					int item_type = ((IntTag)c.get("type")).getValue();
+					// Amount
+					int item_amount = ((IntTag)c.get("amount")).getValue();
+					// Damage
+					int item_damage = ((IntTag)c.get("damage")).getValue();
+					// Data
+					int item_data = ((IntTag)c.get("data")).getValue();
+					
+					// Enchantments
+					// TODO
+					
+					// Add stack
+					s.getInventory().addItem(new ItemStack(item_type, item_amount, (short)item_damage, (byte)item_data));
+							
+					i++;
+				}
+				
+				// Add the stacks to the chest inventory
+				//s.getInventory().setContents(stacks);
+				s.update();
+			}
+		}
 	}
 	
 	/**

@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.util.noise.SimplexOctaveGenerator;
+import org.jnbt.CompoundTag;
 
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
@@ -29,6 +31,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 	
 	private HashMap<String,DungeonRoom[]> roomCache = new HashMap<String,DungeonRoom[]>();
 	
+	@SuppressWarnings("unused")
 	private static HashSet<Byte> blocksWithData;
 	
 	// Noise generator attributes
@@ -124,10 +127,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 					for(int y = 0; y < 8; y++)
 					{
 						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
-						if(DungeonChunkProvider.blocksWithData.contains(blocks[pos]))
-						{
-							//dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos]);
-						}
 						
 						// Torches
 						if(blocks[pos] == Block.TORCH.id)
@@ -139,7 +138,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 				}
 			}
 			
-			// TODO: Add tile entities
+			// Handle tile entities
+			CompoundTag schematic = rooms[r].getSchematic();
+			if(schematic.getValue().containsKey("tileEntities"))
+			{
+				Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
+				
+				for(org.jnbt.Tag t : tileEntities.values())
+				{
+					dc.addTileEntityFromTag(t, r*8);
+				}
+			}
 		}
 		
 		// Remove from cache; we shouldn't need it again

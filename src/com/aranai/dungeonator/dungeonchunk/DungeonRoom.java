@@ -3,6 +3,7 @@ package com.aranai.dungeonator.dungeonchunk;
 import java.util.Vector;
 
 import org.bukkit.block.BlockState;
+import org.jnbt.CompoundTag;
 
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.generator.DungeonMath;
@@ -36,6 +37,9 @@ public class DungeonRoom implements IDungeonRoom {
 	/** The library id. */
 	private long libraryId = 0;
 	
+	/** Temporary raw schematic */
+	private CompoundTag schematic;
+	
 	/** Temporary raw block array */
 	private byte[] tempRawBlocks;
 	
@@ -67,6 +71,7 @@ public class DungeonRoom implements IDungeonRoom {
 		allowedThemes = new Vector<String>();
 		defaultTheme = "DEFAULT";
 		allowedThemes.add(defaultTheme);
+		schematic = null;
 	}
 	
 	public DungeonRoom(DungeonChunk chunk, int y)
@@ -451,6 +456,26 @@ public class DungeonRoom implements IDungeonRoom {
 	public void setRawBlockData(byte[] blockData)
 	{
 		this.tempRawBlockData = blockData;
+	}
+	
+	/**
+	 * Gets the schematic.
+	 *
+	 * @return the schematic
+	 */
+	public CompoundTag getSchematic()
+	{
+		return schematic;
+	}
+	
+	/**
+	 * Sets the schematic.
+	 *
+	 * @param the new schematic
+	 */
+	public void setSchematic(CompoundTag s)
+	{
+		schematic = s;
 	}
 	
 	/**

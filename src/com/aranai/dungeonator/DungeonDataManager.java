@@ -215,6 +215,9 @@ public class DungeonDataManager {
 				// Verify the data was loaded
 				if(schematic != null)
 				{
+					// Set schematic
+					rooms[i].setSchematic(schematic);
+					
 					// Set blocks and block data
 					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
 					rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());

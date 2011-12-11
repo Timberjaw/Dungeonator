@@ -17,18 +17,22 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.block.Sign;
 import org.jnbt.ByteArrayTag;
 import org.jnbt.ByteTag;
 import org.jnbt.CompoundTag;
 import org.jnbt.IntTag;
+import org.jnbt.ListTag;
 import org.jnbt.LongTag;
 import org.jnbt.NBTInputStream;
 import org.jnbt.NBTOutputStream;
 import org.jnbt.StringTag;
+import org.jnbt.Tag;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 import com.aranai.dungeonator.Direction;
@@ -324,35 +328,7 @@ public class DungeonRoomEditor {
 				
 				for(org.jnbt.Tag t : tileEntities.values())
 				{
-					// TODO: this.chunk.addTileEntityFromTag(t);
-					Map<String,org.jnbt.Tag> ct = ((CompoundTag)t).getValue();
-					Map<String,org.jnbt.Tag> data = ((CompoundTag)ct.get("data")).getValue();
-					StringTag typeTag = (StringTag)ct.get("type");
-					String type = typeTag.getValue();
-					
-					if(type.equalsIgnoreCase("sign"))
-					{
-						// Debug info
-						editor.sendMessage("Found tile entity of type 'sign'");
-						
-						// Get block
-						int x = ((IntTag)data.get("x")).getValue();
-						int y = ((IntTag)data.get("y")).getValue();
-						int z = ((IntTag)data.get("z")).getValue();
-						Block b = this.chunk.getHandle().getBlock(x, y+this.editor_y, z);
-						BlockState bs = b.getState();
-						
-						// Get lines
-						if(bs instanceof Sign)
-						{
-							Sign s = (Sign)bs;
-							s.setLine(0, ((StringTag)data.get("line1")).getValue());
-							s.setLine(1, ((StringTag)data.get("line2")).getValue());
-							s.setLine(2, ((StringTag)data.get("line3")).getValue());
-							s.setLine(3, ((StringTag)data.get("line4")).getValue());
-							s.update();
-						}
-					}
+					this.chunk.addTileEntityFromTag(t, this.editor_y);
 				}
 			}
 			
@@ -476,6 +452,12 @@ public class DungeonRoomEditor {
 		{
 			// Entity compound tag
 			HashMap<String,org.jnbt.Tag> entityTags = new HashMap<String,org.jnbt.Tag>();
+			HashMap<String,org.jnbt.Tag> innerTags = new HashMap<String,org.jnbt.Tag>();
+			
+			// Add common elements
+			innerTags.put("x", new IntTag("x", b.getX() & 0xF));
+			innerTags.put("y", new IntTag("y", (b.getY() & 0x7)));
+			innerTags.put("z", new IntTag("z", b.getZ() & 0xF));
 			
 			// Sign Entity
 			if(b instanceof Sign)
@@ -485,18 +467,51 @@ public class DungeonRoomEditor {
 				
 				// Save text lines 1-4
 				Sign s = (Sign)b;
-				HashMap<String,org.jnbt.Tag> lineTags = new HashMap<String,org.jnbt.Tag>();
-				lineTags.put("x", new IntTag("x", s.getX() & 0xF));
-				lineTags.put("y", new IntTag("y", (s.getY() & 0x7)));
-				lineTags.put("z", new IntTag("z", s.getZ() & 0xF));
-				lineTags.put("line1", new StringTag("line1", s.getLine(0)));
-				lineTags.put("line2", new StringTag("line2", s.getLine(1)));
-				lineTags.put("line3", new StringTag("line3", s.getLine(2)));
-				lineTags.put("line4", new StringTag("line4", s.getLine(3)));
-				entityTags.put("data", new CompoundTag("data", lineTags));
-				
-				tileEntityTags.put(b.toString(), new CompoundTag(b.toString(), entityTags));
+				innerTags.put("line1", new StringTag("line1", s.getLine(0)));
+				innerTags.put("line2", new StringTag("line2", s.getLine(1)));
+				innerTags.put("line3", new StringTag("line3", s.getLine(2)));
+				innerTags.put("line4", new StringTag("line4", s.getLine(3)));
 			}
+			
+			// Chest Entity
+			if(b instanceof Chest)
+			{
+				// Set type as chest
+				entityTags.put("type", new StringTag("type", "chest"));
+				
+				// Save type, amount, damage, data, and enchantments
+				Chest c = (Chest)b;
+				ItemStack[] stacks = c.getInventory().getContents();
+				Vector<Tag> list = new Vector<Tag>();
+				
+				for(ItemStack s : stacks)
+				{
+					if(s != null)
+					{
+						HashMap<String,org.jnbt.Tag> stackTags = new HashMap<String,org.jnbt.Tag>();
+						
+						// Item type
+						stackTags.put("type", new IntTag("type", s.getTypeId()));
+						// Stack amount
+						stackTags.put("amount", new IntTag("amount", s.getAmount()));
+						// Damage value for item
+						stackTags.put("damage", new IntTag("damage", s.getDurability()));
+						// Data value for item
+						stackTags.put("data", new IntTag("data", s.getData().getData()));
+						
+						// TODO: Enchantments
+						
+						CompoundTag ct = new CompoundTag("", stackTags);
+						list.add(ct);
+					}
+				}
+				
+				innerTags.put("stacks", new ListTag("stacks", CompoundTag.class, list));
+			}
+			
+			// Add tile entity tag to entity list tag
+			entityTags.put("data", new CompoundTag("data", innerTags));
+			tileEntityTags.put(b.toString(), new CompoundTag(b.toString(), entityTags));
 		}
 		
 		// Tile Entity compound tag
