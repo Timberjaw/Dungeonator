@@ -8,6 +8,9 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.ContainerBlock;
+import org.bukkit.block.Dispenser;
+import org.bukkit.block.Furnace;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
 import org.jnbt.CompoundTag;
@@ -189,6 +192,8 @@ public class DungeonChunk {
 		Map<String,org.jnbt.Tag> ct = ((CompoundTag)t).getValue();
 		Map<String,org.jnbt.Tag> data = ((CompoundTag)ct.get("data")).getValue();
 		StringTag typeTag = (StringTag)ct.get("type");
+		if(typeTag == null) { return; }
+		
 		String type = typeTag.getValue();
 		
 		// Get block
@@ -215,18 +220,21 @@ public class DungeonChunk {
 		}
 		
 		i = 0;
-		if(type.equalsIgnoreCase("chest"))
+		if(type.equalsIgnoreCase("chest") || type.equalsIgnoreCase("furnace") || type.equalsIgnoreCase("dispenser"))
 		{
 			// Get item stacks
-			if(bs instanceof Chest)
+			if(bs instanceof Chest || bs instanceof Furnace || bs instanceof Dispenser)
 			{
-				Chest s = (Chest)bs;
+				//Chest s = (Chest)bs;
+				ContainerBlock s = (ContainerBlock) bs;
 				List<Tag> list = ((ListTag)data.get("stacks")).getValue();
 				//ItemStack[] stacks = new ItemStack[list.size()];
 				for(Tag e : list)
 				{
 					Map<String, Tag> c = ((CompoundTag)e).getValue();
 					
+					// Position
+					int item_pos = ((IntTag)c.get("pos")).getValue();
 					// Type
 					int item_type = ((IntTag)c.get("type")).getValue();
 					// Amount
@@ -240,14 +248,13 @@ public class DungeonChunk {
 					// TODO
 					
 					// Add stack
-					s.getInventory().addItem(new ItemStack(item_type, item_amount, (short)item_damage, (byte)item_data));
+					s.getInventory().setItem(item_pos, new ItemStack(item_type, item_amount, (short)item_damage, (byte)item_data));
 							
 					i++;
 				}
 				
-				// Add the stacks to the chest inventory
-				//s.getInventory().setContents(stacks);
-				s.update();
+				// Add the stacks to the object's inventory
+				bs.update();
 			}
 		}
 	}

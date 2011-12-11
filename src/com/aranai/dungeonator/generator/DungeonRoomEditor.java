@@ -18,6 +18,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.Dispenser;
+import org.bukkit.block.Furnace;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -479,39 +481,42 @@ public class DungeonRoomEditor {
 				// Set type as chest
 				entityTags.put("type", new StringTag("type", "chest"));
 				
-				// Save type, amount, damage, data, and enchantments
+				// Save item stacks
 				Chest c = (Chest)b;
 				ItemStack[] stacks = c.getInventory().getContents();
-				Vector<Tag> list = new Vector<Tag>();
+				innerTags.put("stacks", new ListTag("stacks", CompoundTag.class, getInventoryList(stacks)));
+			}
+			
+			// Dispenser Entity
+			if(b instanceof Dispenser)
+			{
+				// Set type as chest
+				entityTags.put("type", new StringTag("type", "dispenser"));
 				
-				for(ItemStack s : stacks)
-				{
-					if(s != null)
-					{
-						HashMap<String,org.jnbt.Tag> stackTags = new HashMap<String,org.jnbt.Tag>();
-						
-						// Item type
-						stackTags.put("type", new IntTag("type", s.getTypeId()));
-						// Stack amount
-						stackTags.put("amount", new IntTag("amount", s.getAmount()));
-						// Damage value for item
-						stackTags.put("damage", new IntTag("damage", s.getDurability()));
-						// Data value for item
-						stackTags.put("data", new IntTag("data", s.getData().getData()));
-						
-						// TODO: Enchantments
-						
-						CompoundTag ct = new CompoundTag("", stackTags);
-						list.add(ct);
-					}
-				}
+				// Save item stacks
+				Dispenser c = (Dispenser)b;
+				ItemStack[] stacks = c.getInventory().getContents();
+				innerTags.put("stacks", new ListTag("stacks", CompoundTag.class, getInventoryList(stacks)));
+			}
+			
+			// Furnace Entity
+			if(b instanceof Furnace)
+			{
+				// Set type as chest
+				entityTags.put("type", new StringTag("type", "furnace"));
 				
-				innerTags.put("stacks", new ListTag("stacks", CompoundTag.class, list));
+				// Save item stacks
+				Furnace c = (Furnace)b;
+				ItemStack[] stacks = c.getInventory().getContents();
+				innerTags.put("stacks", new ListTag("stacks", CompoundTag.class, getInventoryList(stacks)));
 			}
 			
 			// Add tile entity tag to entity list tag
 			entityTags.put("data", new CompoundTag("data", innerTags));
-			tileEntityTags.put(b.toString(), new CompoundTag(b.toString(), entityTags));
+			if(entityTags.containsKey("type"))
+			{
+				tileEntityTags.put(b.toString(), new CompoundTag(b.toString(), entityTags));
+			}
 		}
 		
 		// Tile Entity compound tag
@@ -612,6 +617,39 @@ public class DungeonRoomEditor {
 			room.setFilename(name);
 			dungeonator.getDataManager().saveLibraryRoom(room);
 		}
+	}
+	
+	public Vector<Tag> getInventoryList(ItemStack[] stacks)
+	{
+		Vector<Tag> list = new Vector<Tag>();
+		
+		int i = 0;
+		for(ItemStack s : stacks)
+		{
+			if(s != null)
+			{
+				HashMap<String,org.jnbt.Tag> stackTags = new HashMap<String,org.jnbt.Tag>();
+				
+				// Item position
+				stackTags.put("pos", new IntTag("pos", i));
+				// Item type
+				stackTags.put("type", new IntTag("type", s.getTypeId()));
+				// Stack amount
+				stackTags.put("amount", new IntTag("amount", s.getAmount()));
+				// Damage value for item
+				stackTags.put("damage", new IntTag("damage", s.getDurability()));
+				// Data value for item
+				stackTags.put("data", new IntTag("data", s.getData().getData()));
+				
+				// TODO: Enchantments
+				
+				CompoundTag ct = new CompoundTag("", stackTags);
+				list.add(ct);
+			}
+			i++;
+		}
+		
+		return list;
 	}
 	
 	/**
