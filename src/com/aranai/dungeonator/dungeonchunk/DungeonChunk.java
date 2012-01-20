@@ -203,8 +203,6 @@ public class DungeonChunk {
 		Block b = this.getHandle().getBlock(x, y+editor_y, z);
 		BlockState bs = b.getState();
 		
-		int i = 0;
-		
 		if(type.equalsIgnoreCase("sign"))
 		{
 			// Get lines
@@ -219,13 +217,11 @@ public class DungeonChunk {
 			}
 		}
 		
-		i = 0;
 		if(type.equalsIgnoreCase("chest") || type.equalsIgnoreCase("furnace") || type.equalsIgnoreCase("dispenser"))
 		{
 			// Get item stacks
 			if(bs instanceof Chest || bs instanceof Furnace || bs instanceof Dispenser)
 			{
-				//Chest s = (Chest)bs;
 				ContainerBlock s = (ContainerBlock) bs;
 				List<Tag> list = ((ListTag)data.get("stacks")).getValue();
 				//ItemStack[] stacks = new ItemStack[list.size()];
@@ -249,8 +245,6 @@ public class DungeonChunk {
 					
 					// Add stack
 					s.getInventory().setItem(item_pos, new ItemStack(item_type, item_amount, (short)item_damage, (byte)item_data));
-							
-					i++;
 				}
 				
 				// Add the stacks to the object's inventory

@@ -140,14 +140,21 @@ public class DungeonChunkProvider implements IChunkProvider {
 			
 			// Handle tile entities
 			CompoundTag schematic = rooms[r].getSchematic();
-			if(schematic.getValue().containsKey("tileEntities"))
+			if(schematic != null)
 			{
-				Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
-				
-				for(org.jnbt.Tag t : tileEntities.values())
+				if(schematic.getValue().containsKey("tileEntities"))
 				{
-					dc.addTileEntityFromTag(t, r*8);
+					Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
+					
+					for(org.jnbt.Tag t : tileEntities.values())
+					{
+						dc.addTileEntityFromTag(t, r*8);
+					}
 				}
+			}
+			else
+			{
+				System.out.println("Unexpected NULL schematic.");
 			}
 		}
 		

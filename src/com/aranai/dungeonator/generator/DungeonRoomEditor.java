@@ -93,6 +93,14 @@ public class DungeonRoomEditor {
 	/** The theme manager */
 	private ThemeManager themeManager;
 	
+	/** The set dimensions */
+	private int setX = 1;
+	private int setY = 1;
+	private int setZ = 1;
+	
+	/** The set name */
+	private String setName = "Unnamed Room Set";
+	
 	/**
 	 * Instantiates the dungeon chunk editor.
 	 */
@@ -135,7 +143,7 @@ public class DungeonRoomEditor {
 	 *
 	 * @param c the c
 	 */
-	public void start(boolean flatten, boolean hint)
+	public void start(boolean flatten, boolean hint, boolean set)
 	{
 		if(flatten)
 		{
@@ -159,7 +167,16 @@ public class DungeonRoomEditor {
 					{
 						mat = Material.STONE;
 					}
-					this.flattenChunk(chunk.getWorld().getChunkAt(fX, fZ), mat);
+					
+					// Flatten all chunks in the set region
+					// By default this will be one chunk because no set is specified
+					for(int x = 0; x < this.setX; x++)
+					{
+						for(int z = 0; z < this.setZ; z++)
+						{
+							this.flattenChunk(chunk.getWorld().getChunkAt(fX+x, fZ+z), mat);
+						}
+					}
 				}
 			}
 			
@@ -183,62 +200,103 @@ public class DungeonRoomEditor {
 			int blockX = chunk.getX() << 4;
 			int blockZ = chunk.getZ() << 4;
 			
-			for(int y = 8; y < 16; y++)
+			for(int y = 8; y < (8 + (this.setY * 8)); y++)
 			{
 				w.getBlockAt(blockX-1, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+15+1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+15+1, y, blockZ+15+1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+15+1, y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+(this.setZ*16)).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+(this.setX*16), y, blockZ+(this.setZ*16)).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+(this.setX*16), y, blockZ-1).setType(Material.OBSIDIAN);
 			}
 			
 			/*
 			 * Add doorway hints
 			 */
 			
-			for(int y = 8; y < 12; y++)
-			{
-				w.getBlockAt(blockX+0, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+4, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+5, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+10, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+11, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+15, y, blockZ-1).setType(Material.OBSIDIAN);
-				
-				w.getBlockAt(blockX+0, y, blockZ+16).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+4, y, blockZ+16).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+5, y, blockZ+16).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+10, y, blockZ+16).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+11, y, blockZ+16).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+15, y, blockZ+16).setType(Material.OBSIDIAN);
-				
-				w.getBlockAt(blockX-1, y, blockZ+0).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+4).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+5).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+10).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+11).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+15).setType(Material.OBSIDIAN);
-				
-				w.getBlockAt(blockX+16, y, blockZ+0).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+16, y, blockZ+4).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+16, y, blockZ+5).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+16, y, blockZ+10).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+16, y, blockZ+11).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+16, y, blockZ+15).setType(Material.OBSIDIAN);
-			}
-			
-			for(int x = blockX; x < blockX + 16; x++)
-			{
-				w.getBlockAt(x, 12, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(x, 12, blockZ+16).setType(Material.OBSIDIAN);
-			}
-			
-			for(int z = blockZ; z < blockZ + 16; z++)
-			{
-				w.getBlockAt(blockX-1, 12, z).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+16, 12, z).setType(Material.OBSIDIAN);
-			}
-			
 			editor.sendMessage("Adding doorway hints...");
+			
+			for(int sy = 0; sy < this.setY; sy++)
+			{
+				// Add lintels on the X axis
+				for(int x = blockX; x < blockX + (this.setX*16); x++)
+				{
+					w.getBlockAt(x, 12+(sy*8), blockZ-1).setType(Material.OBSIDIAN);
+					w.getBlockAt(x, 12+(sy*8), blockZ+(this.setZ*16)).setType(Material.OBSIDIAN);
+				}
+				
+				// Add lintels on the Z axis
+				for(int z = blockZ; z < blockZ + (this.setZ*16); z++)
+				{
+					w.getBlockAt(blockX-1, 12+(sy*8), z).setType(Material.OBSIDIAN);
+					w.getBlockAt(blockX+(this.setX*16), 12+(sy*8), z).setType(Material.OBSIDIAN);
+				}
+				
+				// Handle columns
+				for(int sx = 0; sx < this.setX; sx++)
+				{
+					for(int sz = 0; sz < this.setZ; sz++)
+					{
+						// Only include rooms on the edge of the volume
+						if(sx == 0 || sz == 0 || sx == (this.setX-1) || sz == (this.setZ-1))
+						{
+							int tmpStartX = blockX+(sx*16);
+							int tmpStartY = 8+(sy*8);
+							int tmpStartZ = blockZ+(sz*16);
+							
+							// Add vertical columns
+							for(int y = tmpStartY; y < tmpStartY+4; y++)
+							{
+								// Z Min-Wall
+								// Add only if sz is 0
+								if(sz == 0)
+								{
+									w.getBlockAt(tmpStartX+0, y, tmpStartZ-1).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+4, y, tmpStartZ-1).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+5, y, tmpStartZ-1).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+10, y, tmpStartZ-1).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+11, y, tmpStartZ-1).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+15, y, tmpStartZ-1).setType(Material.OBSIDIAN);
+								}
+								
+								// Z Max-Wall
+								// Add only if sz is max
+								if(sz == (this.setZ-1))
+								{
+									w.getBlockAt(tmpStartX+0, y, tmpStartZ+16).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+4, y, tmpStartZ+16).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+5, y, tmpStartZ+16).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+10, y, tmpStartZ+16).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+11, y, tmpStartZ+16).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+15, y, tmpStartZ+16).setType(Material.OBSIDIAN);
+								}
+								
+								// X Min-Wall
+								// Add only if sx is 0
+								if(sx == 0)
+								{
+									w.getBlockAt(tmpStartX-1, y, tmpStartZ+0).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX-1, y, tmpStartZ+4).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX-1, y, tmpStartZ+5).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX-1, y, tmpStartZ+10).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX-1, y, tmpStartZ+11).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX-1, y, tmpStartZ+15).setType(Material.OBSIDIAN);
+								}
+								
+								// X Max-Wall
+								// Add only if sx is max
+								if(sx == (this.setX-1))
+								{
+									w.getBlockAt(tmpStartX+16, y, tmpStartZ+0).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+16, y, tmpStartZ+4).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+16, y, tmpStartZ+5).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+16, y, tmpStartZ+10).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+16, y, tmpStartZ+11).setType(Material.OBSIDIAN);
+									w.getBlockAt(tmpStartX+16, y, tmpStartZ+15).setType(Material.OBSIDIAN);
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 		
 		/*
@@ -707,14 +765,35 @@ public class DungeonRoomEditor {
 		boolean hint = cmd.getNamedArgBool("hint", true);
 		
 		/*
+		 * Get 'set' arg
+		 */
+		
+		boolean set = cmd.getNamedArgBool("set",  true);
+		
+		/*
+		 * Get set dimensions and name
+		 */
+		
+		if(set)
+		{
+			this.setName = cmd.getNamedArgString("setname", "Unnamed Room Set");
+			this.setX = Math.max(1, cmd.getNamedArgInt("setx", 1));
+			this.setY = Math.max(1, cmd.getNamedArgInt("sety", 1));
+			this.setZ = Math.max(1, cmd.getNamedArgInt("setz", 1));
+			
+			// Disable set if dimensions are 1x1x1
+			if((this.setX+this.setY+this.setZ) == 3) { set = false; }
+		}
+		
+		/*
 		 * Start the editor
 		 */
 		
 		int playerY = cmd.getPlayer().getLocation().getBlockY();
 		int roundedY = playerY - (playerY % 8); // Round the player's y coordinate to the nearest multiple of 8
-		this.editor_y = Math.max(Math.min(roundedY, 112), 8); // Force the floor to be placed no lower than 8 and no higher than 112
-		this.chunk = new DungeonChunk(cmd.getChunk());
-		this.start(flatten, hint);
+		this.editor_y = Math.max(Math.min(roundedY, 112-(setY*8)), 8); // Force the floor to be placed no lower than 8 and no higher than (112-(setY*8))
+		this.chunk = new DungeonChunk(cmd.getChunk()); // If the user is starting a set, this is the origin chunk (lowest X,Y,Z)
+		this.start(flatten, hint, set);
 		
 		/*
 		 * Reset the active filename and path
