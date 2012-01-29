@@ -8,13 +8,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Vector;
 
+import org.bukkit.util.BlockVector;
+
 import com.aranai.dungeonator.Direction;
+import com.aranai.dungeonator.DungeonDataManager;
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 
 /**
  * SQLite implementation of the DungeonDataStore interface
@@ -34,9 +40,16 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	 * Table names
 	 */
 	
+	// Active elements
 	private static String TblChunks = "active_chunks";
 	private static String TblRooms = "active_rooms";
+	private static String TblRoomSets = "active_room_sets";
+	private static String TblRoomReservations = "active_room_reservations";
+	
+	// The Library
 	private static String TblLibraryRooms = "library_rooms";
+	private static String TblLibraryRoomSets = "library_room_sets";
+	private static String TblLibraryWidgets = "library_widgets";
 	
 	/*
 	 * Column mappings
@@ -45,24 +58,51 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	private static HashMap<Byte,String> ColDoorways = new HashMap<Byte,String>();
 	
 	/*
-	 * SQL Strings
+	 * SQL Strings for static operations
 	 */
 	
+	// Active Chunks
 	private static String SqlCreateTableChunks = "CREATE TABLE `"+TblChunks+"`" +
 			"(`world` varchar(32) NOT NULL, `x` INTEGER, `z` INTEGER, `type` INTEGER);";
 	
 	private static String SqlCreateIndexChunks = "CREATE UNIQUE INDEX chunkIndex on `"+TblChunks+"` (`world`,`x`,`z`);";
 	
+	// Active Rooms
 	private static String SqlCreateTableRooms = "CREATE TABLE `"+TblRooms+"`" +
 			"(`world` varchar(32) NOT NULL, `x` INTEGER, `y` INTEGER, `z` INTEGER, `library_id` INTEGER, `name` varchar(64));";
 	
 	private static String SqlCreateIndexRooms = "CREATE UNIQUE INDEX roomIndex on `"+TblRooms+"` (`world`,`x`,`y`,`z`);";
 	
+	// Active Room Sets
+	private static String SqlCreateTableRoomSets = "CREATE TABLE `"+TblRoomSets+"`" +
+			"(`world` varchar(32) NOT NULL, `x` INTEGER, `y` INTEGER, `z` INTEGER," +
+			"`library_id` INTEGER, `name` varchar(64));";
+	
+	private static String SqlCreateIndexRoomSets = "CREATE UNIQUE INDEX roomSetIndex on `"+TblRoomSets+"` (`world`,`x`,`y`,`z`);";
+	
+	// Room Reservations
+	private static String SqlCreateTableRoomReservations = "CREATE TABLE `"+TblRoomReservations+"`" +
+			"(`world` varchar(32) NOT NULL, `x` INTEGER, `y` INTEGER, `z` INTEGER, `library_id` INTEGER);";
+	
+	private static String SqlCreateIndexRoomReservations = "CREATE UNIQUE INDEX roomReservationIndex on `"+TblRoomReservations+"` (`world`,`x`,`y`,`z`);";
+	
+	// Library Rooms
 	private static String SqlCreateTableLibraryRooms = "CREATE TABLE `"+TblLibraryRooms+"`" +
 			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64), `name` varchar(64)," +
 			"`door_n` BIT, `door_nne` BIT, `door_ene` BIT, `door_e` BIT, `door_ese` BIT, `door_sse` BIT, " +
 			"`door_s` BIT, `door_ssw` BIT, `door_wsw` BIT, `door_w` BIT, `door_wnw` BIT, `door_nnw` BIT, " +
 			"`door_u` BIT, `door_d` BIT, `theme_default` varchar(16), `themes` varchar(300));";
+	
+	// Library Room Sets
+	private static String SqlCreateTableLibraryRoomSets = "CREATE TABLE `"+TblLibraryRoomSets+"`"+
+			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64), `title` varchar(64),"+
+			"`size_x` INTEGER, `size_y` INTEGER, `size_z` INTEGER);";
+	
+	// Library Widgets
+	private static String SqlCreateTableLibraryWidgets = "CREATE TABLE `"+TblLibraryWidgets+"`" +
+			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64)," +
+			"`size_class` INTEGER, `bound_x` INTEGER, `bound_y` INTEGER, `bound_z` INTEGER," +
+			"`origin_x` INTEGER, `origin_y` INTEGER, `origin_z` INTEGER);";
 	
 	/*
 	 * Static initializer
@@ -187,6 +227,68 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
                 conn.commit();
                 
                 Dungeonator.getLogger().info("[Dungeonator]: Library rooms table created.");
+            }
+            
+            // Room Set Table
+            rs = dbm.getTables(null, null, TblRoomSets, null);
+            if (!rs.next())
+            {
+            	// Create table
+            	Dungeonator.getLogger().info("[Dungeonator]: Room sets table not found, creating.");
+            	
+            	conn.setAutoCommit(false);
+                st = conn.createStatement();
+                st.execute(SqlCreateTableRoomSets);
+                st.execute(SqlCreateIndexRoomSets);
+                conn.commit();
+                
+                Dungeonator.getLogger().info("[Dungeonator]: Room sets table created.");
+            }
+            
+            // Library Room Set Table
+            rs = dbm.getTables(null, null, TblLibraryRoomSets, null);
+            if (!rs.next())
+            {
+            	// Create table
+            	Dungeonator.getLogger().info("[Dungeonator]: Library room sets table not found, creating.");
+            	
+            	conn.setAutoCommit(false);
+                st = conn.createStatement();
+                st.execute(SqlCreateTableLibraryRoomSets);
+                conn.commit();
+                
+                Dungeonator.getLogger().info("[Dungeonator]: Library room sets table created.");
+            }
+            
+            // Room Reservations Table
+            rs = dbm.getTables(null, null, TblRoomReservations, null);
+            if (!rs.next())
+            {
+            	// Create table
+            	Dungeonator.getLogger().info("[Dungeonator]: Room reservations table not found, creating.");
+            	
+            	conn.setAutoCommit(false);
+                st = conn.createStatement();
+                st.execute(SqlCreateTableRoomReservations);
+                st.execute(SqlCreateIndexRoomReservations);
+                conn.commit();
+                
+                Dungeonator.getLogger().info("[Dungeonator]: Room reservations table created.");
+            }
+            
+            // Library Widget Table
+            rs = dbm.getTables(null, null, TblLibraryWidgets, null);
+            if (!rs.next())
+            {
+            	// Create table
+            	Dungeonator.getLogger().info("[Dungeonator]: Library widgets table not found, creating.");
+            	
+            	conn.setAutoCommit(false);
+                st = conn.createStatement();
+                st.execute(SqlCreateTableLibraryWidgets);
+                conn.commit();
+                
+                Dungeonator.getLogger().info("[Dungeonator]: Library widgets table created.");
             }
         }
     	catch(SQLException e)
@@ -595,6 +697,333 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         catch(Exception e) { e.printStackTrace(); }
 		
 		return null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getRoomSet(java.lang.String, int, int, int)
+	 */
+	@Override
+	public DungeonRoomSet getRoomSet(String world, int x, int y, int z) throws DataStoreGetException {
+    	PreparedStatement ps = null;
+        ResultSet rs = null;
+        
+        DungeonRoomSet drc = null;
+		
+		// Get from database
+		try
+        {
+        	ps = conn.prepareStatement("SELECT * FROM `"+TblRoomSets+"`" +
+        			" LEFT JOIN `"+TblLibraryRoomSets+"` ON(`"+TblRoomSets+"`.`library_id`=`"+TblLibraryRoomSets+"`.`id`)" +
+        			" WHERE `world` = ? AND `x` = ? AND `y` = ? AND `z` = ?");
+            ps.setString(1, world);
+            ps.setInt(2, x);
+            ps.setInt(3, y);
+            ps.setInt(4, z);
+            rs = ps.executeQuery();
+             
+            while (rs.next())
+            {
+            	// Successfully retrieved the room
+            	drc = new DungeonRoomSet(
+        			rs.getString("title"), rs.getString("filename"),
+        			rs.getInt("x"), rs.getInt("y"), rs.getInt("z"),
+        			rs.getInt("size_x"), rs.getInt("size_y"), rs.getInt("size_z"),
+        			rs.getInt("library_id") 
+            	);
+            }
+        }
+        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getRoomSet: " + e.getMessage()); e.printStackTrace(); }
+        
+		return drc;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveRoomSet(com.aranai.dungeonator.dungeonchunk.DungeonRoomSet)
+	 */
+	@Override
+	public boolean saveRoomSet(DungeonRoomSet set) throws DataStoreSaveException {
+		Statement st = null;
+        
+        try
+        {
+	    	conn.setAutoCommit(false);
+	    	st = conn.createStatement();
+	        
+	        st.execute("INSERT INTO `"+TblRoomSets+"` (`world`,`x`,`y`,`z`,`library_id`,`name`) VALUES (" +
+	        		"'"+set.getOriginChunk().getWorldName()+"'," +
+	        		"'"+set.getOriginX()+"'," +
+	        		"'"+set.getOriginY()+"'," +
+	        		"'"+set.getOriginZ()+"'," +
+	        		"'"+set.getLibraryID()+"'," +
+	        		"'"+set.getTitle()+"');");
+	        
+	        conn.commit();
+        }
+        catch(SQLException e) { e.printStackTrace(); return false; }
+        catch(Exception e) { e.printStackTrace(); return false; }
+        
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveLibraryRoomSet(com.aranai.dungeonator.dungeonchunk.DungeonRoomSet)
+	 */
+	@Override
+	public boolean saveLibraryRoomSet(DungeonRoomSet set) throws DataStoreSaveException {
+		boolean success = false;
+        
+        try
+        {
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryRoomSets+"`" +
+	        		"(`id`,`filename`,`title`,`size_x`,`size_y`,`size_z`)" +
+	        		"VALUES (?, ?, ?, ?, ?, ?);");
+	        
+	        // Handle library id
+	        long libraryId = set.getLibraryID();
+	        if(libraryId > 0) { ps.setLong(1, libraryId); } else { ps.setNull(1, java.sql.Types.INTEGER); }
+	        
+	        ps.setString(2, set.getName());
+	        ps.setString(3, set.getTitle());
+	        ps.setInt(4, set.getSizeX());
+	        ps.setInt(5, set.getSizeY());
+	        ps.setInt(6, set.getSizeZ());
+	        
+	        ps.execute();
+	        conn.commit();
+	        
+	        success = true;
+        }
+        catch(Exception e) { e.printStackTrace(); }
+        
+		return success;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getLibraryWidget(long)
+	 */
+	@Override
+	public DungeonWidget getLibraryWidget(long id) throws DataStoreGetException {
+		PreparedStatement ps = null;
+        ResultSet rs = null;
+        boolean loaded = false;
+        
+        DungeonWidget widget = null;
+        
+		// Get from database
+		try
+        {
+        	ps = conn.prepareStatement("SELECT * FROM `"+TblLibraryWidgets+"` WHERE `id` = ?");
+            ps.setLong(1, id);
+            rs = ps.executeQuery();
+             
+            while (rs.next()) {
+            	// Get the size class
+            	DungeonWidget.Size size = DungeonWidget.Size.GetByCode(rs.getInt("size_class"));
+            	
+            	// Get the bounds
+            	BlockVector bounds = new BlockVector(rs.getInt("bound_x"), rs.getInt("bound_y"), rs.getInt("bound_z"));
+            	
+            	// Get the origin
+            	BlockVector origin = new BlockVector(rs.getInt("origin_x"), rs.getInt("origin_y"), rs.getInt("origin_z"));
+            	
+            	widget = new DungeonWidget(id, rs.getString("filename"), size, bounds, origin);
+            	loaded = true;
+            }
+        }
+        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] " + e.getMessage()); }
+        
+        if(!loaded)
+        {
+        	return null;
+        }
+        
+		return widget;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveLibraryWidget(com.aranai.dungeonator.dungeonchunk.DungeonWidget)
+	 */
+	@Override
+	public boolean saveLibraryWidget(DungeonWidget widget) throws DataStoreSaveException {
+		boolean success = false;
+        
+        try
+        {
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryWidgets+"`" +
+	        		"(`id`,`filename`,`bound_x`,`bound_y`,`bound_z`,`origin_x`,`origin_y`,`origin_z`)" +
+	        		"VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+	        
+	        // Handle library id
+	        long libraryId = widget.getLibraryID();
+	        if(libraryId > 0) { ps.setLong(1, libraryId); } else { ps.setNull(1, java.sql.Types.INTEGER); }
+	        
+	        ps.setString(2, widget.getFilename());
+	        
+	        // Get bounds
+	        BlockVector bounds = widget.getBounds();
+	        ps.setInt(3, bounds.getBlockX());
+	        ps.setInt(4, bounds.getBlockY());
+	        ps.setInt(5, bounds.getBlockZ());
+	        
+	        // Get origin
+	        BlockVector origin = widget.getOrigin();
+	        ps.setInt(6, origin.getBlockX());
+	        ps.setInt(7, origin.getBlockY());
+	        ps.setInt(8, origin.getBlockZ());
+	        
+	        ps.execute();
+	        conn.commit();
+	        
+	        success = true;
+        }
+        catch(Exception e) { e.printStackTrace(); }
+        
+		return success;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getReservedRooms(int, int, int, int, int, int)
+	 */
+	@Override
+	public DungeonRoom[][][] getReservedRooms(String world, int x1, int y1, int z1, int x2, int y2, int z2) throws DataStoreGetException {
+		PreparedStatement ps;
+		ResultSet rs;
+		
+		// Initialize array
+		DungeonRoom[][][] rooms = new DungeonRoom[(x2-x1)+1][(y2-y1)+1][(z2-z1)+1];
+		
+		// Get query results
+		try
+        {
+        	ps = conn.prepareStatement("SELECT * FROM `"+TblRoomReservations+"`" +
+        			" LEFT JOIN `"+TblLibraryRooms+"` ON(`"+TblRoomReservations+"`.`library_id`=`"+TblLibraryRooms+"`.`id`)" +
+        			" WHERE `world` = ? AND `x` >= ? AND `y` >= ? AND `z` >= ? AND `x` <= ? AND `y` <= ? AND `z` <= ?");
+            ps.setString(1, world);
+            ps.setInt(2, x1);
+            ps.setInt(3, y1);
+            ps.setInt(4, z1);
+            ps.setInt(5, x2);
+            ps.setInt(6, y2);
+            ps.setInt(7, z2);
+            rs = ps.executeQuery();
+            
+            while (rs.next())
+            {
+            	// Successfully retrieved the room
+            	int x = rs.getInt("x");
+            	int y = rs.getInt("y");
+            	int z = rs.getInt("z");
+            	
+            	rooms[x][y][z] = new DungeonRoom(new DungeonChunk(null, DungeonRoomType.BASIC_TILE, x, z), y);
+            	rooms[x][y][z].setLoaded(true);
+            	rooms[x][y][z].setLibraryId(rs.getLong("library_id"));
+            	rooms[x][y][z].setName(rs.getString("name"));
+            	rooms[x][y][z].setFilename(rs.getString("filename"));
+            	
+            	// Set doorways
+            	for(byte d : Direction.directionValues.values())
+            	{
+            		String s = ColDoorways.get(d);
+            		if(s != null)
+            		{
+            			rooms[x][y][z].setDoorway(d, rs.getBoolean(s));
+            		}
+            	}
+            }
+        }
+        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getReservedRooms: " + e.getMessage()); e.printStackTrace(); }
+		
+		return rooms;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveReservedRoom(java.lang.String, int, int, int, long)
+	 */
+	@Override
+	public boolean saveReservedRoom(String world, int x, int y, int z, long id) throws DataStoreSaveException {
+		boolean success = false;
+        
+        try
+        {
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblRoomReservations+"`" +
+	        		"(`world`,`x`,`y`,`z`,`library_id`)" +
+	        		"VALUES (?, ?, ?, ?, ?);");
+	        
+	        ps.setString(1, world);
+	        ps.setInt(2, x);
+	        ps.setInt(3, y);
+	        ps.setInt(4, z);
+	        ps.setLong(5, id);
+	        ps.execute();
+	        conn.commit();
+	        
+	        success = true;
+        }
+        catch(Exception e) { e.printStackTrace(); }
+        
+		return success;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#deleteReservedRoom(java.lang.String, int, int, int)
+	 */
+	@Override
+	public boolean deleteReservedRoom(String world, int x, int y, int z) throws DataStoreDeleteException {
+		boolean success = false;
+        
+        try
+        {
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement("DELETE FROM `"+TblRoomReservations+"`" +
+	        		"WHERE `world` = ? AND `x` = ? AND `y` = ? AND `z` = ?;");
+	        
+	        ps.setString(1, world);
+	        ps.setInt(2, x);
+	        ps.setInt(3, y);
+	        ps.setInt(4, z);
+	        ps.execute();
+	        conn.commit();
+	        
+	        success = true;
+        }
+        catch(Exception e) { e.printStackTrace(); }
+        
+		return success;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getAllReservedRooms(java.lang.String)
+	 */
+	@Override
+	public Hashtable<String, Long> getAllReservedRooms(String world) throws DataStoreGetException {
+		PreparedStatement ps;
+		ResultSet rs;
+		
+		// Initialize hashtable
+		Hashtable<String,Long> rooms = new Hashtable<String,Long>();
+		
+		// Get query results
+		try
+        {
+        	ps = conn.prepareStatement("SELECT * FROM `"+TblRoomReservations+"`" +
+        			" LEFT JOIN `"+TblLibraryRooms+"` ON(`"+TblRoomReservations+"`.`library_id`=`"+TblLibraryRooms+"`.`id`)" +
+        			" WHERE `world` = ?");
+            ps.setString(1, world);
+            rs = ps.executeQuery();
+            
+            while (rs.next())
+            {
+            	// Successfully retrieved the room
+            	String key = DungeonDataManager.GetReservationKey(rs.getString("world"), rs.getInt("x"), rs.getInt("y"), rs.getInt("z"));
+            	rooms.put(key, rs.getLong("library_id"));
+            }
+        }
+        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getReservedRooms: " + e.getMessage()); e.printStackTrace(); }
+		
+		return rooms;
 	}
 
 }

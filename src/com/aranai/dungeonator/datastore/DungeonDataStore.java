@@ -1,10 +1,15 @@
 package com.aranai.dungeonator.datastore;
 
+import java.util.Hashtable;
 import java.util.Vector;
+
+import org.bukkit.util.BlockVector;
 
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 
 /**
  * Provides a default (non-functional) implementation for others to extend.
@@ -172,6 +177,71 @@ public class DungeonDataStore implements IDungeonDataStore {
 	 */
 	@Override
 	public boolean saveRooms(DungeonRoom[] rooms) throws DataStoreSaveException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveRoomSet(com.aranai.dungeonator.dungeonchunk.DungeonRoomSet)
+	 */
+	@Override
+	public boolean saveRoomSet(DungeonRoomSet set)
+			throws DataStoreSaveException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public DungeonWidget getLibraryWidget(long id) throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean saveLibraryWidget(DungeonWidget widget)
+			throws DataStoreSaveException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public DungeonRoomSet getRoomSet(String world, int x, int y, int z)
+			throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean saveLibraryRoomSet(DungeonRoomSet set)
+			throws DataStoreSaveException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public DungeonRoom[][][] getReservedRooms(String world, int x1, int y1,
+			int z1, int x2, int y2, int z2) throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean saveReservedRoom(String world, int x, int y, int z, long id)
+			throws DataStoreSaveException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Hashtable<String, Long> getAllReservedRooms(String world)
+			throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean deleteReservedRoom(String world, int x, int y, int z)
+			throws DataStoreDeleteException {
 		// TODO Auto-generated method stub
 		return false;
 	}

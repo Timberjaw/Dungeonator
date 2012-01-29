@@ -19,7 +19,7 @@ import com.aranai.dungeonator.datastore.SqliteDungeonDataStore;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunkManager;
 import com.aranai.dungeonator.dungeonmaster.DungeonMaster;
 import com.aranai.dungeonator.generator.DungeonChunkProvider;
-import com.aranai.dungeonator.generator.DungeonRoomEditor;
+import com.aranai.dungeonator.generator.DungeonEditor;
 
 /**
  * The Dungeonator Plugin for Bukkit.
@@ -53,7 +53,7 @@ public class Dungeonator extends JavaPlugin {
 	private DungeonChunkManager chunkManager;
 	
 	/** The dungeon room editor. */
-	private DungeonRoomEditor roomEditor;
+	private DungeonEditor roomEditor;
 	
 	/** The dungeon chunk provider. */
 	private DungeonChunkProvider dcp;
@@ -148,7 +148,7 @@ public class Dungeonator extends JavaPlugin {
 		chunkManager = new DungeonChunkManager(dataManager);
 		
 		// Initialize chunk editor
-		roomEditor = new DungeonRoomEditor(this);
+		roomEditor = new DungeonEditor(this);
 		
 		// Initialize DM
 		dungeonMaster = new DungeonMaster();
@@ -225,7 +225,7 @@ public class Dungeonator extends JavaPlugin {
 	 *
 	 * @return the chunk editor
 	 */
-	public DungeonRoomEditor getChunkEditor()
+	public DungeonEditor getChunkEditor()
 	{
 		return roomEditor;
 	}

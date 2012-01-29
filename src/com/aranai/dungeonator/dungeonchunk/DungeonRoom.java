@@ -64,6 +64,9 @@ public class DungeonRoom implements IDungeonRoom {
 	/** Default theme */
 	private String defaultTheme;
 	
+	/** Widget Nodes */
+	private Vector<DungeonWidgetNode> nodes;
+	
 	public DungeonRoom()
 	{
 		chunk = null;
@@ -72,6 +75,7 @@ public class DungeonRoom implements IDungeonRoom {
 		defaultTheme = "DEFAULT";
 		allowedThemes.add(defaultTheme);
 		schematic = null;
+		nodes = new Vector<DungeonWidgetNode>();
 	}
 	
 	public DungeonRoom(DungeonChunk chunk, int y)
@@ -628,6 +632,56 @@ public class DungeonRoom implements IDungeonRoom {
 		{
 			addTheme(s);
 		}
+	}
+	
+	/**
+	 * Adds a widget node to the room's node list.
+	 *
+	 * @param node the node
+	 */
+	public void addNode(DungeonWidgetNode node)
+	{
+		node.setNodeID(nodes.size());
+		nodes.add(node);
+	}
+	
+	/**
+	 * Sets a node.
+	 *
+	 * @param node the node
+	 * @param index the index
+	 */
+	public void setNode(DungeonWidgetNode node, int index)
+	{
+		// Increase the size of the node list if the index is out of bounds
+		if(nodes.size() <= index)
+		{
+			nodes.setSize(index);
+		}
+		
+		node.setNodeID(index);
+		nodes.set(index, node);
+	}
+	
+	/**
+	 * Gets a specified widget node.
+	 *
+	 * @param index the index of the node to get
+	 * @return the node
+	 */
+	public DungeonWidgetNode getNode(int index)
+	{
+		return nodes.get(index);
+	}
+	
+	/**
+	 * Gets the widget node list.
+	 *
+	 * @return the nodes
+	 */
+	public Vector<DungeonWidgetNode> getNodes()
+	{
+		return nodes;
 	}
 	
 	/**

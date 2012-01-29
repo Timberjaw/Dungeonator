@@ -1,10 +1,15 @@
 package com.aranai.dungeonator.datastore;
 
+import java.util.Hashtable;
 import java.util.Vector;
+
+import org.bukkit.util.BlockVector;
 
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 
 /**
  * Interface for data store classes. Specifies standard methods for accessing,
@@ -83,6 +88,36 @@ public interface IDungeonDataStore {
 	public boolean saveRoom(DungeonRoom room) throws DataStoreSaveException;
 	
 	/**
+	 * Gets an active room set.
+	 *
+	 * @param world the world name
+	 * @param x the x coordinate of the room set origin
+	 * @param y the y coordinate of the room set origin
+	 * @param z the z coordinate of the room set origin
+	 * @return the DungeonRoomSet, or null if the coordinates have not yet been populated
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public DungeonRoomSet getRoomSet(String world, int x, int y, int z) throws DataStoreGetException;
+	
+	/**
+	 * Save a room set.
+	 *
+	 * @param set the DungeonRoomSet
+	 * @return true, if successful
+	 * @throws DataStoreSaveException the data store save exception
+	 */
+	public boolean saveRoomSet(DungeonRoomSet set) throws DataStoreSaveException;
+	
+	/**
+	 * Save a room set to the library.
+	 *
+	 * @param set the DungeonRoomSet
+	 * @return true, if successful
+	 * @throws DataStoreSaveException the data store save exception
+	 */
+	public boolean saveLibraryRoomSet(DungeonRoomSet set) throws DataStoreSaveException;
+	
+	/**
 	 * Delete room.
 	 *
 	 * @param world the world
@@ -134,5 +169,72 @@ public interface IDungeonDataStore {
 	 * @return true, if successful
 	 * @throws DataStoreSaveException
 	 */
-	boolean saveRooms(DungeonRoom[] rooms) throws DataStoreSaveException;
+	public boolean saveRooms(DungeonRoom[] rooms) throws DataStoreSaveException;
+	
+	/**
+	 * Gets a DungeonWidget record from the library.
+	 *
+	 * @param id the id of the widget
+	 * @return the DungeonWidget if the ID is valid, or null otherwise
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public DungeonWidget getLibraryWidget(long id) throws DataStoreGetException;
+	
+	/**
+	 * Save a DungeonWidget record in the library.
+	 *
+	 * @param widget the widget
+	 * @return true, if successful
+	 * @throws DataStoreSaveException the data store save exception
+	 */
+	public boolean saveLibraryWidget(DungeonWidget widget) throws DataStoreSaveException;
+	
+	/**
+	 * Gets a list of reserved rooms within a specified volume.
+	 *
+	 * @param world the world name
+	 * @param x1 the starting x coord
+	 * @param y1 the starting y coord
+	 * @param z1 the starting z coord
+	 * @param x2 the ending x coord
+	 * @param y2 the ending y coord
+	 * @param z2 the ending z coord
+	 * @return a list of reserved rooms within the volume, or an empty list if no reserved rooms were found
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public DungeonRoom[][][] getReservedRooms(String world, int x1, int y1, int z1, int x2, int y2, int z2) throws DataStoreGetException;
+	
+	/**
+	 * Gets info on all the reserved rooms for a world.
+	 *
+	 * @param world the world
+	 * @return the room info
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public Hashtable<String,Long> getAllReservedRooms(String world) throws DataStoreGetException;
+	
+	/**
+	 * Save a reserved room.
+	 *
+	 * @param world the world name
+	 * @param x the x coord
+	 * @param y the y coord
+	 * @param z the z coord
+	 * @param id the library id for the room
+	 * @return true, if successful
+	 * @throws DataStoreSetException the data store set exception
+	 */
+	public boolean saveReservedRoom(String world, int x, int y, int z, long id) throws DataStoreSaveException;
+	
+	/**
+	 * Delete reserved room.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @return true, if successful
+	 * @throws DataStoreDeleteException the data store delete exception
+	 */
+	public boolean deleteReservedRoom(String world, int x, int y, int z) throws DataStoreDeleteException;
 }

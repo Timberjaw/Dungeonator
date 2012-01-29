@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import org.bukkit.World;
 import org.jnbt.ByteArrayTag;
 import org.jnbt.CompoundTag;
 import org.jnbt.NBTInputStream;
@@ -13,6 +14,8 @@ import org.jnbt.NBTInputStream;
 import com.aranai.dungeonator.datastore.*;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 
 /**
  * Abstracts all data store access for Dungeonator.
@@ -27,6 +30,9 @@ public class DungeonDataManager {
 	
 	private Hashtable<String,CompoundTag> roomCache;
 	
+	/** Reserved room list */
+	private Hashtable<String,Long> roomReservations;
+	
 	/**
 	 * Instantiates the DungeonDataManager.
 	 *
@@ -39,6 +45,97 @@ public class DungeonDataManager {
 		this.dataStore.initialize(plugin);
 		
 		this.roomCache = new Hashtable<String,CompoundTag>();
+		
+		this.roomReservations = new Hashtable<String,Long>();
+		
+		loadRoomReservations();
+	}
+	
+	/**
+	 * Load room reservations. This should be done once per world on startup.
+	 */
+	private void loadRoomReservations()
+	{
+		for(World w : plugin.getServer().getWorlds())
+		{
+			try {
+				roomReservations.putAll(dataStore.getAllReservedRooms(w.getName()));
+			} catch (DataStoreGetException e) { e.printStackTrace(); }
+		}
+		
+		plugin.getLogger().info("Found "+roomReservations.size()+" room reservations.");
+	}
+	
+	/**
+	 * Checks if a room is reserved.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @return true, if room is reserved
+	 */
+	private boolean isRoomReserved(String world, int x, int y, int z)
+	{
+		return roomReservations.containsKey(DungeonDataManager.GetReservationKey(world,x,y,z));
+	}
+	
+	/**
+	 * Gets a room reservation.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @return the room reservation
+	 */
+	private long getRoomReservation(String world, int x, int y, int z)
+	{
+		if(isRoomReserved(world, x, y, z))
+		{
+			return roomReservations.get(GetReservationKey(world, x, y, z));
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Sets a room reservation.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @param id the id
+	 */
+	private void setRoomReservation(String world, int x, int y, int z, long id)
+	{
+		try {
+			// Save to data store
+			dataStore.saveReservedRoom(world, x, y, z, id);
+			
+			// Save to local cache
+			roomReservations.put(GetReservationKey(world,x,y,z), id);
+		} catch (DataStoreSaveException e) { e.printStackTrace(); }
+	}
+	
+	/**
+	 * Delete a room reservation.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 */
+	private void deleteRoomReservation(String world, int x, int y, int z)
+	{
+		try {
+			// Delete from data store
+			dataStore.deleteReservedRoom(world, x, y, z);
+			
+			// Delete from local cache
+			roomReservations.remove(GetReservationKey(world,x,y,z));
+		} catch (DataStoreDeleteException e) { e.printStackTrace(); }
 	}
 	
 	/**
@@ -87,6 +184,22 @@ public class DungeonDataManager {
 		}
 	}
 	
+	/**
+	 * Save a room set to the library.
+	 *
+	 * @param set the room set to save
+	 */
+	public void saveLibraryRoomSet(DungeonRoomSet set)
+	{
+		try {
+			// Save the room set
+			dataStore.saveLibraryRoomSet(set);
+			
+			// Notify the editor
+			plugin.getChunkEditor().getActiveEditor().sendMessage("Saved room set '"+set.getTitle()+"["+set.getName()+"] to Library.");
+		} catch (DataStoreSaveException e) { e.printStackTrace(); }
+	}
+	
 	public boolean saveChunk(DungeonChunk chunk)
 	{
 		try {
@@ -119,6 +232,22 @@ public class DungeonDataManager {
 		return this.saveRooms(rooms);
 	}
 	
+	/**
+	 * Save a widget to the library.
+	 *
+	 * @param widget the widget to save
+	 */
+	public void saveLibraryWidget(DungeonWidget widget)
+	{
+		try {
+			// Save the widget
+			dataStore.saveLibraryWidget(widget);
+			
+			// Notify the editor
+			plugin.getChunkEditor().getActiveEditor().sendMessage("Saved widget '"+widget.getFilename()+"' to Library.");
+		} catch (DataStoreSaveException e) { e.printStackTrace(); }
+	}
+	
 	public DungeonRoom[] getRoomsForChunk(DungeonChunk chunk)
 	{
 		String fullPath = "";
@@ -144,7 +273,7 @@ public class DungeonDataManager {
 				// Get the full path to the source tile
 				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
 				
-				CompoundTag schematic = this.getSchematic(fullPath);
+				CompoundTag schematic = this.getRoomSchematic(fullPath);
 				
 				// Verify the data was loaded
 				if(schematic != null)
@@ -170,6 +299,23 @@ public class DungeonDataManager {
 		String fullPath = "";
 		DungeonRoom[] rooms = new DungeonRoom[16];
 		
+		// Get a count of reserved rooms
+		int reservedRoomCount = 0;
+		for(int i = 0; i < 16; i++)
+		{
+			if(isRoomReserved(chunk.getWorldName(), chunk.getX(), i, chunk.getZ())) { reservedRoomCount++; }
+		}
+		
+		// Get the reserved room list for the chunk
+		DungeonRoom[][][] reservedRooms = null;
+		
+		if(reservedRoomCount > 0)
+		{
+			try {
+				reservedRooms = dataStore.getReservedRooms(chunk.getWorldName(), chunk.getX(), 0, chunk.getZ(), chunk.getX(), 15, chunk.getZ());
+			} catch (DataStoreGetException e1) { e1.printStackTrace(); }
+		}
+		
 		Vector<Byte>[] doorways = this.getAdjacentDoorways(chunk.getWorldName(), chunk.getX(), chunk.getZ());
 		
 		for(int i = 0; i < 16; i++)
@@ -182,7 +328,24 @@ public class DungeonDataManager {
 			
 			// Get a random room
 			try {
-				rooms[i] = dataStore.getLibraryRoomRandom(doorways[i]);
+				// Check for a room reservation id
+				long reservedID = -1;
+				if(reservedRoomCount > 0)
+				{
+					reservedID = getRoomReservation(chunk.getWorldName(), chunk.getX(), i, chunk.getZ());
+				}
+				
+				if(reservedID > 0)
+				{
+					// Get the reserved room
+					rooms[i] = reservedRooms[chunk.getX()][i][chunk.getZ()];
+					Dungeonator.getLogger().info("Found reserved room "+rooms[i].getLibraryId());
+				}
+				else
+				{
+					// Get a random room
+					rooms[i] = dataStore.getLibraryRoomRandom(doorways[i]);
+				}
 				
 				// Make sure we actually got a result, and bail out if we didn't
 				if(rooms[i] == null) { return null; }
@@ -210,7 +373,7 @@ public class DungeonDataManager {
 				// Get the full path to the source tile
 				fullPath = folderPath+rooms[i].getFilename()+tmpTheme+".nbt";
 				
-				CompoundTag schematic = this.getSchematic(fullPath);
+				CompoundTag schematic = this.getRoomSchematic(fullPath);
 				
 				// Verify the data was loaded
 				if(schematic != null)
@@ -221,6 +384,12 @@ public class DungeonDataManager {
 					// Set blocks and block data
 					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
 					rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
+				}
+				
+				// Remove the room reservation
+				if(reservedID > 0)
+				{
+					deleteRoomReservation(chunk.getWorldName(), chunk.getX(), i, chunk.getZ());
 				}
 			} catch (DataStoreGetException e) { e.printStackTrace(); return null; }
 		}
@@ -235,7 +404,7 @@ public class DungeonDataManager {
 		return rooms;
 	}
 	
-	public CompoundTag getSchematic(String fullPath)
+	public CompoundTag getRoomSchematic(String fullPath)
 	{
 		// Check cache
 		if(roomCache.containsKey(fullPath))
@@ -431,5 +600,19 @@ public class DungeonDataManager {
 		} catch (DataStoreGetException e) { e.printStackTrace(); }
 		
 		return doors;
+	}
+	
+	/**
+	 * Utility method for getting a room reservation hash key.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @return the key
+	 */
+	public static String GetReservationKey(String world, int x, int y, int z)
+	{
+		return world+"."+x+"."+y+"."+z;
 	}
 }
