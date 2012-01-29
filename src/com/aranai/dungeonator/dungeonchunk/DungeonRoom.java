@@ -365,6 +365,7 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	public byte[] getRawBlocks()
 	{
+		int tick = 0;
 		if(chunk != null && chunk.isReady())
 		{
 			/*
@@ -382,9 +383,12 @@ public class DungeonRoom implements IDungeonRoom {
 					{
 						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
 						blocks[pos] = (byte)chunk.getHandle().getBlock(x, (this.y*8)+y, z).getTypeId();
+						if(blocks[pos] > 0) { tick++; }
 					}
 				}
 			}
+			
+			System.out.println("Found "+tick+" blocks for room at Y "+(this.y*8)+". "+this.toString());
 			
 			return blocks;
 		}

@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Level;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -44,6 +45,7 @@ import com.aranai.dungeonator.amt.ThemeMaterialTranslation;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 
 /**
  * Handles in-game editing of resources. Supports manual construction and
@@ -83,6 +85,9 @@ public class DungeonEditor {
 	/** The origin room. */
 	private DungeonRoom room;
 	
+	/** The active room set */
+	private DungeonRoomSet roomSet;
+	
 	/** The full room list. */
 	private DungeonRoom[][][] rooms;
 	
@@ -113,16 +118,8 @@ public class DungeonEditor {
 	/** The theme manager */
 	private ThemeManager themeManager;
 	
-	/** Set active flag */
-	private boolean setActive = false;
-	
-	/** The set dimensions */
-	private int setX = 1;
-	private int setY = 1;
-	private int setZ = 1;
-	
 	/** The set name */
-	private String setName = "Unnamed Room Set";
+	private String setName = "";
 	
 	/** The set ID */
 	private int setID = -1;
@@ -188,12 +185,12 @@ public class DungeonEditor {
 			
 			// Flatten all chunks in the set region
 			// By default this will be one chunk because no set is specified
-			for(int fX = chunk.getX()-1; fX <= chunk.getX()+this.setX+1; fX++)
+			for(int fX = chunk.getX()-1; fX <= chunk.getX()+roomSet.getSizeX()+1; fX++)
 			{
-				for(int fZ = chunk.getZ()-1; fZ <= chunk.getZ()+this.setZ+1; fZ++)
+				for(int fZ = chunk.getZ()-1; fZ <= chunk.getZ()+roomSet.getSizeZ()+1; fZ++)
 				{
 					// Set the floor material based on whether the chunk is inside the set or is a border chunk
-					if(fX >= chunk.getX() && fX <= chunk.getX()+this.setX && fZ >= chunk.getZ() && fZ <= chunk.getZ()+this.setZ)
+					if(fX >= chunk.getX() && fX <= chunk.getX()+roomSet.getSizeX() && fZ >= chunk.getZ() && fZ <= chunk.getZ()+roomSet.getSizeZ())
 					{
 						// Part of set
 						mat = Material.COBBLESTONE;
@@ -228,12 +225,12 @@ public class DungeonEditor {
 			int blockX = chunk.getX() << 4;
 			int blockZ = chunk.getZ() << 4;
 			
-			for(int y = this.editor_y; y < (this.editor_y + (this.setY * 8)); y++)
+			for(int y = this.editor_y; y < (this.editor_y + (roomSet.getSizeY() * 8)); y++)
 			{
 				w.getBlockAt(blockX-1, y, blockZ-1).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX-1, y, blockZ+(this.setZ*16)).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+(this.setX*16), y, blockZ+(this.setZ*16)).setType(Material.OBSIDIAN);
-				w.getBlockAt(blockX+(this.setX*16), y, blockZ-1).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX-1, y, blockZ+(roomSet.getSizeZ()*16)).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+(roomSet.getSizeX()*16), y, blockZ+(roomSet.getSizeZ()*16)).setType(Material.OBSIDIAN);
+				w.getBlockAt(blockX+(roomSet.getSizeX()*16), y, blockZ-1).setType(Material.OBSIDIAN);
 			}
 			
 			/*
@@ -242,29 +239,29 @@ public class DungeonEditor {
 			
 			editor.sendMessage("Adding doorway hints...");
 			
-			for(int sy = 0; sy < this.setY; sy++)
+			for(int sy = 0; sy < roomSet.getSizeY(); sy++)
 			{
 				// Add lintels on the X axis
-				for(int x = blockX; x < blockX + (this.setX*16); x++)
+				for(int x = blockX; x < blockX + (roomSet.getSizeX()*16); x++)
 				{
 					w.getBlockAt(x, this.editor_y+4+(sy*8), blockZ-1).setType(Material.OBSIDIAN);
-					w.getBlockAt(x, this.editor_y+4+(sy*8), blockZ+(this.setZ*16)).setType(Material.OBSIDIAN);
+					w.getBlockAt(x, this.editor_y+4+(sy*8), blockZ+(roomSet.getSizeZ()*16)).setType(Material.OBSIDIAN);
 				}
 				
 				// Add lintels on the Z axis
-				for(int z = blockZ; z < blockZ + (this.setZ*16); z++)
+				for(int z = blockZ; z < blockZ + (roomSet.getSizeZ()*16); z++)
 				{
 					w.getBlockAt(blockX-1, this.editor_y+4+(sy*8), z).setType(Material.OBSIDIAN);
-					w.getBlockAt(blockX+(this.setX*16), this.editor_y+4+(sy*8), z).setType(Material.OBSIDIAN);
+					w.getBlockAt(blockX+(roomSet.getSizeX()*16), this.editor_y+4+(sy*8), z).setType(Material.OBSIDIAN);
 				}
 				
 				// Handle columns
-				for(int sx = 0; sx < this.setX; sx++)
+				for(int sx = 0; sx < roomSet.getSizeX(); sx++)
 				{
-					for(int sz = 0; sz < this.setZ; sz++)
+					for(int sz = 0; sz < roomSet.getSizeZ(); sz++)
 					{
 						// Only include rooms on the edge of the volume
-						if(sx == 0 || sz == 0 || sx == (this.setX-1) || sz == (this.setZ-1))
+						if(sx == 0 || sz == 0 || sx == (roomSet.getSizeX()-1) || sz == (roomSet.getSizeZ()-1))
 						{
 							int tmpStartX = blockX+(sx*16);
 							int tmpStartY = this.editor_y+(sy*8);
@@ -287,7 +284,7 @@ public class DungeonEditor {
 								
 								// Z Max-Wall
 								// Add only if sz is max
-								if(sz == (this.setZ-1))
+								if(sz == (roomSet.getSizeZ()-1))
 								{
 									w.getBlockAt(tmpStartX+0, y, tmpStartZ+16).setType(Material.OBSIDIAN);
 									w.getBlockAt(tmpStartX+4, y, tmpStartZ+16).setType(Material.OBSIDIAN);
@@ -311,7 +308,7 @@ public class DungeonEditor {
 								
 								// X Max-Wall
 								// Add only if sx is max
-								if(sx == (this.setX-1))
+								if(sx == (roomSet.getSizeX()-1))
 								{
 									w.getBlockAt(tmpStartX+16, y, tmpStartZ+0).setType(Material.OBSIDIAN);
 									w.getBlockAt(tmpStartX+16, y, tmpStartZ+4).setType(Material.OBSIDIAN);
@@ -335,13 +332,13 @@ public class DungeonEditor {
 		hasUnsavedChanges = true;
 		
 		// Initialize rooms list
-		this.rooms = new DungeonRoom[this.setX][this.setY][this.setZ];
+		this.rooms = new DungeonRoom[roomSet.getSizeX()][roomSet.getSizeY()][roomSet.getSizeZ()];
 		
-		for(int x = 0; x < this.setX; x++)
+		for(int x = 0; x < roomSet.getSizeX(); x++)
 		{
-			for(int y = 0; y < this.setY; y++)
+			for(int y = 0; y < roomSet.getSizeY(); y++)
 			{
-				for(int z = 0; z < this.setZ; z++)
+				for(int z = 0; z < roomSet.getSizeZ(); z++)
 				{
 					this.rooms[x][y][z] = new DungeonRoom(this.chunks[x][z], y+1);
 				}
@@ -357,18 +354,173 @@ public class DungeonEditor {
 	 *
 	 * @param file the file
 	 */
-	public void load(String path, String name)
+	public void loadRoom(String path, String name, boolean isRoomSet)
 	{
 		CompoundTag schematic = null;
+		
+		// Handle the room set
+		if(isRoomSet)
+		{
+			path = path + "sets" + File.separator + name + File.separator;
+			loadRoomSet(path, name+".nbt");
+		}
+		
+		// Append file extension
+		name = name + ".nbt";
 		
 		// Notify the editor that we are loading the file
 		editor.sendMessage("Loading: " + path + name);
 		
 		// If the editor is not started, start it
-		if(!this.isActive)
+		if(!this.isActive || isRoomSet)
 		{
-			this.cmdNew(new DCommandEvent(editor, "new", new String[]{"flatten:true", "hint:true"}));
+			String setString = "false";
+			if(isRoomSet) { setString = "true"; }
+			
+			// Create a blank room set if one doesn't exist yet
+			if(roomSet == null) { roomSet = new DungeonRoomSet(name, name, 1, 1, 1); }
+			
+			this.cmdNew(new DCommandEvent(editor, "new", new String[]{
+					"flatten:true", "hint:true", "set:"+setString, "setx:"+roomSet.getSizeX(), "sety:"+roomSet.getSizeY(), "setz:"+roomSet.getSizeZ()}
+			));
 		}
+		
+		// Reinitialize the room array
+		rooms = new DungeonRoom[roomSet.getSizeX()][roomSet.getSizeY()][roomSet.getSizeZ()];
+		
+		// Loop through rooms and load each one
+		for(int setX = 0; setX < roomSet.getSizeX(); setX++)
+		{
+			for(int setY = 0; setY < roomSet.getSizeY(); setY++)
+			{
+				for(int setZ = 0; setZ < roomSet.getSizeZ(); setZ++)
+				{
+					// Load the file
+					try {
+						// Open file input stream
+						String tmpName = name;
+						if(mode == EditMode.ROOM_SET) { tmpName = setX+"."+setY+"."+setZ+".nbt"; }
+						
+						FileInputStream fis = new FileInputStream(path+File.separator+tmpName);
+						
+						try {
+							// Open NBT input stream
+							NBTInputStream nis = new NBTInputStream(fis);
+							
+							// Read NBT data
+							org.jnbt.Tag tag = nis.readTag();
+							
+							if(tag instanceof CompoundTag)
+							{
+								schematic = (CompoundTag)tag;
+							}
+						} catch (IOException e) { e.printStackTrace(); }
+					} catch (FileNotFoundException e) { e.printStackTrace(); }
+					
+					// Get temporary chunk handle
+					DungeonChunk tmpChunk = new DungeonChunk(dungeonator.getServer().getWorld(chunk.getWorldName()).getChunkAt(chunk.getX()+setX, chunk.getZ()+setZ));
+					
+					// Initialize room
+					rooms[setX][setY][setZ] = new DungeonRoom(tmpChunk, setY+1);
+					DungeonRoom tmpRoom = rooms[setX][setY][setZ];
+					
+					// Verify the data was loaded
+					if(schematic != null)
+					{
+						// Get blocks
+						byte[] blocks = ((ByteArrayTag)schematic.getValue().get("blocks")).getValue();
+						
+						// Get block data
+						byte[] blockData = ((ByteArrayTag)schematic.getValue().get("blockData")).getValue();
+						
+						// Add blocks to chunk
+						for(int x = 0; x < 16; x++)
+						{
+							for(int z = 0; z < 16; z++)
+							{
+								for(int y = 0; y < 8; y++)
+								{
+									// Set block type and basic data value
+									tmpChunk.getHandle().getBlock(x, y+this.editor_y, z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
+								}
+							}
+						}
+						
+						// Set data values
+						// This has to run after all the blocks have been added, to prevent weirdness with MC overriding the data values
+						for(int x = 0; x < 16; x++)
+						{
+							for(int z = 0; z < 16; z++)
+							{
+								for(int y = 0; y < 8; y++)
+								{
+									tmpChunk.getHandle().getBlock(x, y+this.editor_y, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
+								}
+							}
+						}
+						
+						// Handle tile entities
+						if(schematic.getValue().containsKey("tileEntities"))
+						{
+							Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
+							
+							for(org.jnbt.Tag t : tileEntities.values())
+							{
+								tmpChunk.addTileEntityFromTag(t, this.editor_y);
+							}
+						}
+						
+						// Load doorways
+						int exitCount = 0;
+						tmpRoom.resetDoorways();
+						byte[] exits = ((ByteArrayTag)schematic.getValue().get("exits")).getValue();
+						
+						for(byte i = 0; i < exits.length; i++)
+						{
+							if(exits[i] != 0)
+							{
+								tmpRoom.setDoorway(i, true);
+								exitCount++;
+							}
+						}
+						
+						// Load themes
+						StringTag themeTag = (StringTag)schematic.getValue().get("themes");
+						if(themeTag != null)
+						{
+							tmpRoom.resetThemes();
+							String themes = themeTag.getValue();
+							for(String s : themes.split(","))
+							{
+								tmpRoom.addTheme(s);
+							}
+						}
+						
+						// Load default theme
+						StringTag defaultThemeTag = (StringTag)schematic.getValue().get("defaultTheme");
+						if(defaultThemeTag != null)
+						{
+							tmpRoom.setDefaultTheme(defaultThemeTag.getValue());
+						}
+						
+						// Semi-debug: notify the user of how many doorways were added
+						editor.sendMessage("Adding "+exitCount+" doorways.");
+					}
+				}
+			}
+			
+			// Set filename and path
+			activeFile = name;
+			activePath = path;
+		}
+	}
+	
+	/**
+	 * Load a room set from file.
+	 */
+	public void loadRoomSet(String path, String name)
+	{
+		CompoundTag schematic = null;
 		
 		// Load the file
 		try {
@@ -392,88 +544,17 @@ public class DungeonEditor {
 		// Verify the data was loaded
 		if(schematic != null)
 		{
-			// Get blocks
-			byte[] blocks = ((ByteArrayTag)schematic.getValue().get("blocks")).getValue();
+			CompoundTag setTag = ((CompoundTag)schematic.getValue().get("set"));
 			
-			// Get block data
-			byte[] blockData = ((ByteArrayTag)schematic.getValue().get("blockData")).getValue();
+			// Get Title
+			String title = ((StringTag)setTag.getValue().get("title")).getValue();
 			
-			// Add blocks to chunk
-			for(int x = 0; x < 16; x++)
-			{
-				for(int z = 0; z < 16; z++)
-				{
-					for(int y = 0; y < 8; y++)
-					{
-						// Set block type and basic data value
-						this.chunk.getHandle().getBlock(x, y+this.editor_y, z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
-					}
-				}
-			}
+			// Get bounds
+			int x = ((IntTag)setTag.getValue().get("x")).getValue();
+			int y = ((IntTag)setTag.getValue().get("y")).getValue();
+			int z = ((IntTag)setTag.getValue().get("z")).getValue();
 			
-			// Set data values
-			// This has to run after all the blocks have been added, to prevent weirdness with MC overriding the data values
-			for(int x = 0; x < 16; x++)
-			{
-				for(int z = 0; z < 16; z++)
-				{
-					for(int y = 0; y < 8; y++)
-					{
-						this.chunk.getHandle().getBlock(x, y+this.editor_y, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
-					}
-				}
-			}
-			
-			// Handle tile entities
-			if(schematic.getValue().containsKey("tileEntities"))
-			{
-				Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
-				
-				for(org.jnbt.Tag t : tileEntities.values())
-				{
-					this.chunk.addTileEntityFromTag(t, this.editor_y);
-				}
-			}
-			
-			// Load doorways
-			int exitCount = 0;
-			this.room.resetDoorways();
-			byte[] exits = ((ByteArrayTag)schematic.getValue().get("exits")).getValue();
-			
-			for(byte i = 0; i < exits.length; i++)
-			{
-				if(exits[i] != 0)
-				{
-					this.room.setDoorway(i, true);
-					exitCount++;
-				}
-			}
-			
-			// Load themes
-			StringTag themeTag = (StringTag)schematic.getValue().get("themes");
-			if(themeTag != null)
-			{
-				room.resetThemes();
-				String themes = themeTag.getValue();
-				for(String s : themes.split(","))
-				{
-					room.addTheme(s);
-				}
-			}
-			
-			// Load default theme
-			StringTag defaultThemeTag = (StringTag)schematic.getValue().get("defaultTheme");
-			if(defaultThemeTag != null)
-			{
-				room.setDefaultTheme(defaultThemeTag.getValue());
-			}
-			
-			// Set filename and path
-			activeFile = name;
-			activePath = path;
-			
-			// Semi-debug: notify the user of how many doorways were added
-			editor.sendMessage("Adding "+exitCount+" doorways.");
+			roomSet = new DungeonRoomSet(name, title, x, y, z, chunk.getX(), editor_y, chunk.getZ());
 		}
 	}
 	
@@ -500,7 +581,7 @@ public class DungeonEditor {
 	 * @param path the path
 	 * @param name the name
 	 */
-	public void save(String path, String name, boolean saveToLibrary)
+	public void saveRoom(String path, String name, boolean saveToLibrary)
 	{
 		// Make sure the editor is active
 		if(!isActive && (mode == EditMode.ROOM || mode == EditMode.ROOM_SET))
@@ -516,7 +597,7 @@ public class DungeonEditor {
 		 * Save set file
 		 */
 		
-		if(setActive)
+		if(mode == EditMode.ROOM_SET)
 		{
 			try {
 				this.saveRoomSet(path, name, saveToLibrary);
@@ -531,17 +612,17 @@ public class DungeonEditor {
 		 * Save room file(s)
 		 */
 		
-		for(int x = 0; x < this.setX; x++)
+		for(int x = 0; x < roomSet.getSizeX(); x++)
 		{
-			for(int y = 0; y < this.setX; y++)
+			for(int y = 0; y < roomSet.getSizeY(); y++)
 			{
-				for(int z = 0; z < this.setZ; z++)
+				for(int z = 0; z < roomSet.getSizeZ(); z++)
 				{
 					// If this is part of a set, alter the name to match the coords
 					// Format: X.Y.Z (file extension will be added automatically)
 					String tmpName = name;
 					
-					if(setActive)
+					if(mode == EditMode.ROOM_SET)
 					{
 						tmpName = x+"."+y+"."+z;
 					}
@@ -578,16 +659,29 @@ public class DungeonEditor {
 		// Set tags
 		HashMap<String,org.jnbt.Tag> setTags = new HashMap<String,org.jnbt.Tag>();
 		
+		// Title
+		setTags.put("title", new StringTag("title", roomSet.getTitle()));
+		
 		// Dimensions X,Y,Z
-		setTags.put("x", new IntTag("x", setX));
-		setTags.put("y", new IntTag("y", setY));
-		setTags.put("z", new IntTag("z", setZ));
+		setTags.put("x", new IntTag("x", roomSet.getSizeX()));
+		setTags.put("y", new IntTag("y", roomSet.getSizeY()));
+		setTags.put("z", new IntTag("z", roomSet.getSizeZ()));
 		
 		// Add set tags to schematic
 		tags.put("set", new CompoundTag("set", setTags));
 		
 		// Build final schematic tag
 		CompoundTag schematic = new CompoundTag("DungeonRoomSchematic", tags);
+		
+		// Create the set folder
+		if (!new File(path).exists()) {
+			try {
+				(new File(path)).mkdirs();
+			} catch (Exception e) {
+				Dungeonator.getLogger().log(Level.SEVERE, "[Dungeonator]: Unable to create room set folder at: "+path);
+				return;
+			}
+		}
 		
 		// Create file output stream
 		OutputStream output = new FileOutputStream(path+name+".nbt");
@@ -607,8 +701,7 @@ public class DungeonEditor {
 		
 		if(saveToLibrary)
 		{
-			// TODO: write to library
-			//dungeonator.getDataManager().saveLibraryRoomSet(room);
+			dungeonator.getDataManager().saveLibraryRoomSet(roomSet);
 		}
 	}
 	
@@ -719,10 +812,10 @@ public class DungeonEditor {
 		tags.put("defaultTheme", new StringTag("defaultTheme", room.getDefaultTheme()));
 		
 		// Loop through themes and save cached copies of the translated versions
-		byte[] blockData = this.room.getRawBlockData();
-		byte[] blocks = this.room.getRawBlocks();
+		byte[] blockData = room.getRawBlockData();
+		byte[] blocks = room.getRawBlocks();
 		
-		for(String s : this.room.getThemes())
+		for(String s : room.getThemes())
 		{
 			// Handle path and filename for processed versions
 			String tmpPath = path;
@@ -934,24 +1027,33 @@ public class DungeonEditor {
 		 * Get 'set' arg
 		 */
 		
-		setActive = cmd.getNamedArgBool("set",  true);
+		boolean setActive = cmd.getNamedArgBool("set",  false);
 		
 		/*
 		 * Get set dimensions and name
 		 */
 		
-		this.setX = this.setY = this.setZ = 1;
+		int setX = 1,setY = 1,setZ = 1;
+		String setTitle = "";
 		
 		if(setActive)
 		{
-			this.setName = cmd.getNamedArgString("setname", "Unnamed Room Set");
-			this.setX = Math.max(1, cmd.getNamedArgInt("setx", 1));
-			this.setY = Math.max(1, cmd.getNamedArgInt("sety", 1));
-			this.setZ = Math.max(1, cmd.getNamedArgInt("setz", 1));
+			// Change the edit mode
+			setMode(EditMode.ROOM_SET);
 			
-			// Disable set if dimensions are 1x1x1
-			if((this.setX+this.setY+this.setZ) == 3) { setActive = false; }
+			setName = cmd.getNamedArgString("setname", "Unnamed-Room-Set-"+System.currentTimeMillis());
+			setTitle = cmd.getNamedArgString("settitle", "Unnamed Room Set");
+			setX = Math.max(1, cmd.getNamedArgInt("setx", 1));
+			setY = Math.max(1, cmd.getNamedArgInt("sety", 1));
+			setZ = Math.max(1, cmd.getNamedArgInt("setz", 1));
 		}
+		else
+		{
+			setMode(EditMode.ROOM);
+		}
+		
+		// Create a room set whether or not one is active; it will be used for the dimensions of the editor regardless
+		roomSet = new DungeonRoomSet(setName, setTitle, setX, setY, setZ);
 		
 		/*
 		 * Start the editor
@@ -962,10 +1064,10 @@ public class DungeonEditor {
 		this.editor_y = Math.max(Math.min(roundedY, 112-(setY*8)), 8); // Force the floor to be placed no lower than 8 and no higher than (112-(setY*8))
 		
 		// Set the editing chunks
-		this.chunks = new DungeonChunk[this.setX][this.setZ];
-		for(int x = 0; x < this.setX; x++)
+		this.chunks = new DungeonChunk[roomSet.getSizeX()][roomSet.getSizeZ()];
+		for(int x = 0; x < roomSet.getSizeX(); x++)
 		{
-			for(int z = 0; z < this.setZ; z++)
+			for(int z = 0; z < roomSet.getSizeZ(); z++)
 			{
 				this.chunks[x][z] = new DungeonChunk(this.editor.getWorld().getChunkAt(cmd.getChunk().getX()+x, cmd.getChunk().getZ()+z));
 			}
@@ -975,7 +1077,7 @@ public class DungeonEditor {
 		this.chunk = this.chunks[0][0];
 		
 		// Flatten and hint the editing region
-		this.start(flatten, hint, setActive);
+		this.start(flatten, hint, (mode == EditMode.ROOM_SET));
 		
 		/*
 		 * Reset the active filename and path
@@ -1002,7 +1104,12 @@ public class DungeonEditor {
 	{
 		// Get the path and filename, or use defaults if no values were specified
 		String path = cmd.getNamedArgString("path", Dungeonator.TileFolderPath);
-		String name = cmd.getNamedArgString("name", "")+".nbt";
+		String name = cmd.getNamedArgString("name", "");
+		
+		// Get the room set flag
+		boolean loadSet = cmd.getNamedArgBool("set",  false);
+		
+		if(loadSet) { setMode(EditMode.ROOM_SET); } else { setMode(EditMode.ROOM); }
 		
 		if(name.isEmpty())
 		{
@@ -1010,8 +1117,11 @@ public class DungeonEditor {
 		}
 		else
 		{
-			// Load the chunk
-			this.load(path, name);
+			// Set the chunk
+			chunk = new DungeonChunk(cmd.getChunk());
+			
+			// Load the room
+			this.loadRoom(path, name, loadSet);
 		}
 	}
 	
@@ -1045,24 +1155,24 @@ public class DungeonEditor {
 		if(!activePath.equals("")) { path = activePath; }
 		if(!activeFile.equals("")) { name = activeFile; }
 		
-		// If a set is active, alter the path
-		// Format: /tiles/sets/{name}/
-		if(setActive)
-		{
-			path = path + "sets/" + name + "/";
-		}
-		
 		// Get the specified path and filename, or use defaults if no values were specified
 		// If the editor is active and a file has already been saved, the default will be the last saved name and path
 		// Active path and name can be reset by resetting or restarting the editor 
 		path = cmd.getNamedArgString("path", path);
 		name = cmd.getNamedArgString("name", name);
 		
+		// If a set is active, alter the path
+		// Format: /tiles/sets/{name}/
+		if(mode == EditMode.ROOM_SET)
+		{
+			path = path + "sets" + File.separator + name + File.separator;
+		}
+		
 		// Check for library save command
 		boolean saveToLibrary = cmd.getNamedArgBool("library", false);
 		
 		// Save the chunk
-		this.save(path, name, saveToLibrary);
+		this.saveRoom(path, name, saveToLibrary);
 	}
 	
 	/**
@@ -1331,7 +1441,7 @@ public class DungeonEditor {
 	{
 		// Get room coordinate within a room set (or 0,0,0 if no room is specified)
 		int[] coords = {0,0,0};
-		if(this.setActive)
+		if(mode == EditMode.ROOM_SET)
 		{
 			int[] tmpCoords = cmd.getNamedArgIntList("room", null);
 			
@@ -1393,5 +1503,19 @@ public class DungeonEditor {
 	public boolean hasUnsavedChanges()
 	{
 		return hasUnsavedChanges;
+	}
+	
+	/**
+	 * Sets the edit mode.
+	 *
+	 * @param mode the new edit mode
+	 */
+	private void setMode(EditMode mode)
+	{
+		if(this.mode != mode)
+		{
+			this.mode = mode;
+			editor.sendMessage("Changed edit mode to "+mode);
+		}
 	}
 }
