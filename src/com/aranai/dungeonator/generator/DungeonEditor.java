@@ -47,6 +47,7 @@ import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidget.Size;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode.AttachmentFace;
@@ -94,6 +95,9 @@ public class DungeonEditor {
 	
 	/** The full room list. */
 	private DungeonRoom[][][] rooms;
+	
+	/** The active widget */
+	private DungeonWidget widget;
 	
 	/** The active path. */
 	private String activePath;
@@ -612,36 +616,107 @@ public class DungeonEditor {
 		if(widgetCmd.equals("new"))
 		{
 			// New widget
+			cmdWidgetNew(cmd);
 		}
 		else if(widgetCmd.equals("load"))
 		{
 			// Load widget
+			cmdWidgetLoad(cmd);
 		}
 		else if(widgetCmd.equals("save"))
 		{
 			// Save widget
+			cmdWidgetSave(cmd);
 		}
-		else if(widgetCmd.equals("size"))
+		else if(widgetCmd.equals("edit"))
 		{
-			// Set bounds and size class
-		}
-		else if(widgetCmd.equals("origin"))
-		{
-			// Set origin
+			// Set bounds, size class, origin
+			cmdWidgetEdit(cmd);
 		}
 		else if(widgetCmd.equals("themes"))
 		{
 			// Set themes
+			cmdWidgetTheme(cmd);
 		}
 		else if(widgetCmd.equals("move"))
 		{
 			// Move widget
+			cmdWidgetMove(cmd);
 		}
 	}
 	
 	public void cmdWidgetNew(DCommandEvent cmd)
 	{
-		// TODO
+		// TODO: Get node ID (optional - use current position if unavailable)
+		
+		// Get size class (optional)
+		Size size = Size.GetByName(cmd.getNamedArgString("size", Size.TINY.getName()));
+		if(size == null)
+		{
+			editor.sendMessage("Invalid widget size class. Valid sizes are: tiny, small, medium, large, huge.");
+			return;
+		}
+		
+		// Get position (required)
+		BlockVector position = cmd.getNamedArgVectorInt("pos", editor.getLocation().toVector().toBlockVector());
+		
+		// Get attachment face (optional)
+		AttachmentFace face = AttachmentFace.GetFaceByName(cmd.getNamedArgString("face", "up"));
+		if(face == null)
+		{
+			editor.sendMessage("Invalid attachment face. Valid faces are: up, down, north, east, south, west.");
+			return;
+		}
+		
+		// Hints
+		boolean hint = cmd.getNamedArgBool("hint", true);
+		
+		// Clear
+		boolean clear = cmd.getNamedArgBool("clear", true);
+		
+		Material hintMat = Material.OBSIDIAN;
+		Material mat = Material.AIR;
+		
+		if(clear)
+		{
+			for(int x = -1; x <= size.bound(); x++)
+			{
+				for(int y = -1; y <= size.bound(); y++)
+				{
+					for(int z = -1; z <= size.bound(); z++)
+					{
+						mat = Material.AIR;
+						
+						if(hint)
+						{
+							if(
+								(x == -1 && z == -1 && y == -1)
+								|| (x == size.bound() && z == -1 && y == -1)
+								|| (x == -1 && z == size.bound() && y == -1)
+								|| (x == size.bound() && z == size.bound() && y == -1)
+								|| (x == -1 && z == -1 && y == size.bound())
+								|| (x == size.bound() && z == -1 && y == size.bound())
+								|| (x == -1 && z == size.bound() && y == size.bound())
+								|| (x == size.bound() && z == size.bound() && y == size.bound())
+							)
+							{
+								mat = hintMat;
+							}
+						}
+						
+						cmd.getChunk().getBlock(
+								position.getBlockX()+x, position.getBlockY()+y, position.getBlockZ()+z
+						).setType(mat);
+					}
+				}
+			}
+		}
+		
+		// Create widget
+		widget = new DungeonWidget(size, position);
+		
+		// Set edit mode
+		setMode(EditMode.WIDGET);
 	}
 	
 	public void cmdWidgetLoad(DCommandEvent cmd)
@@ -657,12 +732,12 @@ public class DungeonEditor {
 		// TODO
 	}
 	
-	public void cmdWidgetBounds(DCommandEvent cmd)
+	public void cmdWidgetEdit(DCommandEvent cmd)
 	{
 		// TODO
 	}
 	
-	public void cmdWidgetOrigin(DCommandEvent cmd)
+	public void cmdWidgetTheme(DCommandEvent cmd)
 	{
 		// TODO
 	}
@@ -850,13 +925,20 @@ public class DungeonEditor {
 	
 	public void cmdWidgetNodeInfo(DCommandEvent cmd)
 	{
-		// TODO
-		
-		// Needs: node id (optional)
+		// Get node ID
+		int id = cmd.getNamedArgInt("id", -1);
+		if(id >= room.getNodes().size())
+		{
+			editor.sendMessage("Invalid node ID. This room has "+room.getNodes().size()+" nodes.");
+			return;
+		}
 		
 		for(DungeonWidgetNode n : this.getRoomFromCommand(cmd).getNodes())
 		{
-			editor.sendMessage("Node "+n.getNodeID()+" ["+n.getSize().getName()+"] "+n.getPosition());
+			if(id <= 0 || n.getNodeID() == id)
+			{
+				editor.sendMessage("Node "+n.getNodeID()+" ["+n.getSize().getName()+"] "+n.getPosition());
+			}
 		}
 	}
 	

@@ -102,7 +102,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	// Library Widgets
 	private static String SqlCreateTableLibraryWidgets = "CREATE TABLE `"+TblLibraryWidgets+"`" +
 			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64)," +
-			"`size_class` INTEGER, `bound_x` INTEGER, `bound_y` INTEGER, `bound_z` INTEGER," +
+			"`size_class` INTEGER," +
 			"`origin_x` INTEGER, `origin_y` INTEGER, `origin_z` INTEGER);";
 	
 	/*
@@ -884,7 +884,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         {
 	    	conn.setAutoCommit(false);
 	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryWidgets+"`" +
-	        		"(`id`,`filename`,`bound_x`,`bound_y`,`bound_z`,`origin_x`,`origin_y`,`origin_z`)" +
+	        		"(`id`,`filename`,`origin_x`,`origin_y`,`origin_z`)" +
 	        		"VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
 	        
 	        // Handle library id
@@ -892,12 +892,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        if(libraryId > 0) { ps.setLong(1, libraryId); } else { ps.setNull(1, java.sql.Types.INTEGER); }
 	        
 	        ps.setString(2, widget.getFilename());
-	        
-	        // Get bounds
-	        BlockVector bounds = widget.getBounds();
-	        ps.setInt(3, bounds.getBlockX());
-	        ps.setInt(4, bounds.getBlockY());
-	        ps.setInt(5, bounds.getBlockZ());
 	        
 	        // Get origin
 	        BlockVector origin = widget.getOrigin();

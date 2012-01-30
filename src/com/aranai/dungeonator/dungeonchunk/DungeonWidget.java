@@ -115,59 +115,25 @@ public class DungeonWidget {
 	private String defaultTheme;
 	
 	public DungeonWidget() { this(Size.TINY); }
-	public DungeonWidget(Size size) { this(size, size.bound(), size.bound(), size.bound()); }
-	public DungeonWidget(Size size, int bound_x, int bound_y, int bound_z) { this(size, bound_x, bound_y, bound_z, 0, 0, 0); }
+	public DungeonWidget(Size size) { this(size,0,0,0); }
 	
-	public DungeonWidget(Size size, int bound_x, int bound_y, int bound_z, int origin_x, int origin_y, int origin_z)
+	public DungeonWidget(Size size, int origin_x, int origin_y, int origin_z)
 	{
-		this(size, new BlockVector(bound_x, bound_y, bound_z), new BlockVector(origin_x, origin_y, origin_z));
+		this(size, new BlockVector(origin_x, origin_y, origin_z));
 	}
 	
-	public DungeonWidget(Size size, BlockVector bounds, BlockVector origin)
+	public DungeonWidget(Size size, BlockVector origin)
 	{
 		setSize(size);
-		setBounds(bounds);
 		setOrigin(origin);
 		setPosition(new BlockVector(0,0,0));
 	}
 	
 	public DungeonWidget(long id, String filename, Size size, BlockVector bounds, BlockVector origin)
 	{
-		this(size, bounds, origin);
+		this(size, origin);
 		setLibraryID(id);
 		setFilename(filename);
-	}
-	
-	/**
-	 * Gets the bounds of the widget.
-	 *
-	 * @return the bounds
-	 */
-	public BlockVector getBounds()
-	{
-		return bounds;
-	}
-	
-	/**
-	 * Sets the bounds of the widget.
-	 *
-	 * @param bound_x the bound_x
-	 * @param bound_y the bound_y
-	 * @param bound_z the bound_z
-	 */
-	public void setBounds(int bound_x, int bound_y, int bound_z)
-	{
-		setBounds(new BlockVector(bound_x, bound_y, bound_z));
-	}
-	
-	/**
-	 * Sets the bounds of the widget.
-	 *
-	 * @param bounds the new bounds
-	 */
-	public void setBounds(BlockVector bounds)
-	{
-		this.bounds = bounds;
 	}
 	
 	/**

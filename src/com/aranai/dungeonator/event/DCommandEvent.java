@@ -331,7 +331,7 @@ public class DCommandEvent {
 				return new BlockVector(intList[0],intList[1],intList[2]);
 			}
 			
-			return null;
+			return defaultValue;
 		}
 		
 		/**
