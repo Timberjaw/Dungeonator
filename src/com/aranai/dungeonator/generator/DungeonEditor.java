@@ -705,6 +705,11 @@ public class DungeonEditor {
 			// Delete node in room
 			cmdWidgetNodeDelete(cmd);
 		}
+		else if(nodeCmd.equals("info"))
+		{
+			// Get info on node(s)
+			cmdWidgetNodeInfo(cmd);
+		}
 	}
 	
 	public void cmdWidgetNodeAdd(DCommandEvent cmd)
@@ -725,6 +730,8 @@ public class DungeonEditor {
 			return;
 		}
 		
+		// TODO: check bounds against room/set bounds
+		
 		// Get attachment face (optional)
 		AttachmentFace face = AttachmentFace.GetFaceByName(cmd.getNamedArgString("face", "up"));
 		if(face == null)
@@ -738,7 +745,7 @@ public class DungeonEditor {
 		DungeonWidgetNode node = new DungeonWidgetNode(sizeClass, position, face);
 		room.addNode(node);
 		
-		editor.sendMessage("Added "+node.getSize().getName()+" widget node to room "+room+" with node ID "+node.getNodeID());
+		editor.sendMessage("Added "+node.getSize().getName()+" widget node to room "+room+" at "+position+" with node ID "+node.getNodeID());
 	}
 	
 	public void cmdWidgetNodeMove(DCommandEvent cmd)
@@ -750,9 +757,32 @@ public class DungeonEditor {
 	
 	public void cmdWidgetNodeDelete(DCommandEvent cmd)
 	{
+		DungeonRoom room = this.getRoomFromCommand(cmd);
+		
+		// Get node ID
+		int id = cmd.getNamedArgInt("id", -1);
+		if(id < 0 || id >= room.getNodes().size())
+		{
+			editor.sendMessage("Invalid or missing node ID. Specify ID with id:X. This room has "+room.getNodes().size()+" nodes.");
+			return;
+		}
+		
+		// Remove node
+		room.removeNode(id);
+		
+		editor.sendMessage("Removed node.");
+	}
+	
+	public void cmdWidgetNodeInfo(DCommandEvent cmd)
+	{
 		// TODO
 		
-		// Needs: node id
+		// Needs: node id (optional)
+		
+		for(DungeonWidgetNode n : this.getRoomFromCommand(cmd).getNodes())
+		{
+			editor.sendMessage("Node "+n.getNodeID()+" ["+n.getSize().getName()+"] "+n.getPosition());
+		}
 	}
 	
 	/**

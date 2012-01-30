@@ -682,6 +682,21 @@ public class DungeonRoom implements IDungeonRoom {
 	}
 	
 	/**
+	 * Removes a specified widget node.
+	 *
+	 * @param index the index of the node to get
+	 * @return the node
+	 */
+	public void removeNode(int index)
+	{
+		if(nodes.size() > index)
+		{
+			nodes.remove(index);
+			resetNodeIDs();
+		}
+	}
+	
+	/**
 	 * Gets the widget node list.
 	 *
 	 * @return the nodes
@@ -689,6 +704,17 @@ public class DungeonRoom implements IDungeonRoom {
 	public Vector<DungeonWidgetNode> getNodes()
 	{
 		return nodes;
+	}
+	
+	/**
+	 * Reset node ids.
+	 */
+	private void resetNodeIDs()
+	{
+		for(int i = 0; i < nodes.size(); i++)
+		{
+			nodes.get(i).setNodeID(i);
+		}
 	}
 	
 	/**
