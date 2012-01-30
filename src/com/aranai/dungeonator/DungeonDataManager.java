@@ -1,5 +1,6 @@
 package com.aranai.dungeonator;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class DungeonDataManager {
 	 * @param z the z
 	 * @return true, if room is reserved
 	 */
-	private boolean isRoomReserved(String world, int x, int y, int z)
+	public boolean isRoomReserved(String world, int x, int y, int z)
 	{
 		return roomReservations.containsKey(DungeonDataManager.GetReservationKey(world,x,y,z));
 	}
@@ -89,7 +90,7 @@ public class DungeonDataManager {
 	 * @param z the z
 	 * @return the room reservation
 	 */
-	private long getRoomReservation(String world, int x, int y, int z)
+	public long getRoomReservation(String world, int x, int y, int z)
 	{
 		if(isRoomReserved(world, x, y, z))
 		{
@@ -108,7 +109,7 @@ public class DungeonDataManager {
 	 * @param z the z
 	 * @param id the id
 	 */
-	private void setRoomReservation(String world, int x, int y, int z, long id)
+	public void setRoomReservation(String world, int x, int y, int z, long id)
 	{
 		try {
 			// Save to data store
@@ -127,7 +128,7 @@ public class DungeonDataManager {
 	 * @param y the y
 	 * @param z the z
 	 */
-	private void deleteRoomReservation(String world, int x, int y, int z)
+	public void deleteRoomReservation(String world, int x, int y, int z)
 	{
 		try {
 			// Delete from data store
@@ -136,6 +137,53 @@ public class DungeonDataManager {
 			// Delete from local cache
 			roomReservations.remove(GetReservationKey(world,x,y,z));
 		} catch (DataStoreDeleteException e) { e.printStackTrace(); }
+	}
+	
+	/**
+	 * Gets the unreserved rooms for a chunk.
+	 *
+	 * @param world the world
+	 * @param x the x
+	 * @param z the z
+	 * @return the unreserved rooms
+	 */
+	public Vector<Integer> getUnreservedRooms(String world, int x, int z)
+	{
+		Vector<Integer> rooms = new Vector<Integer>();
+		
+		int largestSize = 0;
+		int startsAt = 0;
+		int tmpSize = 0;
+		int tmpStartsAt = 0;
+		
+		for(int i = 0; i < 16; i++)
+		{
+			if(!isRoomReserved(world, x, i, z))
+			{
+				tmpSize++;
+				
+				if(tmpSize > largestSize)
+				{
+					largestSize = tmpSize;
+					startsAt = tmpStartsAt;
+				}
+			}
+			else
+			{
+				tmpStartsAt = i+1;
+				tmpSize = 0;
+			}
+		}
+		
+		if(largestSize > 0)
+		{
+			for(int i = startsAt; i < startsAt + largestSize; i++)
+			{
+				rooms.add(i);
+			}
+		}
+		
+		return rooms;
 	}
 	
 	/**
@@ -279,6 +327,7 @@ public class DungeonDataManager {
 				if(schematic != null)
 				{
 					// Set blocks and block data
+					rooms[i].setSchematic(schematic);
 					rooms[i].setRawBlocks(((ByteArrayTag)schematic.getValue().get("blocks")).getValue());
 					rooms[i].setRawBlockData(((ByteArrayTag)schematic.getValue().get("blockData")).getValue());
 				}
@@ -338,7 +387,7 @@ public class DungeonDataManager {
 				if(reservedID > 0)
 				{
 					// Get the reserved room
-					rooms[i] = reservedRooms[chunk.getX()][i][chunk.getZ()];
+					rooms[i] = reservedRooms[0][i][0];
 					Dungeonator.getLogger().info("Found reserved room "+rooms[i].getLibraryId());
 				}
 				else
@@ -361,11 +410,19 @@ public class DungeonDataManager {
 				// Determine which folder we're drawing from
 				String folderPath = Dungeonator.TileFolderPath;
 				
+				// Append set path if this is a reserved room
+				if(reservedID > 0)
+				{
+					folderPath = folderPath + File.separator + "sets" + File.separator + rooms[i].getRoomSet().getName() + File.separator;
+				}
+				
 				// If we're not using the default theme, pull from the processed folder
+				// Note: for now, reserved rooms are not themed
 				String tmpTheme = "";
-				if(!theme.equals("DEFAULT"))
+				if(reservedID < 0 && !theme.equals("DEFAULT"))
 				{
 					folderPath = Dungeonator.ProcessedTileFolderPath;
+					
 					tmpTheme = "."+theme;
 					Dungeonator.getLogger().info("Selected theme "+theme+" for room.");
 				}
@@ -600,6 +657,21 @@ public class DungeonDataManager {
 		} catch (DataStoreGetException e) { e.printStackTrace(); }
 		
 		return doors;
+	}
+	
+	public Vector<DungeonRoomSet> getRandomRoomSets(int number)
+	{
+		Vector<DungeonRoomSet> rooms = null;
+		try {
+			rooms = dataStore.getLibraryRoomSetsRandom(number);
+		} catch (DataStoreGetException e) { e.printStackTrace(); }
+		
+		if(rooms == null)
+		{
+			rooms = new Vector<DungeonRoomSet>();
+		}
+		
+		return rooms;
 	}
 	
 	/**

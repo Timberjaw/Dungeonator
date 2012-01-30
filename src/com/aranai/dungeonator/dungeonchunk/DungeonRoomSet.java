@@ -24,8 +24,14 @@ public class DungeonRoomSet {
 	// The loaded status: true if the set represents a loaded set
 	private boolean isLoaded = false;
 	
+	// The active id; 0 if unloaded
+	private long activeID = -1;
+	
 	// The library id; 0 if unloaded
-	private int libraryID = 0;
+	private long libraryID = -1;
+	
+	// The library room ids
+	private long[][][] libraryRoomsID;
 	
 	// The origin chunk, if loaded
 	private DungeonChunk originChunk = null;
@@ -43,7 +49,7 @@ public class DungeonRoomSet {
 	 * @param originZ the origin z
 	 * @param libraryID the library id
 	 */
-	public DungeonRoomSet(String name, String title, int sizeX, int sizeY, int sizeZ, int originX, int originY, int originZ, int libraryID)
+	public DungeonRoomSet(String name, String title, int sizeX, int sizeY, int sizeZ, int originX, int originY, int originZ, long libraryID)
 	{
 		this.setName(name);
 		this.setTitle(title);
@@ -54,6 +60,7 @@ public class DungeonRoomSet {
 		this.setOriginY(originY);
 		this.setOriginZ(originZ);
 		this.setLibraryID(libraryID);
+		this.resetLibraryRoomIDs();
 	}
 	
 	/**
@@ -107,6 +114,14 @@ public class DungeonRoomSet {
 	{
 		this(name, name);
 	}
+	
+	/**
+	 * Reset library room ids.
+	 */
+	private void resetLibraryRoomIDs()
+	{
+		libraryRoomsID = new long[sizeX][sizeY][sizeZ];
+	}
 
 	/**
 	 * @return the loaded status
@@ -125,14 +140,14 @@ public class DungeonRoomSet {
 	/**
 	 * @return the libraryID
 	 */
-	public int getLibraryID() {
+	public long getLibraryID() {
 		return libraryID;
 	}
 
 	/**
 	 * @param libraryID the libraryID to set
 	 */
-	public void setLibraryID(int libraryID) {
+	public void setLibraryID(long libraryID) {
 		this.libraryID = libraryID;
 	}
 
@@ -260,5 +275,50 @@ public class DungeonRoomSet {
 	 */
 	public void setOriginChunk(DungeonChunk originChunk) {
 		this.originChunk = originChunk;
+	}
+
+	/**
+	 * @return the activeID
+	 */
+	public long getActiveID() {
+		return activeID;
+	}
+
+	/**
+	 * @param activeID the activeID to set
+	 */
+	public void setActiveID(long activeID) {
+		this.activeID = activeID;
+	}
+	
+	/**
+	 * Gets the library room id.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @return the library room id
+	 */
+	public long getLibraryRoomID(int x, int y, int z)
+	{
+		return libraryRoomsID[x][y][z];
+	}
+	
+	/**
+	 * Sets the library room id.
+	 *
+	 * @param x the x
+	 * @param y the y
+	 * @param z the z
+	 * @param id the id
+	 */
+	public void setLibraryRoomID(int x, int y, int z, long id)
+	{
+		libraryRoomsID[x][y][z] = id;
+	}
+	
+	public String toString()
+	{
+		return "{DungeonRoom<"+libraryID+":"+sizeX+","+sizeY+","+sizeZ+">}";
 	}
 }

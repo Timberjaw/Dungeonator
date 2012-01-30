@@ -625,6 +625,7 @@ public class DungeonEditor {
 					if(mode == EditMode.ROOM_SET)
 					{
 						tmpName = x+"."+y+"."+z;
+						rooms[x][y][z].setRoomSet(roomSet);
 					}
 					
 					try {
@@ -1152,7 +1153,7 @@ public class DungeonEditor {
 		String name = "Unnamed-"+System.currentTimeMillis();
 		
 		// Check for active path and name
-		if(!activePath.equals("")) { path = activePath; }
+		if(!activePath.equals("") && mode != EditMode.ROOM_SET) { path = activePath; }
 		if(!activeFile.equals("")) { name = activeFile; }
 		
 		// Get the specified path and filename, or use defaults if no values were specified
@@ -1166,6 +1167,7 @@ public class DungeonEditor {
 		if(mode == EditMode.ROOM_SET)
 		{
 			path = path + "sets" + File.separator + name + File.separator;
+			roomSet.setName(name);
 		}
 		
 		// Check for library save command

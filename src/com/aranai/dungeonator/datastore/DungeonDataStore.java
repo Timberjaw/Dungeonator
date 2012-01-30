@@ -246,4 +246,11 @@ public class DungeonDataStore implements IDungeonDataStore {
 		return false;
 	}
 
+	@Override
+	public Vector<DungeonRoomSet> getLibraryRoomSetsRandom(int number)
+			throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

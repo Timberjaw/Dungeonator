@@ -161,6 +161,15 @@ public interface IDungeonDataStore {
 	 * @throws DataStoreGetException the data store get exception
 	 */
 	public DungeonRoom getLibraryRoomRandom(Vector<Byte> doorways) throws DataStoreGetException;
+	
+	/**
+	 * Gets a random list of library room sets.
+	 *
+	 * @param number the number of room sets to retrieve
+	 * @return the random sets
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public Vector<DungeonRoomSet> getLibraryRoomSetsRandom(int number) throws DataStoreGetException;
 
 	/**
 	 * Saves multiple rooms simultaneously

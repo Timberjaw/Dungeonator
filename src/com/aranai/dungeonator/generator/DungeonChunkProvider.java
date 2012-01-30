@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -14,6 +15,7 @@ import org.jnbt.CompoundTag;
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
+import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 
 import net.minecraft.server.Block;
@@ -89,8 +91,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 		String hash = "stack-"+arg1+"-"+arg2;
 		
 		long startTime = System.currentTimeMillis();
-		
-		// TODO Hand control to DungeonChunkGenerator
 		
 		// Get active rooms for chunk
 		DungeonChunk dc = new DungeonChunk(this.world.getChunkAt(arg1, arg2), DungeonRoomType.BASIC_TILE, arg1, arg2);
@@ -173,7 +173,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		long startDbTime = 0;
 		long dbTime = 0;
 		
-		// Get random rooms from the data manager
+		// Get rooms from the data manager
 		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
 		dc.setWorld(world);
 		
@@ -182,8 +182,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 		dbTime += (System.currentTimeMillis()-startDbTime);
 		
 		int roomCount = (rooms != null) ? rooms.length : 0;
-		
-		// TODO: Hand control to DungeonChunkGenerator
 		
 		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
 		
@@ -280,7 +278,139 @@ public class DungeonChunkProvider implements IChunkProvider {
         
         System.out.println("Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms, DB Time "+dbTime+" milliseconds");
         
+        // Handle new room reservation
+        reserveRooms(arg0,arg1);
+        
         return chunk;
+	}
+	
+	public void reserveRooms(int x, int z)
+	{
+		// Check the noise value
+		double value = getNoise(x, 0, z);
+		
+		// If noise value is above threshhold
+		if(value > 0.0)
+		{
+			// Get 3 random sets
+			Vector<DungeonRoomSet> sets = dungeonator.getDataManager().getRandomRoomSets(3);
+			
+			if(sets != null)
+			{
+				// Loop through the sets and get the maximum dimension from any set
+				int maxDim = 0;
+				for(DungeonRoomSet s : sets)
+				{
+					if(s.getSizeX() > maxDim) { maxDim = s.getSizeX(); }
+					if(s.getSizeY() > maxDim) { maxDim = s.getSizeY(); }
+					if(s.getSizeZ() > maxDim) { maxDim = s.getSizeZ(); }
+				}
+				
+				// Compute 5 random scatter points within X chunks of the current chunk,
+				// where X is the largest dimension of the largest set, divided by 1.5
+				// Use a random direction for each point
+				class ScatterPlot {
+					public int x;
+					public int z;
+				};
+				
+				ScatterPlot[] points = new ScatterPlot[5];
+				
+				for(int i = 0; i < 5; i++)
+				{
+					points[i] = new ScatterPlot();
+					int rand = Math.random() >= 0.5 ? 2 : -3;
+					points[i].x = (rand*maxDim) + ((int)Math.random()*maxDim) + x;
+					rand = Math.random() >= 0.5 ? 2 : -3;
+					points[i].z = (rand*maxDim) + ((int)Math.random()*maxDim) + z;
+				}
+				
+				// Loop through the points; for each point, check the sets in order to
+				// see if they can be placed on the destination chunk; adjust Y up or
+				// down as needed to avoid other reserved rooms
+				for(ScatterPlot p : points)
+				{
+					// If chunk is generated, bail
+					Dungeonator.getLogger().info("At {"+x+","+z+"}, checking point {"+p.x+","+p.z+"}");
+					if(this.world.isChunkLoaded(p.x, p.z)) { Dungeonator.getLogger().info("Chunk is already generated."); continue; }
+					
+					Dungeonator.getLogger().info("Chunk is free.");
+					
+					// Get the largest block of unreserved room Y indexes, or an empty
+					// array if no rooms are unreserved in the chunk
+					Vector<Integer> unreserved = dungeonator.getDataManager().getUnreservedRooms(world.getName(), p.x, p.z);
+					
+					if(unreserved.size() > 0)
+					{
+						// Loop through the sets and compare the Y size to the available space
+						for(DungeonRoomSet s : sets)
+						{
+							// If set is too large, bail
+							if(s.getSizeY() > unreserved.size()) { Dungeonator.getLogger().info("Not enough height for room set."); continue; }
+							
+							// Tentatively set this point and the starting Y from the
+							// unreserved list as our room set origin. Check adjacent chunks
+							// to make sure the additional rooms are also available
+							int originX = p.x;
+							int originZ = p.z;
+							int originY = unreserved.get(0);
+							
+							boolean fail = false;
+							
+							for(int sx = 0; sx < s.getSizeX(); sx++)
+							{
+								for(int sy = 0; sy < s.getSizeY(); sy++)
+								{
+									for(int sz = 0; sz < s.getSizeZ(); sz++)
+									{
+										// If the room is reserved, set failure status and bail
+										if(dungeonator.getDataManager().isRoomReserved(world.getName(),originX+sx,originY+sy,originZ+sz))
+										{
+											fail = true;
+											break;
+										}
+									}
+									
+									// If failure has occurred, bail
+									if(fail) { break; }
+								}
+								
+								// If failure has occurred, bail
+								if(fail) { break; }
+							}
+							
+							// All rooms are available; loop through the rooms again
+							// and reserve them with the appropriate room library ID
+							if(!fail)
+							{
+								for(int sx = 0; sx < s.getSizeX(); sx++)
+								{
+									for(int sy = 0; sy < s.getSizeY(); sy++)
+									{
+										for(int sz = 0; sz < s.getSizeZ(); sz++)
+										{
+											dungeonator.getDataManager().setRoomReservation(world.getName(), originX+sx, originY+sy, originZ+sz, s.getLibraryRoomID(sx,sy,sz));
+										}
+									}
+								}
+								
+								// Log
+								Dungeonator.getLogger().info("Reserved room set "+s+" at {"+originX+","+originY+","+originZ+"}");
+								
+								// Move the set to the end of the list
+								sets.remove(s);
+								sets.add(s);
+								
+								// Break the loop to go on to the next point
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		System.out.println("Noise for {"+x+","+z+"}: "+value);
 	}
 
 	@Override
@@ -313,14 +443,12 @@ public class DungeonChunkProvider implements IChunkProvider {
 
 	@Override
 	public List<?> a(EnumCreatureType arg0, int arg1, int arg2, int arg3) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public ChunkPosition a(net.minecraft.server.World arg0, String arg1,
 			int arg2, int arg3, int arg4) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

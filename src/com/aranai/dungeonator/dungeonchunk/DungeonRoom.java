@@ -35,7 +35,10 @@ public class DungeonRoom implements IDungeonRoom {
 	private String filename = "";
 	
 	/** The library id. */
-	private long libraryId = 0;
+	private long libraryID = 0;
+	
+	/** The room set */
+	private DungeonRoomSet roomSet;
 	
 	/** Temporary raw schematic */
 	private CompoundTag schematic;
@@ -512,7 +515,7 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	@Override
 	public void setLibraryId(long id) {
-		this.libraryId = id;
+		this.libraryID = id;
 	}
 
 	/* (non-Javadoc)
@@ -520,7 +523,7 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	@Override
 	public long getLibraryId() {
-		return this.libraryId;
+		return this.libraryID;
 	}
 
 	/* (non-Javadoc)
@@ -695,5 +698,19 @@ public class DungeonRoom implements IDungeonRoom {
 	public String toString()
 	{
 		return "{DungeonRoom<"+x+","+y+","+z+">}";
+	}
+
+	/**
+	 * @return the roomSet
+	 */
+	public DungeonRoomSet getRoomSet() {
+		return roomSet;
+	}
+
+	/**
+	 * @param roomSet the roomSet to set
+	 */
+	public void setRoomSet(DungeonRoomSet roomSet) {
+		this.roomSet = roomSet;
 	}
 }
