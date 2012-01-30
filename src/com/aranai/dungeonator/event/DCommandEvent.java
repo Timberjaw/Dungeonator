@@ -1,7 +1,10 @@
 package com.aranai.dungeonator.event;
 
+import java.util.Vector;
+
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
+import org.bukkit.util.BlockVector;
 
 /**
  * The Class DCommandEvent.
@@ -68,6 +71,21 @@ public class DCommandEvent {
 		public String[] getArgs()
 		{
 			return this.args;
+		}
+		
+		/**
+		 * Gets a single arg
+		 * 
+		 * @return the arg, or null if the index is invalid
+		 */
+		public String getArg(int index)
+		{
+			if(index < args.length)
+			{
+				return args[index];
+			}
+			
+			return null;
 		}
 		
 		/**
@@ -294,6 +312,26 @@ public class DCommandEvent {
 			}
 			
 			return defaultValue;
+		}
+		
+		/**
+		 * Gets a vector (int) coordinate from a named argument
+		 * 
+		 * @param name the name of the argument to look for
+		 * @param defaultValue the default value to use if the argument was not specified
+		 * @return the resulting vector coordinate
+		 */
+		public BlockVector getNamedArgVectorInt(String name, BlockVector defaultValue)
+		{
+			// Get int list
+			int[] intList = getNamedArgIntList(name, new int[0]);
+			
+			if(intList.length == 3)
+			{
+				return new BlockVector(intList[0],intList[1],intList[2]);
+			}
+			
+			return null;
 		}
 		
 		/**

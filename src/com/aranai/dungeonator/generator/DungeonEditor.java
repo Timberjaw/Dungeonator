@@ -25,6 +25,7 @@ import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.BlockVector;
 import org.bukkit.block.Sign;
 import org.jnbt.ByteArrayTag;
 import org.jnbt.ByteTag;
@@ -46,6 +47,9 @@ import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget.Size;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode.AttachmentFace;
 
 /**
  * Handles in-game editing of resources. Supports manual construction and
@@ -143,6 +147,612 @@ public class DungeonEditor {
 		activeTheme = "DEFAULT";
 		testLibrary = new Vector<String>();
 		themeManager = d.getThemeManager();
+	}
+	
+	/**
+	 * Process an edit command.
+	 *
+	 * @param p the player
+	 * @param command the command
+	 * @param args additional arguments
+	 */
+	public void onCommand(DCommandEvent cmd)
+	{
+		this.editor = cmd.getPlayer();
+		
+		if(cmd.getCmd().equals("mode"))
+		{
+			this.cmdMode(cmd);
+		}
+		else if(cmd.getCmd().equals("new"))
+		{
+			this.cmdNew(cmd);
+		}
+		else if(cmd.getCmd().equals("load"))
+		{
+			this.cmdLoad(cmd);
+		}
+		else if(cmd.getCmd().equals("cancel"))
+		{
+			this.cmdCancel(cmd);
+		}
+		else if(cmd.getCmd().equals("save"))
+		{
+			this.cmdSave(cmd);
+		}
+		else if(cmd.getCmd().equals("exits") || cmd.getCmd().equals("doors"))
+		{
+			this.cmdExits(cmd);
+		}
+		else if(cmd.getCmd().equals("theme"))
+		{
+			this.cmdTheme(cmd);
+		}
+		else if(cmd.getCmd().equals("widget"))
+		{
+			this.cmdWidget(cmd);
+		}
+		else if(cmd.getCmd().equals("node"))
+		{
+			this.cmdNode(cmd);
+		}
+	}
+	
+	/**
+	 * Command: Set/Check Edit Mode
+	 * 
+	 * This will set and/or display the edit mode.
+	 */
+	public void cmdMode(DCommandEvent cmd)
+	{
+		/*
+		 * Get 'set' arg to change the edit mode
+		 */
+		String newMode = cmd.getNamedArgString("set", null);
+		
+		if(newMode != null)
+		{
+			if(newMode.equalsIgnoreCase("room"))
+			{
+				mode = EditMode.ROOM;
+			}
+			else if(newMode.equalsIgnoreCase("room_set"))
+			{
+				mode = EditMode.ROOM_SET;
+			}
+			else if(newMode.equalsIgnoreCase("widget"))
+			{
+				mode = EditMode.WIDGET;
+			}
+		}
+		
+		/*
+		 * Print the active edit mode
+		 */
+		
+		editor.sendMessage("Edit Mode: "+mode);
+	}
+	
+	/**
+	 * Command: New DungeonChunk
+	 * 
+	 * This will activate the editor with a blank chunk.
+	 *
+	 * @param cmd the command
+	 */
+	public void cmdNew(DCommandEvent cmd)
+	{
+		/*
+		 * Get 'flatten' and 'hint' args
+		 */
+		
+		boolean flatten = cmd.getNamedArgBool("flatten", true);
+		boolean hint = cmd.getNamedArgBool("hint", true);
+		
+		/*
+		 * Get 'set' arg
+		 */
+		
+		boolean setActive = cmd.getNamedArgBool("set",  false);
+		
+		/*
+		 * Get set dimensions and name
+		 */
+		
+		int setX = 1,setY = 1,setZ = 1;
+		String setTitle = "";
+		
+		if(setActive)
+		{
+			// Change the edit mode
+			setMode(EditMode.ROOM_SET);
+			
+			setName = cmd.getNamedArgString("setname", "Unnamed-Room-Set-"+System.currentTimeMillis());
+			setTitle = cmd.getNamedArgString("settitle", "Unnamed Room Set");
+			setX = Math.max(1, cmd.getNamedArgInt("setx", 1));
+			setY = Math.max(1, cmd.getNamedArgInt("sety", 1));
+			setZ = Math.max(1, cmd.getNamedArgInt("setz", 1));
+		}
+		else
+		{
+			setMode(EditMode.ROOM);
+		}
+		
+		// Create a room set whether or not one is active; it will be used for the dimensions of the editor regardless
+		roomSet = new DungeonRoomSet(setName, setTitle, setX, setY, setZ);
+		
+		/*
+		 * Start the editor
+		 */
+		
+		int playerY = cmd.getPlayer().getLocation().getBlockY();
+		int roundedY = playerY - (playerY % 8); // Round the player's y coordinate to the nearest multiple of 8
+		this.editor_y = Math.max(Math.min(roundedY, 112-(setY*8)), 8); // Force the floor to be placed no lower than 8 and no higher than (112-(setY*8))
+		
+		// Set the editing chunks
+		this.chunks = new DungeonChunk[roomSet.getSizeX()][roomSet.getSizeZ()];
+		for(int x = 0; x < roomSet.getSizeX(); x++)
+		{
+			for(int z = 0; z < roomSet.getSizeZ(); z++)
+			{
+				this.chunks[x][z] = new DungeonChunk(this.editor.getWorld().getChunkAt(cmd.getChunk().getX()+x, cmd.getChunk().getZ()+z));
+			}
+		}
+		
+		// Set the origin chunk (lowest X,Y,Z)
+		this.chunk = this.chunks[0][0];
+		
+		// Flatten and hint the editing region
+		this.start(flatten, hint, (mode == EditMode.ROOM_SET));
+		
+		/*
+		 * Reset the active filename and path
+		 */
+		
+		this.activeFile = "";
+		this.activePath = "";
+		
+		/*
+		 * Let the player know what we've done
+		 */
+		
+		cmd.getPlayer().sendMessage("[Dungeonator][Editor] Started new DungeonChunk at "+cmd.getChunk().getWorld().getName()+":"+cmd.getChunk().getX()+","+cmd.getChunk().getZ());
+	}
+	
+	/**
+	 * Command: Load DungeonChunk
+	 * 
+	 * This will activate the editor with a specified chunk loaded.
+	 *
+	 * @param cmd the command event instance
+	 */
+	public void cmdLoad(DCommandEvent cmd)
+	{
+		// Get the path and filename, or use defaults if no values were specified
+		String path = cmd.getNamedArgString("path", Dungeonator.TileFolderPath);
+		String name = cmd.getNamedArgString("name", "");
+		
+		// Get the room set flag
+		boolean loadSet = cmd.getNamedArgBool("set",  false);
+		
+		if(loadSet) { setMode(EditMode.ROOM_SET); } else { setMode(EditMode.ROOM); }
+		
+		if(name.isEmpty())
+		{
+			cmd.getPlayer().sendMessage("No file specified.");
+		}
+		else
+		{
+			// Set the chunk
+			chunk = new DungeonChunk(cmd.getChunk());
+			
+			// Load the room
+			this.loadRoom(path, name, loadSet);
+		}
+	}
+	
+	/**
+	 * Command: Cancel Edit
+	 * 
+	 * This will cancel the editing process.
+	 *
+	 * @param cmd the command event instance
+	 */
+	public void cmdCancel(DCommandEvent cmd)
+	{
+		this.cancel();
+		cmd.getPlayer().sendMessage("[Dungeonator][Editor] Cancelled edit operation.");
+	}
+	
+	/**
+	 * Command: Save DungeonChunk
+	 * 
+	 * This will save the current DungeonChunk. The editor will remain active.
+	 *
+	 * @param p the player triggering the command
+	 * @param args the args
+	 */
+	public void cmdSave(DCommandEvent cmd)
+	{
+		String path = Dungeonator.TileFolderPath;
+		String name = "Unnamed-"+System.currentTimeMillis();
+		
+		// Check for active path and name
+		if(!activePath.equals("") && mode != EditMode.ROOM_SET) { path = activePath; }
+		if(!activeFile.equals("")) { name = activeFile; }
+		
+		// Get the specified path and filename, or use defaults if no values were specified
+		// If the editor is active and a file has already been saved, the default will be the last saved name and path
+		// Active path and name can be reset by resetting or restarting the editor 
+		path = cmd.getNamedArgString("path", path);
+		name = cmd.getNamedArgString("name", name);
+		
+		// If a set is active, alter the path
+		// Format: /tiles/sets/{name}/
+		if(mode == EditMode.ROOM_SET)
+		{
+			path = path + "sets" + File.separator + name + File.separator;
+			roomSet.setName(name);
+		}
+		
+		// Check for library save command
+		boolean saveToLibrary = cmd.getNamedArgBool("library", false);
+		
+		// Save the chunk
+		this.saveRoom(path, name, saveToLibrary);
+	}
+	
+	/**
+	 * Command: Exits
+	 * 
+	 * Parent command for getting, setting, and removing exit data for the current chunk.
+	 *
+	 * @param p the p
+	 * @param args the args
+	 */
+	public void cmdExits(DCommandEvent cmd)
+	{
+		DungeonRoom room = this.getRoomFromCommand(cmd);
+		
+		// Handle reset first: remove all exits (N,NNE,ENE,E,ESE,SSE,S,SSW,WSW,W,WNW,NNW,U,D)
+		if(cmd.getNamedArgBool("reset", false) == true)
+		{
+			editor.sendMessage("Resetting doorways.");
+			room.resetDoorways();
+		}
+		
+		// Handle delete: remove specific exits
+		String[] doorways = cmd.getNamedArgStringList("delete", null);
+		if(doorways != null)
+		{
+			StringBuffer removedDoorways = new StringBuffer();
+			
+			// Loop through the list and remove the specified doorways
+			for(String value : doorways)
+			{
+				// Validate the doorway name
+				byte doorway = Direction.getDirectionFromString(value);
+				
+				if(doorway != -1)
+				{
+					removedDoorways.append(value);
+					removedDoorways.append(",");
+					room.setDoorway(doorway, false);
+				}
+			}
+			
+			removedDoorways.setLength(Math.max(removedDoorways.length()-1, 0));
+			
+			editor.sendMessage("Removed doorways: "+removedDoorways.toString());
+		}
+		
+		// Handle add
+		doorways = cmd.getNamedArgStringList("add", null);
+		if(doorways != null)
+		{
+			StringBuffer addedDoorways = new StringBuffer();
+			
+			// Loop through the list and add the specified doorways
+			for(String value : doorways)
+			{
+				// Validate the doorway name
+				byte doorway = Direction.getDirectionFromString(value);
+				
+				if(doorway != -1)
+				{
+					addedDoorways.append(value);
+					addedDoorways.append(",");
+					room.setDoorway(doorway, true);
+				}
+			}
+			
+			addedDoorways.setLength(Math.max(addedDoorways.length()-1,0));
+			
+			editor.sendMessage("Added doorways: "+addedDoorways.toString());
+		}
+		
+		// List exits after everything else, so the user knows exactly what exits are active
+		Vector<DungeonRoomDoorway> finalDoorways = room.getDoorways();
+		StringBuffer sb = new StringBuffer("Doorways: ");
+		
+		for(DungeonRoomDoorway doorway : finalDoorways)
+		{
+			sb.append(Direction.getDirectionName(doorway.getDirection()));
+			sb.append(",");
+		}
+		sb.setLength(Math.max(sb.length()-1, 0));
+		
+		editor.sendMessage(sb.toString());
+	}
+	
+	/**
+	 * Manage theme setting and previewing for the room
+	 * 
+	 * @param cmd
+	 */
+	public void cmdTheme(DCommandEvent cmd)
+	{
+		DungeonRoom room = this.getRoomFromCommand(cmd);
+		
+		// Handle set theme list
+		String[] themes = cmd.getNamedArgStringList("set", null);
+		if(themes != null)
+		{
+			// Set theme list
+			room.resetThemes();
+			for(String s : themes)
+			{
+				room.addTheme(s);
+			}
+		}
+		
+		// Handle add themes
+		themes = cmd.getNamedArgStringList("add", null);
+		if(themes != null)
+		{
+			// Add themes to list
+			for(String s : themes)
+			{
+				room.addTheme(s);
+			}
+		}
+		
+		// Handle remove themes
+		themes = cmd.getNamedArgStringList("remove", null);
+		if(themes != null)
+		{
+			// Remove themes from list
+			for(String s : themes)
+			{
+				room.removeTheme(s);
+			}
+		}
+		
+		// Handle set default theme
+		String defaultTheme = cmd.getNamedArgString("default", null);
+		if(themes != null)
+		{
+			// Set default theme
+			room.setDefaultTheme(defaultTheme);
+		}
+		
+		// Handle preview
+		String newThemeName = cmd.getNamedArgString("preview", null);
+		if(newThemeName != null)
+		{
+			// Make sure the theme exists before we proceed
+			if(!themeManager.themeExists(newThemeName))
+			{
+				editor.sendMessage("The specified theme does not exist.");
+				return;
+			}
+			
+			// Don't waste time converting to the currently active theme
+			if(newThemeName.equals(activeTheme))
+			{
+				editor.sendMessage("Theme is already active.");
+				return;
+			}
+			
+			// Notify the editor
+			editor.sendMessage("Converting room from theme '"+activeTheme+"' to '"+newThemeName);
+			
+			// Convert blocks
+			Block b = null;
+			ThemeMaterialTranslation mt = null;
+			int i = 0;
+			for(int x = 0; x < 16; x++)
+			{
+				for(int z = 0; z < 16; z++)
+				{
+					for(int y = 0; y < 8; y++)
+					{
+						// Get the block handle
+						b = room.getDungeonChunk().getHandle().getBlock(x, y+this.editor_y, z);
+						// Get the new material, if any
+						mt = themeManager.getFullTranslation(activeTheme, newThemeName, new ThemeMaterialTranslation((byte) b.getTypeId(), b.getData()));
+						if(mt != null && mt.type > 0)
+						{
+							// Set block type and basic data value
+							b.setTypeIdAndData(mt.type, (byte)mt.sub, false);
+							i++;
+						}
+					}
+				}
+			}
+			
+			// Set active theme
+			activeTheme = newThemeName;
+			
+			editor.sendMessage("Material translation complete, "+i+" blocks converted.");
+		}
+		
+		// List the final themes
+		editor.sendMessage("Allowed Themes: "+room.getThemeCSV());
+	}
+	
+	/**
+	 * Manage loading, saving, and editing of widgets
+	 *
+	 * @param cmd
+	 */
+	public void cmdWidget(DCommandEvent cmd)
+	{
+		String widgetCmd = cmd.getArg(1);
+		
+		// Check command
+		if(widgetCmd == null)
+		{
+			editor.sendMessage("No widget command specified.");
+			return;
+		}
+		
+		widgetCmd = widgetCmd.toLowerCase();
+		
+		if(widgetCmd.equals("new"))
+		{
+			// New widget
+		}
+		else if(widgetCmd.equals("load"))
+		{
+			// Load widget
+		}
+		else if(widgetCmd.equals("save"))
+		{
+			// Save widget
+		}
+		else if(widgetCmd.equals("size"))
+		{
+			// Set bounds and size class
+		}
+		else if(widgetCmd.equals("origin"))
+		{
+			// Set origin
+		}
+		else if(widgetCmd.equals("themes"))
+		{
+			// Set themes
+		}
+		else if(widgetCmd.equals("move"))
+		{
+			// Move widget
+		}
+	}
+	
+	public void cmdWidgetNew(DCommandEvent cmd)
+	{
+		// TODO
+	}
+	
+	public void cmdWidgetLoad(DCommandEvent cmd)
+	{
+		// TODO
+		
+		// Need widget file name and either an XYZ coord or a node ID
+		// Args: name (string), pos (int,int,int), node (int)
+	}
+	
+	public void cmdWidgetSave(DCommandEvent cmd)
+	{
+		// TODO
+	}
+	
+	public void cmdWidgetBounds(DCommandEvent cmd)
+	{
+		// TODO
+	}
+	
+	public void cmdWidgetOrigin(DCommandEvent cmd)
+	{
+		// TODO
+	}
+	
+	public void cmdWidgetMove(DCommandEvent cmd)
+	{
+		// TODO
+	}
+	
+	/**
+	 * Commands for widget node management.
+	 *
+	 * @param cmd the cmd
+	 */
+	public void cmdNode(DCommandEvent cmd)
+	{
+		String nodeCmd = cmd.getArg(1);
+		
+		// Check command
+		if(nodeCmd == null)
+		{
+			editor.sendMessage("No widget command specified.");
+			return;
+		}
+		
+		nodeCmd = nodeCmd.toLowerCase();
+		
+		if(nodeCmd.equals("add"))
+		{
+			// Add node in room
+			cmdWidgetNodeAdd(cmd);
+		}
+		else if(nodeCmd.equals("move"))
+		{
+			// Move node in room
+			cmdWidgetNodeMove(cmd);
+		}
+		else if(nodeCmd.equals("delete"))
+		{
+			// Delete node in room
+			cmdWidgetNodeDelete(cmd);
+		}
+	}
+	
+	public void cmdWidgetNodeAdd(DCommandEvent cmd)
+	{
+		// Get size class (optional)
+		Size sizeClass = Size.GetByName(cmd.getNamedArgString("size", Size.TINY.getName()));
+		if(sizeClass == null)
+		{
+			editor.sendMessage("Invalid widget size class. Valid sizes are: tiny, small, medium, large, huge.");
+			return;
+		}
+		
+		// Get position (required)
+		BlockVector position = cmd.getNamedArgVectorInt("pos", null);
+		if(position == null || position.getBlockX() < 0 || position.getBlockY() < 0 || position.getBlockZ() < 0)
+		{
+			editor.sendMessage("Invalid or missing widget position.");
+			return;
+		}
+		
+		// Get attachment face (optional)
+		AttachmentFace face = AttachmentFace.GetFaceByName(cmd.getNamedArgString("face", "up"));
+		if(face == null)
+		{
+			editor.sendMessage("Invalid attachment face. Valid faces are: up, down, north, east, south, west.");
+			return;
+		}
+		
+		// Create new widget node
+		DungeonRoom room = this.getRoomFromCommand(cmd);
+		DungeonWidgetNode node = new DungeonWidgetNode(sizeClass, position, face);
+		room.addNode(node);
+		
+		editor.sendMessage("Added "+node.getSize().getName()+" widget node to room "+room+" with node ID "+node.getNodeID());
+	}
+	
+	public void cmdWidgetNodeMove(DCommandEvent cmd)
+	{
+		// TODO
+		
+		// Needs: node id, new position (optional), attachment face (optional)
+	}
+	
+	public void cmdWidgetNodeDelete(DCommandEvent cmd)
+	{
+		// TODO
+		
+		// Needs: node id
 	}
 	
 	/**
@@ -926,511 +1536,6 @@ public class DungeonEditor {
 		}
 		
 		return list;
-	}
-	
-	/**
-	 * Process an edit command.
-	 *
-	 * @param p the player
-	 * @param command the command
-	 * @param args additional arguments
-	 */
-	public void onCommand(DCommandEvent cmd)
-	{
-		this.editor = cmd.getPlayer();
-		
-		if(cmd.getCmd().equals("mode"))
-		{
-			this.cmdMode(cmd);
-		}
-		else if(cmd.getCmd().equals("new"))
-		{
-			this.cmdNew(cmd);
-		}
-		else if(cmd.getCmd().equals("load"))
-		{
-			this.cmdLoad(cmd);
-		}
-		else if(cmd.getCmd().equals("cancel"))
-		{
-			this.cmdCancel(cmd);
-		}
-		else if(cmd.getCmd().equals("save"))
-		{
-			this.cmdSave(cmd);
-		}
-		else if(cmd.getCmd().equals("exits") || cmd.getCmd().equals("doors"))
-		{
-			this.cmdExits(cmd);
-		}
-		else if(cmd.getCmd().equals("theme"))
-		{
-			this.cmdTheme(cmd);
-		}
-		else if(cmd.getCmd().equals("widget"))
-		{
-			this.cmdWidget(cmd);
-		}
-	}
-	
-	/**
-	 * Command: Set/Check Edit Mode
-	 * 
-	 * This will set and/or display the edit mode.
-	 */
-	public void cmdMode(DCommandEvent cmd)
-	{
-		/*
-		 * Get 'set' arg to change the edit mode
-		 */
-		String newMode = cmd.getNamedArgString("set", null);
-		
-		if(newMode != null)
-		{
-			if(newMode.equalsIgnoreCase("room"))
-			{
-				mode = EditMode.ROOM;
-			}
-			else if(newMode.equalsIgnoreCase("room_set"))
-			{
-				mode = EditMode.ROOM_SET;
-			}
-			else if(newMode.equalsIgnoreCase("widget"))
-			{
-				mode = EditMode.WIDGET;
-			}
-		}
-		
-		/*
-		 * Print the active edit mode
-		 */
-		
-		editor.sendMessage("Edit Mode: "+mode);
-	}
-	
-	/**
-	 * Command: New DungeonChunk
-	 * 
-	 * This will activate the editor with a blank chunk.
-	 *
-	 * @param cmd the command
-	 */
-	public void cmdNew(DCommandEvent cmd)
-	{
-		/*
-		 * Get 'flatten' and 'hint' args
-		 */
-		
-		boolean flatten = cmd.getNamedArgBool("flatten", true);
-		boolean hint = cmd.getNamedArgBool("hint", true);
-		
-		/*
-		 * Get 'set' arg
-		 */
-		
-		boolean setActive = cmd.getNamedArgBool("set",  false);
-		
-		/*
-		 * Get set dimensions and name
-		 */
-		
-		int setX = 1,setY = 1,setZ = 1;
-		String setTitle = "";
-		
-		if(setActive)
-		{
-			// Change the edit mode
-			setMode(EditMode.ROOM_SET);
-			
-			setName = cmd.getNamedArgString("setname", "Unnamed-Room-Set-"+System.currentTimeMillis());
-			setTitle = cmd.getNamedArgString("settitle", "Unnamed Room Set");
-			setX = Math.max(1, cmd.getNamedArgInt("setx", 1));
-			setY = Math.max(1, cmd.getNamedArgInt("sety", 1));
-			setZ = Math.max(1, cmd.getNamedArgInt("setz", 1));
-		}
-		else
-		{
-			setMode(EditMode.ROOM);
-		}
-		
-		// Create a room set whether or not one is active; it will be used for the dimensions of the editor regardless
-		roomSet = new DungeonRoomSet(setName, setTitle, setX, setY, setZ);
-		
-		/*
-		 * Start the editor
-		 */
-		
-		int playerY = cmd.getPlayer().getLocation().getBlockY();
-		int roundedY = playerY - (playerY % 8); // Round the player's y coordinate to the nearest multiple of 8
-		this.editor_y = Math.max(Math.min(roundedY, 112-(setY*8)), 8); // Force the floor to be placed no lower than 8 and no higher than (112-(setY*8))
-		
-		// Set the editing chunks
-		this.chunks = new DungeonChunk[roomSet.getSizeX()][roomSet.getSizeZ()];
-		for(int x = 0; x < roomSet.getSizeX(); x++)
-		{
-			for(int z = 0; z < roomSet.getSizeZ(); z++)
-			{
-				this.chunks[x][z] = new DungeonChunk(this.editor.getWorld().getChunkAt(cmd.getChunk().getX()+x, cmd.getChunk().getZ()+z));
-			}
-		}
-		
-		// Set the origin chunk (lowest X,Y,Z)
-		this.chunk = this.chunks[0][0];
-		
-		// Flatten and hint the editing region
-		this.start(flatten, hint, (mode == EditMode.ROOM_SET));
-		
-		/*
-		 * Reset the active filename and path
-		 */
-		
-		this.activeFile = "";
-		this.activePath = "";
-		
-		/*
-		 * Let the player know what we've done
-		 */
-		
-		cmd.getPlayer().sendMessage("[Dungeonator][Editor] Started new DungeonChunk at "+cmd.getChunk().getWorld().getName()+":"+cmd.getChunk().getX()+","+cmd.getChunk().getZ());
-	}
-	
-	/**
-	 * Command: Load DungeonChunk
-	 * 
-	 * This will activate the editor with a specified chunk loaded.
-	 *
-	 * @param cmd the command event instance
-	 */
-	public void cmdLoad(DCommandEvent cmd)
-	{
-		// Get the path and filename, or use defaults if no values were specified
-		String path = cmd.getNamedArgString("path", Dungeonator.TileFolderPath);
-		String name = cmd.getNamedArgString("name", "");
-		
-		// Get the room set flag
-		boolean loadSet = cmd.getNamedArgBool("set",  false);
-		
-		if(loadSet) { setMode(EditMode.ROOM_SET); } else { setMode(EditMode.ROOM); }
-		
-		if(name.isEmpty())
-		{
-			cmd.getPlayer().sendMessage("No file specified.");
-		}
-		else
-		{
-			// Set the chunk
-			chunk = new DungeonChunk(cmd.getChunk());
-			
-			// Load the room
-			this.loadRoom(path, name, loadSet);
-		}
-	}
-	
-	/**
-	 * Command: Cancel Edit
-	 * 
-	 * This will cancel the editing process.
-	 *
-	 * @param cmd the command event instance
-	 */
-	public void cmdCancel(DCommandEvent cmd)
-	{
-		this.cancel();
-		cmd.getPlayer().sendMessage("[Dungeonator][Editor] Cancelled edit operation.");
-	}
-	
-	/**
-	 * Command: Save DungeonChunk
-	 * 
-	 * This will save the current DungeonChunk. The editor will remain active.
-	 *
-	 * @param p the player triggering the command
-	 * @param args the args
-	 */
-	public void cmdSave(DCommandEvent cmd)
-	{
-		String path = Dungeonator.TileFolderPath;
-		String name = "Unnamed-"+System.currentTimeMillis();
-		
-		// Check for active path and name
-		if(!activePath.equals("") && mode != EditMode.ROOM_SET) { path = activePath; }
-		if(!activeFile.equals("")) { name = activeFile; }
-		
-		// Get the specified path and filename, or use defaults if no values were specified
-		// If the editor is active and a file has already been saved, the default will be the last saved name and path
-		// Active path and name can be reset by resetting or restarting the editor 
-		path = cmd.getNamedArgString("path", path);
-		name = cmd.getNamedArgString("name", name);
-		
-		// If a set is active, alter the path
-		// Format: /tiles/sets/{name}/
-		if(mode == EditMode.ROOM_SET)
-		{
-			path = path + "sets" + File.separator + name + File.separator;
-			roomSet.setName(name);
-		}
-		
-		// Check for library save command
-		boolean saveToLibrary = cmd.getNamedArgBool("library", false);
-		
-		// Save the chunk
-		this.saveRoom(path, name, saveToLibrary);
-	}
-	
-	/**
-	 * Command: Exits
-	 * 
-	 * Parent command for getting, setting, and removing exit data for the current chunk.
-	 *
-	 * @param p the p
-	 * @param args the args
-	 */
-	public void cmdExits(DCommandEvent cmd)
-	{
-		DungeonRoom room = this.getRoomFromCommand(cmd);
-		
-		// Handle reset first: remove all exits (N,NNE,ENE,E,ESE,SSE,S,SSW,WSW,W,WNW,NNW,U,D)
-		if(cmd.getNamedArgBool("reset", false) == true)
-		{
-			editor.sendMessage("Resetting doorways.");
-			room.resetDoorways();
-		}
-		
-		// Handle delete: remove specific exits
-		String[] doorways = cmd.getNamedArgStringList("delete", null);
-		if(doorways != null)
-		{
-			StringBuffer removedDoorways = new StringBuffer();
-			
-			// Loop through the list and remove the specified doorways
-			for(String value : doorways)
-			{
-				// Validate the doorway name
-				byte doorway = Direction.getDirectionFromString(value);
-				
-				if(doorway != -1)
-				{
-					removedDoorways.append(value);
-					removedDoorways.append(",");
-					room.setDoorway(doorway, false);
-				}
-			}
-			
-			removedDoorways.setLength(Math.max(removedDoorways.length()-1, 0));
-			
-			editor.sendMessage("Removed doorways: "+removedDoorways.toString());
-		}
-		
-		// Handle add
-		doorways = cmd.getNamedArgStringList("add", null);
-		if(doorways != null)
-		{
-			StringBuffer addedDoorways = new StringBuffer();
-			
-			// Loop through the list and add the specified doorways
-			for(String value : doorways)
-			{
-				// Validate the doorway name
-				byte doorway = Direction.getDirectionFromString(value);
-				
-				if(doorway != -1)
-				{
-					addedDoorways.append(value);
-					addedDoorways.append(",");
-					room.setDoorway(doorway, true);
-				}
-			}
-			
-			addedDoorways.setLength(Math.max(addedDoorways.length()-1,0));
-			
-			editor.sendMessage("Added doorways: "+addedDoorways.toString());
-		}
-		
-		// List exits after everything else, so the user knows exactly what exits are active
-		Vector<DungeonRoomDoorway> finalDoorways = room.getDoorways();
-		StringBuffer sb = new StringBuffer("Doorways: ");
-		
-		for(DungeonRoomDoorway doorway : finalDoorways)
-		{
-			sb.append(Direction.getDirectionName(doorway.getDirection()));
-			sb.append(",");
-		}
-		sb.setLength(Math.max(sb.length()-1, 0));
-		
-		editor.sendMessage(sb.toString());
-	}
-	
-	/**
-	 * Manage theme setting and previewing for the room
-	 * 
-	 * @param cmd
-	 */
-	public void cmdTheme(DCommandEvent cmd)
-	{
-		DungeonRoom room = this.getRoomFromCommand(cmd);
-		
-		// Handle set theme list
-		String[] themes = cmd.getNamedArgStringList("set", null);
-		if(themes != null)
-		{
-			// Set theme list
-			room.resetThemes();
-			for(String s : themes)
-			{
-				room.addTheme(s);
-			}
-		}
-		
-		// Handle add themes
-		themes = cmd.getNamedArgStringList("add", null);
-		if(themes != null)
-		{
-			// Add themes to list
-			for(String s : themes)
-			{
-				room.addTheme(s);
-			}
-		}
-		
-		// Handle remove themes
-		themes = cmd.getNamedArgStringList("remove", null);
-		if(themes != null)
-		{
-			// Remove themes from list
-			for(String s : themes)
-			{
-				room.removeTheme(s);
-			}
-		}
-		
-		// Handle set default theme
-		String defaultTheme = cmd.getNamedArgString("default", null);
-		if(themes != null)
-		{
-			// Set default theme
-			room.setDefaultTheme(defaultTheme);
-		}
-		
-		// Handle preview
-		String newThemeName = cmd.getNamedArgString("preview", null);
-		if(newThemeName != null)
-		{
-			// Make sure the theme exists before we proceed
-			if(!themeManager.themeExists(newThemeName))
-			{
-				editor.sendMessage("The specified theme does not exist.");
-				return;
-			}
-			
-			// Don't waste time converting to the currently active theme
-			if(newThemeName.equals(activeTheme))
-			{
-				editor.sendMessage("Theme is already active.");
-				return;
-			}
-			
-			// Notify the editor
-			editor.sendMessage("Converting room from theme '"+activeTheme+"' to '"+newThemeName);
-			
-			// Convert blocks
-			Block b = null;
-			ThemeMaterialTranslation mt = null;
-			int i = 0;
-			for(int x = 0; x < 16; x++)
-			{
-				for(int z = 0; z < 16; z++)
-				{
-					for(int y = 0; y < 8; y++)
-					{
-						// Get the block handle
-						b = room.getDungeonChunk().getHandle().getBlock(x, y+this.editor_y, z);
-						// Get the new material, if any
-						mt = themeManager.getFullTranslation(activeTheme, newThemeName, new ThemeMaterialTranslation((byte) b.getTypeId(), b.getData()));
-						if(mt != null && mt.type > 0)
-						{
-							// Set block type and basic data value
-							b.setTypeIdAndData(mt.type, (byte)mt.sub, false);
-							i++;
-						}
-					}
-				}
-			}
-			
-			// Set active theme
-			activeTheme = newThemeName;
-			
-			editor.sendMessage("Material translation complete, "+i+" blocks converted.");
-		}
-		
-		// List the final themes
-		editor.sendMessage("Allowed Themes: "+room.getThemeCSV());
-	}
-	
-	/**
-	 * Manage loading, saving, and editing of widgets
-	 *
-	 * @param cmd
-	 */
-	public void cmdWidget(DCommandEvent cmd)
-	{
-		// New widget
-		// Load widget
-		// Save widget
-		// Set bounds and size class
-		// Set origin
-		// Set themes
-		// Move widget
-		// Add node in room
-		// Move node in room
-		// Delete node in room
-	}
-	
-	public void cmdWidgetNew(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetLoad(DCommandEvent cmd)
-	{
-		// TODO
-		
-		// Need widget file name and either an XYZ coord or a node ID
-		// Args: name (string), pos (int,int,int), node (int)
-	}
-	
-	public void cmdWidgetSave(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetBounds(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetOrigin(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetMove(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetNodeAdd(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetNodeMove(DCommandEvent cmd)
-	{
-		// TODO
-	}
-	
-	public void cmdWidgetNodeDelete(DCommandEvent cmd)
-	{
-		// TODO
 	}
 	
 	/**

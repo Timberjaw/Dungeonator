@@ -12,11 +12,11 @@ public class DungeonWidget {
 
 	/** Size classes */
 	public static enum Size {
-		TINY (0, 2),
-		SMALL (1, 3),
-		MEDIUM (2, 4),
-		LARGE (3, 6),
-		HUGE (4, 8);
+		TINY (0, 2, "tiny"),
+		SMALL (1, 3, "small"),
+		MEDIUM (2, 4, "medium"),
+		LARGE (3, 6, "large"),
+		HUGE (4, 8, "huge");
 		
 		// Numeric code for use in data storage
 		private final int code;
@@ -24,10 +24,14 @@ public class DungeonWidget {
 		// Maximum bound in any dimension
 		private final int bound;
 		
-		Size(int code, int bound)
+		// Friendly string name
+		private final String name;
+		
+		Size(int code, int bound, String name)
 		{
 			this.code = code;
 			this.bound = bound;
+			this.name = name;
 		}
 		
 		public int code()
@@ -37,7 +41,12 @@ public class DungeonWidget {
 		
 		public int bound()
 		{
-			return this.bound;
+			return bound;
+		}
+		
+		public String getName()
+		{
+			return name;
 		}
 		
 		public static Size GetByCode(int code)
@@ -45,6 +54,21 @@ public class DungeonWidget {
 			for(Size s : Size.values())
 			{
 				if(s.code() == code)
+				{
+					return s;
+				}
+			}
+			
+			return null;
+		}
+		
+		public static Size GetByName(String name)
+		{
+			name = name.toLowerCase();
+			
+			for(Size s : Size.values())
+			{
+				if(s.getName().equals(name))
 				{
 					return s;
 				}
