@@ -684,7 +684,7 @@ public class DungeonEditor {
 		// Check command
 		if(nodeCmd == null)
 		{
-			editor.sendMessage("No widget command specified.");
+			editor.sendMessage("No node command specified.");
 			return;
 		}
 		
@@ -695,10 +695,15 @@ public class DungeonEditor {
 			// Add node in room
 			cmdWidgetNodeAdd(cmd);
 		}
-		else if(nodeCmd.equals("move"))
+		else if(nodeCmd.equals("edit") || nodeCmd.equals("move"))
 		{
-			// Move node in room
-			cmdWidgetNodeMove(cmd);
+			// Edit/move node in room
+			cmdWidgetNodeEdit(cmd);
+		}
+		else if(nodeCmd.equals("autotarget"))
+		{
+			// Automatically position and face a widget node based on where the editor is pointing
+			cmdWidgetNodeAutoTarget(cmd);
 		}
 		else if(nodeCmd.equals("delete"))
 		{
@@ -748,11 +753,81 @@ public class DungeonEditor {
 		editor.sendMessage("Added "+node.getSize().getName()+" widget node to room "+room+" at "+position+" with node ID "+node.getNodeID());
 	}
 	
-	public void cmdWidgetNodeMove(DCommandEvent cmd)
+	public void cmdWidgetNodeEdit(DCommandEvent cmd)
 	{
-		// TODO
+		DungeonRoom room = this.getRoomFromCommand(cmd);
 		
-		// Needs: node id, new position (optional), attachment face (optional)
+		// Get node ID
+		int id = cmd.getNamedArgInt("id", -1);
+		if(id < 0 || id >= room.getNodes().size())
+		{
+			editor.sendMessage("Invalid or missing node ID. Specify ID with id:X. This room has "+room.getNodes().size()+" nodes.");
+			return;
+		}
+		
+		DungeonWidgetNode node = room.getNode(id);
+		
+		// Get size class (optional)
+		Size sizeClass = Size.GetByName(cmd.getNamedArgString("size", Size.TINY.getName()));
+		if(sizeClass == null)
+		{
+			editor.sendMessage("Invalid widget size class. Valid sizes are: tiny, small, medium, large, huge.");
+			return;
+		}
+		
+		// Get position (optional)
+		BlockVector position = cmd.getNamedArgVectorInt("pos", node.getPosition());
+		if(position.getBlockX() < 0 || position.getBlockY() < 0 || position.getBlockZ() < 0)
+		{
+			editor.sendMessage("Invalid node position.");
+			return;
+		}
+		
+		// TODO: check bounds against room/set bounds
+		
+		// Get attachment face (optional)
+		AttachmentFace face = AttachmentFace.GetFaceByName(cmd.getNamedArgString("face", "up"));
+		if(face == null)
+		{
+			editor.sendMessage("Invalid attachment face. Valid faces are: up, down, north, east, south, west.");
+			return;
+		}
+		
+		// Set new information
+		node.setPosition(position);
+		node.setSize(sizeClass);
+		node.setAttachmentFace(face);
+		
+		editor.sendMessage("Updated node "+id+".");
+	}
+	
+	public void cmdWidgetNodeAutoTarget(DCommandEvent cmd)
+	{
+		// Get node ID (required)
+		int id = cmd.getNamedArgInt("id", -1);
+		if(id < 0 || id >= room.getNodes().size())
+		{
+			editor.sendMessage("Invalid or missing node ID. Specify ID with id:X. This room has "+room.getNodes().size()+" nodes.");
+			return;
+		}
+		
+		DungeonWidgetNode node = room.getNode(id);
+				
+		// Get targeted block
+		Block block = editor.getTargetBlock(null, 100);
+		
+		// TODO: ensure that block is within room/set bounds
+		
+		// Update node
+		BlockVector pos = block.getLocation().toVector().toBlockVector();
+		
+		pos.setX(pos.getBlockX() - room.getX()*16);
+		pos.setY(pos.getBlockY() - room.getY()*8);
+		pos.setZ(pos.getBlockZ() - room.getZ()*16);
+		
+		node.setPosition(pos);
+		
+		editor.sendMessage("Updated node "+id+" position to "+pos);
 	}
 	
 	public void cmdWidgetNodeDelete(DCommandEvent cmd)

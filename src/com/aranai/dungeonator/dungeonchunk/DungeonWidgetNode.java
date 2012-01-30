@@ -1,7 +1,7 @@
 package com.aranai.dungeonator.dungeonchunk;
 
 import org.bukkit.block.BlockFace;
-import org.bukkit.util.Vector;
+import org.bukkit.util.BlockVector;
 
 /**
  * An in-room attachment point for a widget.
@@ -12,7 +12,7 @@ public class DungeonWidgetNode {
 	private DungeonWidget.Size size;
 	
 	/** The position of the node. The widget origin will be placed here. */
-	private Vector position;
+	private BlockVector position;
 	
 	public static enum AttachmentFace {
 		UP (BlockFace.UP), DOWN (BlockFace.DOWN), NORTH (BlockFace.NORTH), EAST (BlockFace.EAST), SOUTH (BlockFace.SOUTH), WEST (BlockFace.WEST);
@@ -58,14 +58,14 @@ public class DungeonWidgetNode {
 	/** The node id within the room. */
 	private int nodeID;
 	
-	public DungeonWidgetNode(DungeonWidget.Size size, Vector pos, AttachmentFace face) { this(size, pos, face, 0); }
+	public DungeonWidgetNode(DungeonWidget.Size size, BlockVector pos, AttachmentFace face) { this(size, pos, face, 0); }
 	
-	public DungeonWidgetNode(DungeonWidget.Size size, Vector pos, AttachmentFace face, int id)
+	public DungeonWidgetNode(DungeonWidget.Size size, BlockVector pos, AttachmentFace face, int id)
 	{
 		this.setSize(size);
 		this.setPosition(pos);
 		this.setNodeID(id);
-		this.attachmentFace = face;
+		this.setAttachmentFace(face);
 	}
 
 	/**
@@ -85,14 +85,14 @@ public class DungeonWidgetNode {
 	/**
 	 * @return the position
 	 */
-	public Vector getPosition() {
+	public BlockVector getPosition() {
 		return position;
 	}
 
 	/**
 	 * @param position the position to set
 	 */
-	public void setPosition(Vector position) {
+	public void setPosition(BlockVector position) {
 		this.position = position;
 	}
 
@@ -108,5 +108,19 @@ public class DungeonWidgetNode {
 	 */
 	public void setNodeID(int nodeID) {
 		this.nodeID = nodeID;
+	}
+
+	/**
+	 * @return the attachmentFace
+	 */
+	public AttachmentFace getAttachmentFace() {
+		return attachmentFace;
+	}
+
+	/**
+	 * @param attachmentFace the attachmentFace to set
+	 */
+	public void setAttachmentFace(AttachmentFace attachmentFace) {
+		this.attachmentFace = attachmentFace;
 	}
 }
