@@ -859,7 +859,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	// Get the origin
             	BlockVector origin = new BlockVector(rs.getInt("origin_x"), rs.getInt("origin_y"), rs.getInt("origin_z"));
             	
-            	widget = new DungeonWidget(id, rs.getString("filename"), size, bounds, origin);
+            	widget = new DungeonWidget(id, rs.getString("filename"), size, origin);
             	loaded = true;
             }
         }

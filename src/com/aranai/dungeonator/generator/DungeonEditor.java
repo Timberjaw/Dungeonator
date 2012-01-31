@@ -698,6 +698,7 @@ public class DungeonEditor {
 								|| (x == size.bound() && z == -1 && y == size.bound())
 								|| (x == -1 && z == size.bound() && y == size.bound())
 								|| (x == size.bound() && z == size.bound() && y == size.bound())
+								|| (y == -1 && x > -1 && x < size.bound() && z > -1 && z < size.bound())
 							)
 							{
 								mat = hintMat;
@@ -713,7 +714,8 @@ public class DungeonEditor {
 		}
 		
 		// Create widget
-		widget = new DungeonWidget(size, position);
+		widget = new DungeonWidget(size);
+		widget.setLocation(new DungeonRoom(new DungeonChunk(cmd.getChunk()), 1), position);
 		
 		// Set edit mode
 		setMode(EditMode.WIDGET);
@@ -730,6 +732,38 @@ public class DungeonEditor {
 	public void cmdWidgetSave(DCommandEvent cmd)
 	{
 		// TODO
+		
+		// Args: name (optional)
+		
+		// Get blocks
+		byte[] blocks = widget.getRawBlocks();
+		
+		// Get block data
+		byte[] blockData = widget.getRawBlockData();
+		
+		// TODO: Get tile entities
+		
+		// Get themes
+		String defaultTheme = widget.getDefaultTheme();
+		String themes = widget.getThemeCSV();
+		
+		// Test: make sure we're getting the block volume we think we are
+		int tick1 = 0;
+		int tick2 = 0;
+		for(int i = 0; i < blocks.length; i++)
+		{
+			if(blocks[i] > 0)
+			{
+				tick1++;
+			}
+			if(blockData[i] > 0)
+			{
+				tick2++;
+			}
+		}
+		
+		editor.sendMessage("Found "+tick1+" non-air blocks and "+tick2+" blocks with data in widget.");
+		
 	}
 	
 	public void cmdWidgetEdit(DCommandEvent cmd)

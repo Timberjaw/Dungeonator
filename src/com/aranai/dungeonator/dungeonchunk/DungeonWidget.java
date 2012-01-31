@@ -1,5 +1,7 @@
 package com.aranai.dungeonator.dungeonchunk;
 
+import java.util.Vector;
+
 import org.bukkit.util.BlockVector;
 import org.jnbt.CompoundTag;
 
@@ -15,8 +17,8 @@ public class DungeonWidget {
 		TINY (0, 2, "tiny"),
 		SMALL (1, 3, "small"),
 		MEDIUM (2, 4, "medium"),
-		LARGE (3, 6, "large"),
-		HUGE (4, 8, "huge");
+		LARGE (3, 5, "large"),
+		HUGE (4, 6, "huge");
 		
 		// Numeric code for use in data storage
 		private final int code;
@@ -82,7 +84,7 @@ public class DungeonWidget {
 	private Size size;
 	
 	/** Bounds */
-	private BlockVector bounds;
+	private int bound;
 	
 	/** Origin (attachment point) */
 	private BlockVector origin;
@@ -109,7 +111,7 @@ public class DungeonWidget {
 	private byte[] tempRawBlockData;
 	
 	/** Allowed themes */
-	private java.util.Vector<String> allowedThemes;
+	private Vector<String> allowedThemes;
 	
 	/** Default theme */
 	private String defaultTheme;
@@ -127,9 +129,12 @@ public class DungeonWidget {
 		setSize(size);
 		setOrigin(origin);
 		setPosition(new BlockVector(0,0,0));
+		
+		allowedThemes = new Vector<String>();
+		defaultTheme = "default";
 	}
 	
-	public DungeonWidget(long id, String filename, Size size, BlockVector bounds, BlockVector origin)
+	public DungeonWidget(long id, String filename, Size size, BlockVector origin)
 	{
 		this(size, origin);
 		setLibraryID(id);
@@ -212,6 +217,7 @@ public class DungeonWidget {
 	 */
 	public void setSize(Size size) {
 		this.size = size;
+		bound = size.bound();
 	}
 	
 	/**
@@ -283,17 +289,17 @@ public class DungeonWidget {
 			
 			DungeonChunk chunk = room.getDungeonChunk();
 			
-			byte[] blocks = new byte[size.bound()^3];
+			byte[] blocks = new byte[(int)Math.pow(size.bound(), 3)];
 			int pos = 0;
 			
-			for(int x = position.getBlockX(); x < position.getBlockX()+bounds.getBlockX(); x++)
+			for(int x = 0; x < bound; x++)
 			{
-				for(int z = position.getBlockZ(); z < position.getBlockZ()+bounds.getBlockZ(); z++)
+				for(int z = 0; z < bound; z++)
 				{
-					for(int y = position.getBlockY(); y < position.getBlockY()+bounds.getBlockY(); y++)
+					for(int y = 0; y < bound; y++)
 					{
-						pos = DungeonMath.getWidgetPosFromCoords(x-position.getBlockX(), y-position.getBlockY(), z-position.getBlockZ(), size);
-						blocks[pos] = (byte)chunk.getHandle().getBlock(x, (room.getY()*8)+y, z).getTypeId();
+						pos = DungeonMath.getWidgetPosFromCoords(x, y, z, size);
+						blocks[pos] = (byte)chunk.getHandle().getBlock(x+position.getBlockX(), y+position.getBlockY(), z+position.getBlockZ()).getTypeId();
 					}
 				}
 			}
@@ -337,17 +343,17 @@ public class DungeonWidget {
 			
 			DungeonChunk chunk = room.getDungeonChunk();
 			
-			byte[] blocks = new byte[size.bound()^3];
+			byte[] blocks = new byte[(int)Math.pow(size.bound(), 3)];
 			int pos = 0;
 			
-			for(int x = position.getBlockX(); x < position.getBlockX()+bounds.getBlockX(); x++)
+			for(int x = 0; x < bound; x++)
 			{
-				for(int z = position.getBlockZ(); z < position.getBlockZ()+bounds.getBlockZ(); z++)
+				for(int z = 0; z < bound; z++)
 				{
-					for(int y = position.getBlockY(); y < position.getBlockY()+bounds.getBlockY(); y++)
+					for(int y = 0; y < bound; y++)
 					{
-						pos = DungeonMath.getWidgetPosFromCoords(x-position.getBlockX(), y-position.getBlockY(), z-position.getBlockZ(), size);
-						blocks[pos] = (byte)chunk.getHandle().getBlock(x, (room.getY()*8)+y, z).getData();
+						pos = DungeonMath.getWidgetPosFromCoords(x, y, z, size);
+						blocks[pos] = (byte)chunk.getHandle().getBlock(x+position.getBlockX(), y+position.getBlockY(), z+position.getBlockZ()).getData();
 					}
 				}
 			}
@@ -499,7 +505,10 @@ public class DungeonWidget {
 			csv = csv.concat(s).concat(",");
 		}
 		
-		csv = csv.substring(0, csv.length()-1);
+		if(csv.length() > 0)
+		{
+			csv = csv.substring(0, csv.length()-1);
+		}
 		
 		return csv;
 	}

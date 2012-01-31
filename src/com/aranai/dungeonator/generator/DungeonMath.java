@@ -44,6 +44,6 @@ public class DungeonMath {
 	 */
 	public static int getWidgetPosFromCoords(int x, int y, int z, DungeonWidget.Size size)
 	{
-		return x*size.bound() + y*size.bound() + z;
+		return x*size.bound()*size.bound() + y*size.bound() + z;
 	}
 }
