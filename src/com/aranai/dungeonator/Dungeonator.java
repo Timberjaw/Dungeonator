@@ -31,6 +31,9 @@ public class Dungeonator extends JavaPlugin {
 	
 	private static Logger log;
 	
+	/** The plugin instance */
+	private static Dungeonator instance;
+	
 	/** The world listener. Used for detecting chunk load and unload events. */
 	private DWorldListener worldListener;
 	
@@ -81,6 +84,7 @@ public class Dungeonator extends JavaPlugin {
 	 */
 	public Dungeonator() {
 		super();
+		Dungeonator.instance = this;
 	}
 
 	/* (non-Javadoc)
@@ -189,6 +193,16 @@ public class Dungeonator extends JavaPlugin {
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
     	return this.playerListener.onCommand(sender, command, commandLabel, args);
     }
+	
+	/**
+	 * Gets the single instance of Dungeonator.
+	 *
+	 * @return single instance of Dungeonator
+	 */
+	public static Dungeonator getInstance()
+	{
+		return Dungeonator.instance;
+	}
 	
 	/**
 	 * Gets the Dungeonator logger instance.

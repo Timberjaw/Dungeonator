@@ -43,6 +43,7 @@ import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.amt.ThemeManager;
 import com.aranai.dungeonator.amt.ThemeMaterialTranslation;
+import com.aranai.dungeonator.datastore.DataStoreAssetException;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomDoorway;
@@ -129,12 +130,6 @@ public class DungeonEditor {
 	/** The set name */
 	private String setName = "";
 	
-	/** The set ID */
-	private int setID = -1;
-	
-	/** The widget ID, if we're editing a widget */
-	private int widgetID = -1;
-	
 	/**
 	 * Instantiates the dungeon chunk editor.
 	 */
@@ -147,7 +142,7 @@ public class DungeonEditor {
 		activeFile = "";
 		activePath = "";
 		activeWidgetFile = "";
-		activeWidgetPath = "";
+		activeWidgetPath = Dungeonator.WidgetFolderPath;
 		activeTheme = "DEFAULT";
 		testLibrary = new Vector<String>();
 		themeManager = d.getThemeManager();
@@ -649,6 +644,9 @@ public class DungeonEditor {
 	{
 		// TODO: Get node ID (optional - use current position if unavailable)
 		
+		// Reset widget path
+		activeWidgetPath = Dungeonator.WidgetFolderPath;
+		
 		// Get size class (optional)
 		Size size = Size.GetByName(cmd.getNamedArgString("size", Size.TINY.getName()));
 		if(size == null)
@@ -657,7 +655,7 @@ public class DungeonEditor {
 			return;
 		}
 		
-		// Get position (required)
+		// Get position (optional)
 		BlockVector position = cmd.getNamedArgVectorInt("pos", editor.getLocation().toVector().toBlockVector());
 		
 		// Get attachment face (optional)
@@ -723,47 +721,72 @@ public class DungeonEditor {
 	
 	public void cmdWidgetLoad(DCommandEvent cmd)
 	{
-		// TODO
+		// TODO: allow load into active room node
 		
-		// Need widget file name and either an XYZ coord or a node ID
-		// Args: name (string), pos (int,int,int), node (int)
+		DungeonWidget tmp = new DungeonWidget();
+		
+		// Args: position (optional)
+		BlockVector position = cmd.getNamedArgVectorInt("pos", editor.getLocation().toVector().toBlockVector());
+		tmp.setLocation(null, position);
+		
+		// Args: path(optional), name (optional)
+		String path = cmd.getNamedArgString("path", activeWidgetPath);
+		String name = cmd.getNamedArgString("name", activeWidgetFile);
+		
+		// Load asset
+		try {
+			tmp.loadAsset(path, name);
+			widget = tmp;
+		} catch (DataStoreAssetException e) {
+			editor.sendMessage("Could not load widget from "+e.getLocation()+". Error: "+e.getReason());
+			e.printStackTrace();
+			return;
+		}
+		
+		// Add blocks to world
+		byte[] blocks = widget.getRawBlocks();
+		byte[] blockData = widget.getRawBlockData();
+		
+		Size size = widget.getSize();
+		int bound = size.bound();
+		int pos = 0;
+		BlockVector location = widget.getPosition();
+		
+		for(int x = 0; x < bound; x++)
+		{
+			for(int y = 0; y < bound; y++)
+			{
+				for(int z = 0; z < bound; z++)
+				{
+					pos = DungeonMath.getWidgetPosFromCoords(x, y, z, size);
+					cmd.getChunk().getBlock(x+location.getBlockX(), y+location.getBlockY(), z+location.getBlockZ()).setTypeIdAndData(blocks[pos], blockData[pos], true);
+					Dungeonator.getLogger().info("Added block of ID "+blocks[pos]+" to "+(x+location.getBlockX())+","+(y+location.getBlockY())+","+(z+location.getBlockZ()));
+				}
+			}
+		}
+		
+		// TODO: Tile entities
+		
+		// Set widget room
+		widget.setRoom(new DungeonRoom(new DungeonChunk(cmd.getChunk()), 1));
+		
+		editor.sendMessage("Loaded widget from "+path+File.separator+name+" at "+location+".");
 	}
 	
 	public void cmdWidgetSave(DCommandEvent cmd)
 	{
-		// TODO
+		// Args: path(optional), name (optional)
+		String path = cmd.getNamedArgString("path", activeWidgetPath);
+		String name = cmd.getNamedArgString("name", activeWidgetFile);
 		
-		// Args: name (optional)
-		
-		// Get blocks
-		byte[] blocks = widget.getRawBlocks();
-		
-		// Get block data
-		byte[] blockData = widget.getRawBlockData();
-		
-		// TODO: Get tile entities
-		
-		// Get themes
-		String defaultTheme = widget.getDefaultTheme();
-		String themes = widget.getThemeCSV();
-		
-		// Test: make sure we're getting the block volume we think we are
-		int tick1 = 0;
-		int tick2 = 0;
-		for(int i = 0; i < blocks.length; i++)
-		{
-			if(blocks[i] > 0)
-			{
-				tick1++;
-			}
-			if(blockData[i] > 0)
-			{
-				tick2++;
-			}
+		// Save asset
+		try {
+			widget.saveAsset(path, name);
+			editor.sendMessage("Saved widget to "+path+File.separator+name+".");
+		} catch (DataStoreAssetException e) {
+			editor.sendMessage("Could not save widget to "+e.getLocation()+". Error: "+e.getReason());
+			e.printStackTrace();
 		}
-		
-		editor.sendMessage("Found "+tick1+" non-air blocks and "+tick2+" blocks with data in widget.");
-		
 	}
 	
 	public void cmdWidgetEdit(DCommandEvent cmd)

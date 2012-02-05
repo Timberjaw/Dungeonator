@@ -1,6 +1,5 @@
 package com.aranai.dungeonator.datastore;
 
-// TODO: Auto-generated Javadoc
 /**
  * A DataStoreDeleteException is thrown when a data storage delete operation
  * fails. The exception includes details on the failure reason and the data

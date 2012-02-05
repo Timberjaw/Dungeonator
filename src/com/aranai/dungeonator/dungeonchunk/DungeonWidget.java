@@ -1,16 +1,33 @@
 package com.aranai.dungeonator.dungeonchunk;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Vector;
 
 import org.bukkit.util.BlockVector;
+import org.jnbt.ByteArrayTag;
 import org.jnbt.CompoundTag;
+import org.jnbt.IntTag;
+import org.jnbt.LongTag;
+import org.jnbt.NBTInputStream;
+import org.jnbt.NBTOutputStream;
+import org.jnbt.StringTag;
+import org.jnbt.Tag;
 
+import com.aranai.dungeonator.Dungeonator;
+import com.aranai.dungeonator.datastore.DataStoreAssetException;
+import com.aranai.dungeonator.datastore.IAsset;
 import com.aranai.dungeonator.generator.DungeonMath;
 
 /**
  * Represents a single widget instance. Widgets are small objects used to dynamically populate rooms.
  */
-public class DungeonWidget {
+public class DungeonWidget implements IAsset {
 
 	/** Size classes */
 	public static enum Size {
@@ -79,6 +96,9 @@ public class DungeonWidget {
 			return null;
 		}
 	};
+	
+	/** Loaded status */
+	private boolean loaded;
 	
 	/** Size Class */
 	private Size size;
@@ -383,20 +403,6 @@ public class DungeonWidget {
 	}
 	
 	/**
-	 * @return the schematic
-	 */
-	public CompoundTag getSchematic() {
-		return schematic;
-	}
-	
-	/**
-	 * @param schematic the schematic to set
-	 */
-	public void setSchematic(CompoundTag schematic) {
-		this.schematic = schematic;
-	}
-	
-	/**
 	 * Gets the random theme.
 	 *
 	 * @return the random theme
@@ -525,5 +531,156 @@ public class DungeonWidget {
 		{
 			addTheme(s);
 		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IAsset#saveAsset(java.lang.String)
+	 */
+	@Override
+	public boolean saveAsset(String path, String filename) throws DataStoreAssetException {
+		String fullPath = path+filename+".nbt";
+		
+		// Schematic tags
+		HashMap<String,org.jnbt.Tag> tags = new HashMap<String,org.jnbt.Tag>();
+		HashMap<String,org.jnbt.Tag> metaTags = new HashMap<String,org.jnbt.Tag>();
+		HashMap<String,org.jnbt.Tag> widgetTags = new HashMap<String,org.jnbt.Tag>();
+		
+		/*
+		 * Build asset tags
+		 */
+		
+		// Meta: Author
+		metaTags.put("author", new StringTag("author", Dungeonator.getInstance().getChunkEditor().getActiveEditor().getName()));
+		
+		// Meta: Date created/updated
+		metaTags.put("dateUpdated", new LongTag("dateUpdated", System.currentTimeMillis()));
+		
+		// Add meta tag
+		tags.put("meta", new CompoundTag("meta", metaTags));
+		
+		// Widget: Size
+		widgetTags.put("size", new IntTag("size", this.size.code()));
+		
+		// Widget: Blocks
+		widgetTags.put("blocks", new ByteArrayTag("blocks", getRawBlocks()));
+		
+		// Widget: Block Data
+		widgetTags.put("blockData", new ByteArrayTag("blockData", getRawBlockData()));
+		
+		// TODO: Widget: Tile Entities
+		
+		// TODO: Widget: Themes
+		
+		// Add widget tags to schematic
+		tags.put("widget", new CompoundTag("widget", widgetTags));
+		
+		// Build final schematic tag
+		CompoundTag schematic = new CompoundTag("WidgetSchematic", tags);
+			
+		// Save asset tag to file
+		try {
+			// Create file output stream
+			OutputStream output = new FileOutputStream(fullPath);
+		
+			// Create NBT output stream
+			NBTOutputStream os = new NBTOutputStream(output);
+			
+			// Write the room to the file
+			os.writeTag(schematic);
+			
+			// Close the NBT output stream
+			os.close();
+			
+			// Close the file output stream
+			output.flush();
+			output.close();
+		} catch (IOException e) { e.printStackTrace(); throw new DataStoreAssetException("Could not save asset file.", fullPath); }
+			
+		// Set local asset tag
+		setAssetTag(schematic);
+		
+		return false;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IAsset#loadAsset(java.lang.String)
+	 */
+	@Override
+	public void loadAsset(String path, String filename) throws DataStoreAssetException {
+		String fullPath = path+filename+".nbt";
+		CompoundTag schematic = null;
+		
+		// Load the file
+		try {
+			// Open file input stream
+			FileInputStream fis = new FileInputStream(fullPath);
+			
+			try {
+				// Open NBT input stream
+				NBTInputStream nis = new NBTInputStream(fis);
+				
+				// Read NBT data
+				org.jnbt.Tag tag = nis.readTag();
+				
+				if(tag instanceof CompoundTag)
+				{
+					schematic = (CompoundTag)tag;
+				}
+			} catch (IOException e) { e.printStackTrace(); throw new DataStoreAssetException("Failed to load widget from file. IOException.", fullPath); }
+		} catch (FileNotFoundException e) { e.printStackTrace(); throw new DataStoreAssetException("Failed to load widget from file. File not found.", fullPath); }
+		
+		// Set local asset tag
+		if(schematic != null)
+		{
+			try { setAssetTag(schematic); } catch (DataStoreAssetException e) { throw new DataStoreAssetException("Could not parse widget tag: "+e.getReason(), fullPath); }
+			return;
+		}
+		
+		// Something bad happened
+		throw new DataStoreAssetException("Failed to load widget from file.", fullPath);
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IAsset#getAssetTag()
+	 */
+	@Override
+	public CompoundTag getAssetTag() throws DataStoreAssetException {
+		if(this.isLoaded()) { return schematic; }
+		throw new DataStoreAssetException("Widget Asset is not loaded.", filename);
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IAsset#setAssetTag()
+	 */
+	@Override
+	public void setAssetTag(CompoundTag tag) throws DataStoreAssetException {
+		try
+		{
+			// Parse asset tag
+			CompoundTag widgetTag = (CompoundTag)tag.getValue().get("widget");
+		
+			// Size class
+			size = Size.GetByCode(((IntTag)widgetTag.getValue().get("size")).getValue());
+		
+			// Blocks
+			tempRawBlocks = ((ByteArrayTag)widgetTag.getValue().get("blocks")).getValue();
+		
+			// Block data
+			tempRawBlockData = ((ByteArrayTag)widgetTag.getValue().get("blockData")).getValue();
+		
+			// TODO: Themes
+		}
+		catch(Exception e) { e.printStackTrace(); throw new DataStoreAssetException("Could not set asset tag. Structure may be invalid.", ""); }
+		
+		// Set local asset tag
+		schematic = tag;
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IAsset#isLoaded()
+	 */
+	@Override
+	public boolean isLoaded() {
+		return loaded;
 	}
 }
