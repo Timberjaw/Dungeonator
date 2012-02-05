@@ -190,6 +190,15 @@ public interface IDungeonDataStore {
 	public DungeonWidget getLibraryWidget(long id) throws DataStoreGetException;
 	
 	/**
+	 * Gets a random library widget by size.
+	 *
+	 * @param size the size
+	 * @return the random library widget
+	 * @throws DataStoreGetException the data store get exception
+	 */
+	public DungeonWidget getRandomLibraryWidget(DungeonWidget.Size size) throws DataStoreGetException;
+	
+	/**
 	 * Save a DungeonWidget record in the library.
 	 *
 	 * @param widget the widget

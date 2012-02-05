@@ -3,9 +3,13 @@ package com.aranai.dungeonator.dungeonchunk;
 import java.util.Vector;
 
 import org.bukkit.block.BlockState;
+import org.bukkit.util.BlockVector;
 import org.jnbt.CompoundTag;
+import org.jnbt.IntTag;
+import org.jnbt.StringTag;
 
 import com.aranai.dungeonator.Direction;
+import com.aranai.dungeonator.datastore.DataStoreAssetException;
 import com.aranai.dungeonator.generator.DungeonMath;
 
 /**
@@ -36,6 +40,12 @@ public class DungeonRoom implements IDungeonRoom {
 	
 	/** The library id. */
 	private long libraryID = 0;
+	
+	/** The room set id. */
+	private long libraryRoomSetID = 0;
+	
+	/** The room set path. Redundantly included here for performance reasons during generation. */
+	private String libraryRoomSetPath = "";
 	
 	/** The room set */
 	private DungeonRoomSet roomSet;
@@ -652,6 +662,43 @@ public class DungeonRoom implements IDungeonRoom {
 		nodes.add(node);
 	}
 	
+	public void addNodeFromTag(CompoundTag tag) throws DataStoreAssetException
+	{
+		DungeonWidgetNode tmpNode = null;
+		
+		try
+		{
+			// Get ID
+			int id = ((IntTag)tag.getValue().get("id")).getValue();
+			
+			// Get size code
+			int sizeCode = ((IntTag)tag.getValue().get("size")).getValue();
+			
+			// Get attachment face
+			String face = ((StringTag)tag.getValue().get("face")).getValue();
+			
+			// Get position
+			int x = ((IntTag)tag.getValue().get("x")).getValue();
+			int y = ((IntTag)tag.getValue().get("y")).getValue();
+			int z = ((IntTag)tag.getValue().get("z")).getValue();
+			BlockVector pos = new BlockVector(x,y,z);
+			
+			tmpNode = new DungeonWidgetNode(
+					DungeonWidget.Size.GetByCode(sizeCode),
+					pos,
+					DungeonWidgetNode.AttachmentFace.GetFaceByName(face),
+					id
+			);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			throw new DataStoreAssetException("Could not parse widget node from tag.", "DungeonRoom");
+		}
+		
+		this.addNode(tmpNode);
+	}
+	
 	/**
 	 * Sets a node.
 	 *
@@ -738,5 +785,33 @@ public class DungeonRoom implements IDungeonRoom {
 	 */
 	public void setRoomSet(DungeonRoomSet roomSet) {
 		this.roomSet = roomSet;
+	}
+
+	/**
+	 * @return the libraryRoomSetID
+	 */
+	public long getLibraryRoomSetID() {
+		return libraryRoomSetID;
+	}
+
+	/**
+	 * @param libraryRoomSetID the libraryRoomSetID to set
+	 */
+	public void setLibraryRoomSetID(long libraryRoomSetID) {
+		this.libraryRoomSetID = libraryRoomSetID;
+	}
+
+	/**
+	 * @return the libraryRoomSetPath
+	 */
+	public String getLibraryRoomSetPath() {
+		return libraryRoomSetPath;
+	}
+
+	/**
+	 * @param libraryRoomSetPath the libraryRoomSetPath to set
+	 */
+	public void setLibraryRoomSetPath(String libraryRoomSetPath) {
+		this.libraryRoomSetPath = libraryRoomSetPath;
 	}
 }

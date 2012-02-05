@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -787,6 +788,14 @@ public class DungeonEditor {
 			editor.sendMessage("Could not save widget to "+e.getLocation()+". Error: "+e.getReason());
 			e.printStackTrace();
 		}
+		
+		// Save to library
+		boolean saveToLibrary = cmd.getNamedArgBool("library", false);
+		
+		if(saveToLibrary)
+		{
+			dungeonator.getDataManager().saveLibraryWidget(widget);
+		}
 	}
 	
 	public void cmdWidgetEdit(DCommandEvent cmd)
@@ -1324,6 +1333,27 @@ public class DungeonEditor {
 							}
 						}
 						
+						// Handle widget nodes
+						if(schematic.getValue().containsKey("nodes"))
+						{
+							List<Tag> nodes = ((ListTag)schematic.getValue().get("nodes")).getValue();
+							int nodesLoaded = 0;
+							
+							for(Tag t : nodes)
+							{
+								CompoundTag ct = (CompoundTag)t;
+								try {
+									tmpRoom.addNodeFromTag(ct);
+									nodesLoaded++;
+								} catch (DataStoreAssetException e) { editor.sendMessage("Load Error: "+e.getReason()); }
+							}
+							
+							if(nodes.size() > 0)
+							{
+								editor.sendMessage("Loaded "+nodesLoaded+" of "+nodes.size()+".");
+							}
+						}
+						
 						// Load doorways
 						int exitCount = 0;
 						tmpRoom.resetDoorways();
@@ -1577,7 +1607,9 @@ public class DungeonEditor {
 		// Meta compound tag
 		tags.put("meta", new CompoundTag("meta", metaTags));
 		
-		// Tile Entity tags
+		/*
+		 * Tile Entity tags
+		 */
 		HashMap<String,org.jnbt.Tag> tileEntityTags = new HashMap<String,org.jnbt.Tag>();
 		
 		BlockState[] tileEntities = room.getTileEntities();
@@ -1666,7 +1698,26 @@ public class DungeonEditor {
 		// Room default theme
 		tags.put("defaultTheme", new StringTag("defaultTheme", room.getDefaultTheme()));
 		
-		// Loop through themes and save cached copies of the translated versions
+		// Widget nodes
+		Vector<Tag> nodeList = new Vector<Tag>();
+		for(DungeonWidgetNode w : room.getNodes())
+		{
+			HashMap<String,Tag> nodeTags = new HashMap<String,Tag>();
+			nodeTags.put("id", new IntTag("id", w.getNodeID()));
+			nodeTags.put("size", new IntTag("size", w.getSize().code()));
+			nodeTags.put("face", new StringTag("face", w.getAttachmentFace().getBlockFace().name()));
+			nodeTags.put("x", new IntTag("x", w.getPosition().getBlockX()));
+			nodeTags.put("y", new IntTag("y", w.getPosition().getBlockY()));
+			nodeTags.put("z", new IntTag("z", w.getPosition().getBlockZ()));
+			
+			// Build node list
+			nodeList.add(new CompoundTag("node-"+w.getNodeID(), nodeTags));
+		}
+		tags.put("nodes", new ListTag("nodes", CompoundTag.class, nodeList));
+		
+		/*
+		 * Loop through themes and save cached copies of the translated versions
+		 */
 		byte[] blockData = room.getRawBlockData();
 		byte[] blocks = room.getRawBlocks();
 		

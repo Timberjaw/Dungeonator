@@ -318,8 +318,16 @@ public class DungeonDataManager {
 					System.out.println("No room for {"+chunk.getWorldName()+","+chunk.getX()+","+chunk.getZ()+"}");
 					continue;
 				}
+				
+				// Check for room set
+				String setPath = "";
+				if(rooms[i].getLibraryRoomSetID() > 0)
+				{
+					setPath = "sets"+File.separator+rooms[i].getLibraryRoomSetPath()+File.separator;
+				}
+				
 				// Get the full path to the source tile
-				fullPath = Dungeonator.TileFolderPath+rooms[i].getFilename()+".nbt";
+				fullPath = Dungeonator.TileFolderPath+setPath+rooms[i].getFilename()+".nbt";
 				
 				CompoundTag schematic = this.getRoomSchematic(fullPath);
 				
@@ -672,6 +680,19 @@ public class DungeonDataManager {
 		}
 		
 		return rooms;
+	}
+	
+	public DungeonWidget getRandomWidget(DungeonWidget.Size size)
+	{
+		try {
+			DungeonWidget widget = dataStore.getRandomLibraryWidget(size);
+			try {
+				widget.loadAsset(Dungeonator.WidgetFolderPath, widget.getFilename());
+				return widget;
+			} catch (DataStoreAssetException e) {  e.printStackTrace(); }
+		} catch (DataStoreGetException e) { e.printStackTrace(); }
+		
+		return null;
 	}
 	
 	/**

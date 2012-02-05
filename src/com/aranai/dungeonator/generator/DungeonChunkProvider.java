@@ -9,14 +9,20 @@ import java.util.Vector;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.util.BlockVector;
 import org.bukkit.util.noise.SimplexOctaveGenerator;
 import org.jnbt.CompoundTag;
+import org.jnbt.ListTag;
+import org.jnbt.Tag;
 
 import com.aranai.dungeonator.Dungeonator;
+import com.aranai.dungeonator.datastore.DataStoreAssetException;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode;
 
 import net.minecraft.server.Block;
 import net.minecraft.server.Chunk;
@@ -155,6 +161,51 @@ public class DungeonChunkProvider implements IChunkProvider {
 			else
 			{
 				System.out.println("Unexpected NULL schematic.");
+			}
+			
+			// Populate widgets
+			if(schematic != null && schematic.getValue().containsKey("nodes"))
+			{
+				// Add nodes
+				List<Tag> nodes = ((ListTag)schematic.getValue().get("nodes")).getValue();
+				int nodesLoaded = 0;
+				
+				for(Tag t : nodes)
+				{
+					CompoundTag ct = (CompoundTag)t;
+					try { rooms[r].addNodeFromTag(ct); } catch (DataStoreAssetException e) { e.printStackTrace(); }
+				}
+				
+				// Get random widgets
+				for(DungeonWidgetNode node : rooms[r].getNodes())
+				{
+					DungeonWidget w = dungeonator.getDataManager().getRandomWidget(node.getSize());
+					
+					if(w != null)
+					{
+						// Add widget
+						BlockVector tmpPos = node.getPosition();
+						w.setPosition(tmpPos);
+						byte[] tmpRawBlocks = w.getRawBlocks();
+						byte[] tmpRawBlockData = w.getRawBlockData();
+						
+						for(int x = 0; x < w.getSize().bound(); x++)
+						{
+							for(int y = 0; y < w.getSize().bound(); y++)
+							{
+								for(int z = 0; z < w.getSize().bound(); z++)
+								{
+									pos = DungeonMath.getWidgetPosFromCoords(x, y, z, w.getSize());
+									dc.getHandle().getBlock(
+										x+tmpPos.getBlockX(),
+										y+tmpPos.getBlockY()+(r*8),
+										z+tmpPos.getBlockZ()
+									).setTypeIdAndData(tmpRawBlocks[pos], tmpRawBlockData[pos], true);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 		

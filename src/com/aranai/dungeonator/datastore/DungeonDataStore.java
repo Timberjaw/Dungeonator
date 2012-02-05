@@ -10,6 +10,7 @@ import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget.Size;
 
 /**
  * Provides a default (non-functional) implementation for others to extend.
@@ -248,6 +249,13 @@ public class DungeonDataStore implements IDungeonDataStore {
 
 	@Override
 	public Vector<DungeonRoomSet> getLibraryRoomSetsRandom(int number)
+			throws DataStoreGetException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DungeonWidget getRandomLibraryWidget(Size size)
 			throws DataStoreGetException {
 		// TODO Auto-generated method stub
 		return null;

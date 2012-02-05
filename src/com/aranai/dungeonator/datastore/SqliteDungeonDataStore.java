@@ -22,6 +22,7 @@ import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
+import com.aranai.dungeonator.dungeonchunk.DungeonWidget.Size;
 
 /**
  * SQLite implementation of the DungeonDataStore interface
@@ -400,8 +401,11 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		// Get from database
 		try
         {
-        	ps = conn.prepareStatement("SELECT *,`"+TblRooms+"`.`name` AS 'roomname' FROM `"+TblRooms+"`" +
+        	ps = conn.prepareStatement("SELECT `"+TblRooms+"`.*,`"+TblLibraryRooms+"`.*," +
+        			" `"+TblRooms+"`.`name` AS 'roomname',`"+TblLibraryRoomSets+"`.`filename` AS 'set_path',`"+TblLibraryRooms+"`.`set_id` AS 'setid'" +
+        			" FROM `"+TblRooms+"`" +
         			" LEFT JOIN `"+TblLibraryRooms+"` ON(`"+TblRooms+"`.`library_id`=`"+TblLibraryRooms+"`.`id`)" +
+        			" LEFT JOIN `"+TblLibraryRoomSets+"` ON(`"+TblLibraryRoomSets+"`.`id`=`"+TblLibraryRooms+"`.`set_id`)" +
         			" WHERE `world` = ? AND `x` = ? AND `z` = ? LIMIT 16");
             ps.setString(1, world);
             ps.setInt(2, x);
@@ -417,6 +421,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	dr[i] = new DungeonRoom(dc, i);
             	dr[i].setLoaded(true);
             	dr[i].setLibraryId(rs.getLong("library_id"));
+            	dr[i].setLibraryRoomSetID(rs.getLong("setid"));
+            	dr[i].setLibraryRoomSetPath(rs.getString("set_path"));
             	dr[i].setName(rs.getString("roomname"));
             	dr[i].setFilename(rs.getString("filename"));
             	
@@ -853,9 +859,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	// Get the size class
             	DungeonWidget.Size size = DungeonWidget.Size.GetByCode(rs.getInt("size_class"));
             	
-            	// Get the bounds
-            	BlockVector bounds = new BlockVector(rs.getInt("bound_x"), rs.getInt("bound_y"), rs.getInt("bound_z"));
-            	
             	// Get the origin
             	BlockVector origin = new BlockVector(rs.getInt("origin_x"), rs.getInt("origin_y"), rs.getInt("origin_z"));
             	
@@ -872,6 +875,55 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         
 		return widget;
 	}
+	
+	/* (non-Javadoc)
+	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#getRandomLibraryWidget(com.aranai.dungeonator.dungeonchunk.DungeonWidget.Size)
+	 */
+	public DungeonWidget getRandomLibraryWidget(DungeonWidget.Size size) throws DataStoreGetException
+	{
+		ResultSet rs = null;
+		String query = "SELECT * FROM `"+TblLibraryWidgets+"` WHERE `size_class`='"+size.code()+"' ORDER BY RANDOM() LIMIT 1;";
+		String filename = "";
+		long libraryID = -1;
+		BlockVector origin = null;
+		
+		// Get random record
+		try
+        {
+	    	conn.setAutoCommit(false);
+	        PreparedStatement ps = conn.prepareStatement(query);
+	        rs = ps.executeQuery();
+	        
+	        int counter = 0;
+	        
+	        while (rs.next())
+            {
+            	// Successfully retrieved the widget
+            	filename = rs.getString("filename");
+            	libraryID = rs.getLong("id");
+            	origin = new BlockVector(rs.getInt("origin_x"), rs.getInt("origin_y"), rs.getInt("origin_z"));
+            	
+            	counter++;
+            }
+	        
+	        if(counter == 0)
+	        {
+	        	Dungeonator.getLogger().info("Random Widget: No rows with matching size with query:\n"+query);
+	        }
+	        
+	        if(filename.equals("")) { return null; }
+	        
+	        // Initialize DungeonWidget
+	        DungeonWidget widget = new DungeonWidget(libraryID, filename, size, origin);
+	        
+	        conn.commit();
+	        
+	        return widget;
+        }
+        catch(Exception e) { e.printStackTrace(); }
+		
+		return null;
+	}
 
 	/* (non-Javadoc)
 	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#saveLibraryWidget(com.aranai.dungeonator.dungeonchunk.DungeonWidget)
@@ -884,20 +936,24 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
         {
 	    	conn.setAutoCommit(false);
 	        PreparedStatement ps = conn.prepareStatement("REPLACE INTO `"+TblLibraryWidgets+"`" +
-	        		"(`id`,`filename`,`origin_x`,`origin_y`,`origin_z`)" +
-	        		"VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+	        		"(`id`,`filename`,`size_class`,`origin_x`,`origin_y`,`origin_z`)" +
+	        		"VALUES (?, ?, ?, ?, ?, ?);");
 	        
 	        // Handle library id
 	        long libraryId = widget.getLibraryID();
 	        if(libraryId > 0) { ps.setLong(1, libraryId); } else { ps.setNull(1, java.sql.Types.INTEGER); }
 	        
+	        // Set filename
 	        ps.setString(2, widget.getFilename());
 	        
-	        // Get origin
+	        // Set size class
+	        ps.setInt(3, widget.getSize().code());
+	        
+	        // Set origin
 	        BlockVector origin = widget.getOrigin();
-	        ps.setInt(6, origin.getBlockX());
-	        ps.setInt(7, origin.getBlockY());
-	        ps.setInt(8, origin.getBlockZ());
+	        ps.setInt(4, origin.getBlockX());
+	        ps.setInt(5, origin.getBlockY());
+	        ps.setInt(6, origin.getBlockZ());
 	        
 	        ps.execute();
 	        conn.commit();
