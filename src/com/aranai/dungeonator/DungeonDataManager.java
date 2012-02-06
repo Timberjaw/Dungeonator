@@ -64,7 +64,7 @@ public class DungeonDataManager {
 			} catch (DataStoreGetException e) { e.printStackTrace(); }
 		}
 		
-		plugin.getLogger().info("Found "+roomReservations.size()+" room reservations.");
+		Dungeonator.GetLogger().info("Found "+roomReservations.size()+" room reservations.");
 	}
 	
 	/**
@@ -207,7 +207,7 @@ public class DungeonDataManager {
 			 * loss, and move on with our lives.
 			 */
 			
-			Dungeonator.getLogger().severe("Failed to get requested DungeonChunk at Location: "+ e.getLocation() +". Reason: " + e.getReason());
+			Dungeonator.GetLogger().severe("Failed to get requested DungeonChunk at Location: "+ e.getLocation() +". Reason: " + e.getReason());
 		}
 		
 		return chunk;
@@ -396,7 +396,7 @@ public class DungeonDataManager {
 				{
 					// Get the reserved room
 					rooms[i] = reservedRooms[0][i][0];
-					Dungeonator.getLogger().info("Found reserved room "+rooms[i].getLibraryId());
+					Dungeonator.GetLogger().info("Found reserved room "+rooms[i].getLibraryId());
 				}
 				else
 				{
@@ -432,7 +432,7 @@ public class DungeonDataManager {
 					folderPath = Dungeonator.ProcessedTileFolderPath;
 					
 					tmpTheme = "."+theme;
-					Dungeonator.getLogger().info("Selected theme "+theme+" for room.");
+					Dungeonator.GetLogger().info("Selected theme "+theme+" for room.");
 				}
 				
 				// Get the full path to the source tile

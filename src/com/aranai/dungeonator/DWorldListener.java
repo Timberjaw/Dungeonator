@@ -2,13 +2,14 @@ package com.aranai.dungeonator;
 
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
-import org.bukkit.event.world.WorldListener;
 
 import com.aranai.dungeonator.generator.DungeonChunkProvider;
 
-public class DWorldListener extends WorldListener {
+public class DWorldListener implements Listener {
 	
 	/** Dungeonator plugin instance. */
 	private Dungeonator plugin;
@@ -26,9 +27,7 @@ public class DWorldListener extends WorldListener {
 		this.plugin = plugin;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.bukkit.event.world.WorldListener#onWorldInit(org.bukkit.event.world.WorldInitEvent)
-	 */
+	@EventHandler
 	public void onWorldInit(WorldInitEvent e)
 	{
 		World world = e.getWorld();
@@ -41,9 +40,7 @@ public class DWorldListener extends WorldListener {
 		plugin.setDCP(dcp);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.bukkit.event.world.WorldListener#onChunkLoad(org.bukkit.event.world.ChunkLoadEvent)
-	 */
+	@EventHandler
 	public void onChunkLoad(ChunkLoadEvent e)
 	{
 		return;

@@ -6,12 +6,13 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import com.aranai.dungeonator.event.DCommandEvent;
 
-public class DPlayerListener extends PlayerListener {
+public class DPlayerListener implements Listener {
 	private Dungeonator plugin;
 	
 	public DPlayerListener(Dungeonator instance)
@@ -107,6 +108,7 @@ public class DPlayerListener extends PlayerListener {
 		return true;
 	}
 	
+	@EventHandler
 	public void onPlayerRespawn(PlayerRespawnEvent event)
 	{
 		event.setRespawnLocation(new Location(event.getRespawnLocation().getWorld(), 0, 5, 0));

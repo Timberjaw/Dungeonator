@@ -3,8 +3,6 @@ package com.aranai.dungeonator.datastore;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.bukkit.util.BlockVector;
-
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;

@@ -1,7 +1,5 @@
 package com.aranai.dungeonator.event;
 
-import java.util.Vector;
-
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;

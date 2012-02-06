@@ -12,7 +12,6 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import org.bukkit.util.BlockVector;
-import org.sqlite.*;
 
 import com.aranai.dungeonator.Direction;
 import com.aranai.dungeonator.DungeonDataManager;
@@ -22,7 +21,6 @@ import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
-import com.aranai.dungeonator.dungeonchunk.DungeonWidget.Size;
 
 /**
  * SQLite implementation of the DungeonDataStore interface
@@ -142,17 +140,17 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 			Class.forName("org.sqlite.JDBC");
 			conn = DriverManager.getConnection(db);
 		} catch (ClassNotFoundException e) {
-			Dungeonator.getLogger().severe("Could not load database class!");
+			Dungeonator.GetLogger().severe("Could not load database class!");
 			e.printStackTrace();
 		} catch (SQLException e) {
-			Dungeonator.getLogger().severe("Could not open database connection!");
+			Dungeonator.GetLogger().severe("Could not open database connection!");
 			e.printStackTrace();
 		}
 		
 		// Initialize database
 		this.initTables();
 		
-		Dungeonator.getLogger().info("DungeonDataStore(Sqlite) Initialized.");
+		Dungeonator.GetLogger().info("DungeonDataStore(Sqlite) Initialized.");
 	}
 	
 	/* (non-Javadoc)
@@ -166,7 +164,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 			try {
 				conn.close();
 			} catch (SQLException e) {
-				Dungeonator.getLogger().severe("Could not close database connection!");
+				Dungeonator.GetLogger().severe("Could not close database connection!");
 				e.printStackTrace();
 			}
 		}
@@ -189,7 +187,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Active chunks table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Active chunks table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
@@ -197,7 +195,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
                 st.execute(SqlCreateIndexChunks);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Active chunks table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Active chunks table created.");
             }
 			
 			// Active Room Table
@@ -205,7 +203,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Active rooms table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Active rooms table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
@@ -213,7 +211,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
                 st.execute(SqlCreateIndexRooms);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Active rooms table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Active rooms table created.");
             }
 			
 			// Library Room Table
@@ -221,14 +219,14 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Library rooms table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Library rooms table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
                 st.execute(SqlCreateTableLibraryRooms);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Library rooms table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Library rooms table created.");
             }
             
             // Room Set Table
@@ -236,7 +234,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Room sets table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Room sets table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
@@ -244,7 +242,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
                 st.execute(SqlCreateIndexRoomSets);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Room sets table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Room sets table created.");
             }
             
             // Library Room Set Table
@@ -252,14 +250,14 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Library room sets table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Library room sets table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
                 st.execute(SqlCreateTableLibraryRoomSets);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Library room sets table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Library room sets table created.");
             }
             
             // Room Reservations Table
@@ -267,7 +265,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Room reservations table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Room reservations table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
@@ -275,7 +273,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
                 st.execute(SqlCreateIndexRoomReservations);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Room reservations table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Room reservations table created.");
             }
             
             // Library Widget Table
@@ -283,14 +281,14 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             if (!rs.next())
             {
             	// Create table
-            	Dungeonator.getLogger().info("[Dungeonator]: Library widgets table not found, creating.");
+            	Dungeonator.GetLogger().info("[Dungeonator]: Library widgets table not found, creating.");
             	
             	conn.setAutoCommit(false);
                 st = conn.createStatement();
                 st.execute(SqlCreateTableLibraryWidgets);
                 conn.commit();
                 
-                Dungeonator.getLogger().info("[Dungeonator]: Library widgets table created.");
+                Dungeonator.GetLogger().info("[Dungeonator]: Library widgets table created.");
             }
         }
     	catch(SQLException e)
@@ -331,7 +329,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	loaded = true;
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] " + e.getMessage()); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] " + e.getMessage()); }
         
         if(!loaded)
         {
@@ -437,7 +435,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	}
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getChunkRooms: " + e.getMessage()); e.printStackTrace(); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getChunkRooms: " + e.getMessage()); e.printStackTrace(); }
         
 		return dr;
 	}
@@ -495,7 +493,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	}
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getRoom: " + e.getMessage()); e.printStackTrace(); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getRoom: " + e.getMessage()); e.printStackTrace(); }
         
 		return dr;
 	}
@@ -697,7 +695,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        		return null;
 	        	}
 	        	
-	        	Dungeonator.getLogger().info("Random Room: No rows with matching doorways with query:\n"+query);
+	        	Dungeonator.GetLogger().info("Random Room: No rows with matching doorways with query:\n"+query);
 	        	conn.commit();
 	        	return getLibraryRoomRandom(null);
 	        }
@@ -754,7 +752,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	);
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getRoomSet: " + e.getMessage()); e.printStackTrace(); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getRoomSet: " + e.getMessage()); e.printStackTrace(); }
         
 		return drc;
 	}
@@ -823,11 +821,11 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        
 	        if(libraryID <= 0)
 	        {
-	        	Dungeonator.getLogger().severe("Saved RoomSet but got no insert ID.");
+	        	Dungeonator.GetLogger().severe("Saved RoomSet but got no insert ID.");
 	        }
 	        else
 	        {
-	        	Dungeonator.getLogger().info("Saved RoomSet and got ID "+libraryID);
+	        	Dungeonator.GetLogger().info("Saved RoomSet and got ID "+libraryID);
 	        }
 	        
 	        success = true;
@@ -866,7 +864,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	loaded = true;
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] " + e.getMessage()); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] " + e.getMessage()); }
         
         if(!loaded)
         {
@@ -908,7 +906,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        
 	        if(counter == 0)
 	        {
-	        	Dungeonator.getLogger().info("Random Widget: No rows with matching size with query:\n"+query);
+	        	Dungeonator.GetLogger().info("Random Widget: No rows with matching size with query:\n"+query);
 	        }
 	        
 	        if(filename.equals("")) { return null; }
@@ -1024,7 +1022,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	}
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getReservedRooms: " + e.getMessage()); e.printStackTrace(); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getReservedRooms: " + e.getMessage()); e.printStackTrace(); }
 		
 		return rooms;
 	}
@@ -1112,7 +1110,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             	rooms.put(key, rs.getLong("library_id"));
             }
         }
-        catch(Exception e) { Dungeonator.getLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getReservedRooms: " + e.getMessage()); e.printStackTrace(); }
+        catch(Exception e) { Dungeonator.GetLogger().warning("[Dungeonator] SQLiteDungeonDataStore#getReservedRooms: " + e.getMessage()); e.printStackTrace(); }
 		
 		return rooms;
 	}
@@ -1156,7 +1154,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        
 	        if(counter == 0)
 	        {
-	        	Dungeonator.getLogger().info("Random Room Set: No Room Sets Available");
+	        	Dungeonator.GetLogger().info("Random Room Set: No Room Sets Available");
 	        	conn.commit();
 	        	return null;
 	        }

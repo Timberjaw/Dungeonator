@@ -1,12 +1,9 @@
 name: Dungeonator
 main: com.aranai.dungeonator.Dungeonator
-version: 0.0.3
+version: 0.0.4-PREVIEW1
 author: Timberjaw
 load: startup
 commands:
   edit:
     description: Use an edit command
     usage: /<command> <task> <args ...>
-  testmap:
-    description: Test map
-    usage: /<command>

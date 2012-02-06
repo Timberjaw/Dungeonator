@@ -1,10 +1,11 @@
 package com.aranai.dungeonator;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityListener;
+import org.bukkit.event.Listener;
 
-public class DEntityListener extends EntityListener {
+public class DEntityListener implements Listener {
 	private Dungeonator plugin;
 	
 	public DEntityListener(Dungeonator instance)
@@ -12,6 +13,7 @@ public class DEntityListener extends EntityListener {
 		plugin = instance;
 	}
 	
+	@EventHandler
 	public void onEntityDamage(EntityDamageEvent event)
 	{
 		/*

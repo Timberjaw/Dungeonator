@@ -3,8 +3,6 @@ package com.aranai.dungeonator.datastore;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.bukkit.util.BlockVector;
-
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.dungeonchunk.DungeonChunk;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoom;
@@ -23,7 +21,7 @@ public class DungeonDataStore implements IDungeonDataStore {
 	@Override
 	public void initialize(Dungeonator plugin)
 	{
-		Dungeonator.getLogger().warning("Basic DataStore initialized. Data storage is NOT functional.");
+		Dungeonator.GetLogger().warning("Basic DataStore initialized. Data storage is NOT functional.");
 	}
 	
 	/* (non-Javadoc)
@@ -32,7 +30,7 @@ public class DungeonDataStore implements IDungeonDataStore {
 	@Override
 	public void shutdown()
 	{
-		Dungeonator.getLogger().warning("Basic DataStore shutdown.");
+		Dungeonator.GetLogger().warning("Basic DataStore shutdown.");
 	}
 	
 	/* (non-Javadoc)

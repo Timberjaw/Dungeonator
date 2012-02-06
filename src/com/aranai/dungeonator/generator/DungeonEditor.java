@@ -761,7 +761,7 @@ public class DungeonEditor {
 				{
 					pos = DungeonMath.getWidgetPosFromCoords(x, y, z, size);
 					cmd.getChunk().getBlock(x+location.getBlockX(), y+location.getBlockY(), z+location.getBlockZ()).setTypeIdAndData(blocks[pos], blockData[pos], true);
-					Dungeonator.getLogger().info("Added block of ID "+blocks[pos]+" to "+(x+location.getBlockX())+","+(y+location.getBlockY())+","+(z+location.getBlockZ()));
+					Dungeonator.GetLogger().info("Added block of ID "+blocks[pos]+" to "+(x+location.getBlockX())+","+(y+location.getBlockY())+","+(z+location.getBlockZ()));
 				}
 			}
 		}
@@ -1563,7 +1563,7 @@ public class DungeonEditor {
 			try {
 				(new File(path)).mkdirs();
 			} catch (Exception e) {
-				Dungeonator.getLogger().log(Level.SEVERE, "[Dungeonator]: Unable to create room set folder at: "+path);
+				Dungeonator.GetLogger().log(Level.SEVERE, "[Dungeonator]: Unable to create room set folder at: "+path);
 				return;
 			}
 		}

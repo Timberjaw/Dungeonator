@@ -168,7 +168,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 			{
 				// Add nodes
 				List<Tag> nodes = ((ListTag)schematic.getValue().get("nodes")).getValue();
-				int nodesLoaded = 0;
 				
 				for(Tag t : nodes)
 				{
@@ -382,10 +381,10 @@ public class DungeonChunkProvider implements IChunkProvider {
 				for(ScatterPlot p : points)
 				{
 					// If chunk is generated, bail
-					Dungeonator.getLogger().info("At {"+x+","+z+"}, checking point {"+p.x+","+p.z+"}");
-					if(this.world.isChunkLoaded(p.x, p.z)) { Dungeonator.getLogger().info("Chunk is already generated."); continue; }
+					Dungeonator.GetLogger().info("At {"+x+","+z+"}, checking point {"+p.x+","+p.z+"}");
+					if(this.world.isChunkLoaded(p.x, p.z)) { Dungeonator.GetLogger().info("Chunk is already generated."); continue; }
 					
-					Dungeonator.getLogger().info("Chunk is free.");
+					Dungeonator.GetLogger().info("Chunk is free.");
 					
 					// Get the largest block of unreserved room Y indexes, or an empty
 					// array if no rooms are unreserved in the chunk
@@ -397,7 +396,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 						for(DungeonRoomSet s : sets)
 						{
 							// If set is too large, bail
-							if(s.getSizeY() > unreserved.size()) { Dungeonator.getLogger().info("Not enough height for room set."); continue; }
+							if(s.getSizeY() > unreserved.size()) { Dungeonator.GetLogger().info("Not enough height for room set."); continue; }
 							
 							// Tentatively set this point and the starting Y from the
 							// unreserved list as our room set origin. Check adjacent chunks
@@ -446,7 +445,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 								}
 								
 								// Log
-								Dungeonator.getLogger().info("Reserved room set "+s+" at {"+originX+","+originY+","+originZ+"}");
+								Dungeonator.GetLogger().info("Reserved room set "+s+" at {"+originX+","+originY+","+originZ+"}");
 								
 								// Move the set to the end of the list
 								sets.remove(s);
@@ -493,13 +492,16 @@ public class DungeonChunkProvider implements IChunkProvider {
 	}
 
 	@Override
-	public List<?> a(EnumCreatureType arg0, int arg1, int arg2, int arg3) {
+	public ChunkPosition findNearestMapFeature(net.minecraft.server.World arg0,
+			String arg1, int arg2, int arg3, int arg4) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public ChunkPosition a(net.minecraft.server.World arg0, String arg1,
-			int arg2, int arg3, int arg4) {
+	public List getMobsFor(EnumCreatureType arg0, int arg1, int arg2, int arg3) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

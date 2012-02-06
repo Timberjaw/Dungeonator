@@ -1,7 +1,6 @@
 package com.aranai.dungeonator.datastore;
 
 import org.jnbt.CompoundTag;
-import org.jnbt.Tag;
 
 /**
  * Defines an interface for loading and saving NBT data to and from classes.

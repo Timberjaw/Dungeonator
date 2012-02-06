@@ -7,8 +7,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -177,16 +175,9 @@ public class Dungeonator extends JavaPlugin {
 		PluginManager pm = this.getServer().getPluginManager();
 		
 		// World load
-		pm.registerEvent(Event.Type.WORLD_INIT, worldListener, Priority.Normal, this);
-		
-		// Chunk Load
-		pm.registerEvent(Event.Type.CHUNK_LOAD, worldListener, Priority.Normal, this);
-		
-		// Player Respawn
-		pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Priority.Normal, this);
-		
-		// Entity Damage
-		pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Priority.Normal, this);
+		pm.registerEvents(worldListener, this);
+		pm.registerEvents(playerListener, this);
+		pm.registerEvents(entityListener, this);
 	}
 	
 	@Override
@@ -209,7 +200,7 @@ public class Dungeonator extends JavaPlugin {
 	 *
 	 * @return the logger
 	 */
-	public static Logger getLogger()
+	public static Logger GetLogger()
 	{
 		return Dungeonator.log;
 	}
