@@ -243,11 +243,20 @@ public class DungeonEditor {
 	public void cmdNew(DCommandEvent cmd)
 	{
 		/*
-		 * Get 'flatten' and 'hint' args
+		 * Get 'flatten', 'hint' args
 		 */
 		
 		boolean flatten = cmd.getNamedArgBool("flatten", true);
 		boolean hint = cmd.getNamedArgBool("hint", true);
+		
+		/*
+		 * Get fill material
+		 */
+		
+		String fill = cmd.getNamedArgString("fill", Material.AIR.name());
+		Material fillMat = Material.getMaterial(fill.toUpperCase());
+		
+		if(fillMat == null) { editor.sendMessage("Did not understand material name."); }
 		
 		/*
 		 * Get 'set' arg
@@ -303,7 +312,7 @@ public class DungeonEditor {
 		this.chunk = this.chunks[0][0];
 		
 		// Flatten and hint the editing region
-		this.start(flatten, hint, (mode == EditMode.ROOM_SET));
+		this.start(flatten, hint, (mode == EditMode.ROOM_SET), fillMat);
 		
 		/*
 		 * Reset the active filename and path
@@ -1034,7 +1043,7 @@ public class DungeonEditor {
 	 *
 	 * @param c the c
 	 */
-	public void start(boolean flatten, boolean hint, boolean set)
+	public void start(boolean flatten, boolean hint, boolean set, Material fillMat)
 	{
 		if(flatten)
 		{
@@ -1045,6 +1054,8 @@ public class DungeonEditor {
 			editor.sendMessage("Flattening chunks...");
 			
 			Material mat;
+			Material tmpFillMat;
+			int offset_y = 2;
 			
 			// Flatten all chunks in the set region
 			// By default this will be one chunk because no set is specified
@@ -1052,19 +1063,21 @@ public class DungeonEditor {
 			{
 				for(int fZ = chunk.getZ()-1; fZ <= chunk.getZ()+roomSet.getSizeZ()+1; fZ++)
 				{
-					// Set the floor material based on whether the chunk is inside the set or is a border chunk
-					if(fX >= chunk.getX() && fX <= chunk.getX()+roomSet.getSizeX() && fZ >= chunk.getZ() && fZ <= chunk.getZ()+roomSet.getSizeZ())
+					// Set the floor material and fill material based on whether the chunk is inside the set or is a border chunk
+					if(fX >= chunk.getX() && fX < chunk.getX()+roomSet.getSizeX() && fZ >= chunk.getZ() && fZ < chunk.getZ()+roomSet.getSizeZ())
 					{
 						// Part of set
 						mat = Material.COBBLESTONE;
+						tmpFillMat = fillMat;
 					}
 					else
 					{
 						// Border chunk
 						mat = Material.STONE;
+						tmpFillMat = null;
 					}
 					
-					this.flattenChunk(chunk.getWorld().getChunkAt(fX, fZ), mat);
+					this.flattenChunk(chunk.getWorld().getChunkAt(fX, fZ), mat, tmpFillMat);
 				}
 			}
 			
@@ -1072,7 +1085,13 @@ public class DungeonEditor {
 			 * Teleport player to avoid killing them
 			 */
 			
-			editor.teleport(new Location(editor.getWorld(), editor.getLocation().getX(), this.editor_y+2, editor.getLocation().getZ()));
+			// Increase the offset if the room was filled
+			if(fillMat != null)
+			{
+				offset_y += (roomSet.getSizeY()*8);
+			}
+			
+			editor.teleport(new Location(editor.getWorld(), editor.getLocation().getX(), this.editor_y+offset_y, editor.getLocation().getZ()));
 		}
 		
 		if(hint)
@@ -1203,7 +1222,7 @@ public class DungeonEditor {
 			{
 				for(int z = 0; z < roomSet.getSizeZ(); z++)
 				{
-					this.rooms[x][y][z] = new DungeonRoom(this.chunks[x][z], y+1);
+					this.rooms[x][y][z] = new DungeonRoom(this.chunks[x][z], (this.editor_y/8)+y+1);
 				}
 			}
 		}
@@ -1862,7 +1881,7 @@ public class DungeonEditor {
 	 *
 	 * @param c the chunk to flatten
 	 */
-	public void flattenChunk(Chunk c, Material floorMaterial)
+	public void flattenChunk(Chunk c, Material floorMaterial, Material fillMaterial)
 	{
 		byte[] blocks = new byte[32768];
 		
@@ -1879,6 +1898,16 @@ public class DungeonEditor {
 				// Add floor layer
 				pos = (x & 0xF) << 11 | (z & 0xF) << 7 | (this.editor_y & 0x7F);
 				blocks[pos] = (byte)(floorMaterial.getId() & 0xFF);
+				
+				// Add fill layers
+				if(fillMaterial != null && fillMaterial != Material.AIR)
+				{
+					for(int y = 1; y < roomSet.getSizeY()*8; y++)
+					{
+						pos = (x & 0xF) << 11 | (z & 0xF) << 7 | ((editor_y+y) & 0x7F);
+						blocks[pos] = (byte)(fillMaterial.getId() & 0xFF);
+					}
+				}
 			}
 		}
 		

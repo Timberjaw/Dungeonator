@@ -1,6 +1,6 @@
 name: Dungeonator
 main: com.aranai.dungeonator.Dungeonator
-version: 0.0.4-PREVIEW1
+version: 0.0.4-P2
 author: Timberjaw
 load: startup
 commands:
