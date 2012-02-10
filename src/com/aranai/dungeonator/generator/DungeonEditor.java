@@ -160,7 +160,11 @@ public class DungeonEditor {
 	{
 		this.editor = cmd.getPlayer();
 		
-		if(cmd.getCmd().equals("mode"))
+		if(cmd.getCmd().equals("info"))
+		{
+			this.cmdInfo(cmd);
+		}
+		else if(cmd.getCmd().equals("mode"))
 		{
 			this.cmdMode(cmd);
 		}
@@ -195,6 +199,23 @@ public class DungeonEditor {
 		else if(cmd.getCmd().equals("node"))
 		{
 			this.cmdNode(cmd);
+		}
+	}
+	
+	/**
+	 * Command: Get Info
+	 * 
+	 * This will display information about the status of the editor
+	 */
+	public void cmdInfo(DCommandEvent cmd)
+	{
+		// Print the active edit mode
+		editor.sendMessage("Edit mode: "+mode);
+		
+		// Print the room coordinates
+		if(mode == EditMode.ROOM)
+		{
+			editor.sendMessage("Room: "+rooms[0][0][0]);
 		}
 	}
 	
@@ -256,7 +277,7 @@ public class DungeonEditor {
 		String fill = cmd.getNamedArgString("fill", Material.AIR.name());
 		Material fillMat = Material.getMaterial(fill.toUpperCase());
 		
-		if(fillMat == null) { editor.sendMessage("Did not understand material name."); }
+		if(fillMat == null || !fillMat.isBlock()) { editor.sendMessage("Did not understand material name or material is not a block."); fillMat = null; }
 		
 		/*
 		 * Get 'set' arg
@@ -972,7 +993,7 @@ public class DungeonEditor {
 		BlockVector pos = block.getLocation().toVector().toBlockVector();
 		
 		pos.setX(pos.getBlockX() - room.getX()*16);
-		pos.setY(pos.getBlockY() - room.getY()*8);
+		pos.setY((pos.getBlockY() - room.getY()*8) + 1);
 		pos.setZ(pos.getBlockZ() - room.getZ()*16);
 		
 		node.setPosition(pos);
@@ -1222,7 +1243,7 @@ public class DungeonEditor {
 			{
 				for(int z = 0; z < roomSet.getSizeZ(); z++)
 				{
-					this.rooms[x][y][z] = new DungeonRoom(this.chunks[x][z], (this.editor_y/8)+y+1);
+					this.rooms[x][y][z] = new DungeonRoom(this.chunks[x][z], (this.editor_y/8)+y);
 				}
 			}
 		}
@@ -1303,7 +1324,7 @@ public class DungeonEditor {
 					DungeonChunk tmpChunk = new DungeonChunk(dungeonator.getServer().getWorld(chunk.getWorldName()).getChunkAt(chunk.getX()+setX, chunk.getZ()+setZ));
 					
 					// Initialize room
-					rooms[setX][setY][setZ] = new DungeonRoom(tmpChunk, setY+1);
+					rooms[setX][setY][setZ] = new DungeonRoom(tmpChunk, (this.editor_y/8)+setY);
 					DungeonRoom tmpRoom = rooms[setX][setY][setZ];
 					
 					// Verify the data was loaded
