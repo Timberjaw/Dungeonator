@@ -24,13 +24,11 @@ import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode;
 
-import net.minecraft.server.Block;
 import net.minecraft.server.Chunk;
 import net.minecraft.server.ChunkPosition;
 import net.minecraft.server.EnumCreatureType;
 import net.minecraft.server.IChunkProvider;
 import net.minecraft.server.IProgressUpdate;
-import net.minecraft.server.NibbleArray;
 
 public class DungeonChunkProvider implements IChunkProvider {
 
@@ -38,8 +36,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 	private Dungeonator dungeonator;
 	
 	private HashMap<String,DungeonRoom[]> roomCache = new HashMap<String,DungeonRoom[]>();
-	
-	@SuppressWarnings("unused")
 	private static HashSet<Byte> blocksWithData;
 	
 	// Noise generator attributes
@@ -48,12 +44,14 @@ public class DungeonChunkProvider implements IChunkProvider {
 	private double frequency;
 	private int octaves;
 	
+	private boolean debug = true;
+	
 	public DungeonChunkProvider(World world, long i) {
 		this.world = world;
 		
 		// Build the list of special blocks (blocks with data values) that require special attention
 		// This includes things like torches, furnaces, steps, wool; anything with an orientation or multiple states
-		byte[] blocks = {6,17,18,23,25,27,28,29,31,33,34,35,43,44,50,53,54,61,62,64,65,66,67,69,71,75,76,77,84,86,90,91,92,95,96,97,98};
+		byte[] blocks = {6,17,18,23,25,26,27,28,29,31,33,34,35,43,44,50,53,54,61,62,63,64,65,66,67,68,69,71,75,76,77,84,86,90,91,92,95,96,97,98};
 		ArrayList<Byte> tmpList = new ArrayList<Byte>();
 		for(byte b : blocks) { tmpList.add(b); }
 		DungeonChunkProvider.blocksWithData = new HashSet<Byte>(tmpList);
@@ -81,7 +79,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 	@Override
 	public Chunk getChunkAt(int x, int y) {
 		// Purpose is unclear. Passes control to another method with identical args.
-		System.out.println("Call to getChunkAt("+x+","+y+")");
+		if(debug) { System.out.println("Call to getChunkAt("+x+","+y+")"); }
 		return this.getOrCreateChunk(x, y);
 	}
 
@@ -114,31 +112,32 @@ public class DungeonChunkProvider implements IChunkProvider {
 			
 			if(rooms == null)
 			{
-				System.out.println("No rooms for "+arg1+","+arg2);
+			    if(debug) { System.out.println("No rooms for "+arg1+","+arg2); }
 				return;
 			}
 		}
 		
 		int pos = 0;
+		boolean update = false;
+		
 		for(int r = 0; r < rooms.length; r++)
 		{
 			byte[] blocks = rooms[r].getRawBlocks();
 			byte[] data = rooms[r].getRawBlockData();
 			
 			// Set data values
-			for(int x = 0; x < 16; x++)
-			{
-				for(int z = 0; z < 16; z++)
-				{
-					for(int y = 0; y < 8; y++)
-					{
+			for(int y = 7; y >= 0; y--)
+            {
+    			for(int x = 0; x < 16; x++)
+    			{
+    				for(int z = 0; z < 16; z++)
+    				{
 						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
 						
-						// Torches
-						if(blocks[pos] == Block.TORCH.id)
+						// Blocks with orientation/data
+						if(DungeonChunkProvider.blocksWithData.contains(blocks[pos]))
 						{
-							dc.getHandle().getBlock(x, y + (r * 8), z).setTypeId(0);
-							dc.getHandle().getBlock(x, y + (r * 8), z).setTypeIdAndData(Block.TORCH.id, data[pos], true);
+						    dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos], update);
 						}
 					}
 				}
@@ -160,7 +159,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 			}
 			else
 			{
-				System.out.println("Unexpected NULL schematic.");
+			    if(debug) { System.out.println("Unexpected NULL schematic."); }
 			}
 			
 			// Populate widgets
@@ -208,13 +207,15 @@ public class DungeonChunkProvider implements IChunkProvider {
 			}
 		}
 		
+		((org.bukkit.craftbukkit.CraftChunk)dc.getHandle()).getHandle().initLighting();
+		
 		// Remove from cache; we shouldn't need it again
 		if(roomCache.containsKey(hash))
 		{
 			roomCache.remove(hash);
 		}
 		
-		System.out.println("Decoration Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms");
+		if(debug) { System.out.println("Decoration Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms"); }
 	}
 
 	@Override
@@ -222,6 +223,8 @@ public class DungeonChunkProvider implements IChunkProvider {
 		long startTime = System.currentTimeMillis();
 		long startDbTime = 0;
 		long dbTime = 0;
+		
+		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
 		
 		// Get rooms from the data manager
 		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
@@ -233,19 +236,21 @@ public class DungeonChunkProvider implements IChunkProvider {
 		
 		int roomCount = (rooms != null) ? rooms.length : 0;
 		
-		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
-		
-		//System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+"), found "+roomCount+" rooms.");
+		if(debug) { System.out.println("Call to getOrCreateChunk("+arg0+","+arg1+"), found "+roomCount+" rooms."); }
 		
 		/*
 		 * Initialize
 		 */
-		byte[] blocks = new byte[32768];
-		NibbleArray dataNibble = new NibbleArray(32768, 7);	// No idea what that second parameter does
+		byte[] blocks = new byte[16*16*128];
 		
 		/*
 		 * Copy room data to chunk
 		 */
+		
+		int tmp;
+		int tmp2;
+		
+		byte[] tmpBlocks2 = new byte[32768]; // 16 * 16 * 128
 		
 		if(roomCount > 0)
 		{
@@ -255,19 +260,16 @@ public class DungeonChunkProvider implements IChunkProvider {
 				rooms[r].setLocation(arg0, r, arg1);
 				
 				byte[] tmpBlocks = rooms[r].getRawBlocks();
-				byte[] tmpData = rooms[r].getRawBlockData();
 				
-				for(int x = 0; x < 16; x++)
-				{
-					for(int z = 0; z < 16; z++)
-					{
-						for(int y = 0; y < 8; y++)
-						{
-							blocks[DungeonMath.getPosFromCoords(x, y+(8*r), z)] = tmpBlocks[DungeonMath.getRoomPosFromCoords(x, y, z)];
-							
-							// HACK: Add block data value to nibble array
-							// Likely to break on MC update
-							dataNibble.a(x, y+(8*r), z, tmpData[DungeonMath.getRoomPosFromCoords(x, y, z)]);
+				for(int y = 0; y < 8; y++)
+                {
+    				for(int x = 0; x < 16; x++)
+    				{
+    					for(int z = 0; z < 16; z++)
+    					{
+    					    tmp = DungeonMath.getRoomPosFromCoords(x, y, z);
+    					    tmp2 = (x * 16 + z) * 128 + (r * 8) + y;
+    					    tmpBlocks2[tmp2] = tmpBlocks[tmp]; 
 						}
 					}
 				}
@@ -292,7 +294,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 			 * Something went wrong; generate flat chunk
 			 */
 			
-			System.out.println("No rooms available, flattening.");
+		    System.out.println("No rooms available, flattening.");
 		
 			int pos = 0;
 			for(int x = 0; x < 16; x++)
@@ -317,16 +319,11 @@ public class DungeonChunkProvider implements IChunkProvider {
 			}
 		}
 		
-        Chunk chunk = new Chunk(mw, blocks, arg0, arg1);
+		// Create Chunk
+		Chunk chunk = new Chunk(mw, tmpBlocks2, arg0, arg1);
+		chunk.initLighting();
         
-        // HACK: Set chunk block data
-        // 'g' is a NibbleArray in the chunk; it holds the chunk's block data values
-        // Likely to break on MC updates, but what else is new
-        chunk.g = dataNibble;
-        
-        chunk.initLighting();
-        
-        System.out.println("Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms, DB Time "+dbTime+" milliseconds");
+        if(debug) { System.out.println("Generation Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms, DB Time "+dbTime+" milliseconds"); }
         
         // Handle new room reservation
         reserveRooms(arg0,arg1);
@@ -381,10 +378,10 @@ public class DungeonChunkProvider implements IChunkProvider {
 				for(ScatterPlot p : points)
 				{
 					// If chunk is generated, bail
-					Dungeonator.GetLogger().info("At {"+x+","+z+"}, checking point {"+p.x+","+p.z+"}");
-					if(this.world.isChunkLoaded(p.x, p.z)) { Dungeonator.GetLogger().info("Chunk is already generated."); continue; }
+				    if(debug) { Dungeonator.GetLogger().info("At {"+x+","+z+"}, checking point {"+p.x+","+p.z+"}"); }
+					if(this.world.loadChunk(p.x, p.z, false)) { if(debug) { Dungeonator.GetLogger().info("Chunk is already generated."); } continue; }
 					
-					Dungeonator.GetLogger().info("Chunk is free.");
+					if(debug) { Dungeonator.GetLogger().info("Chunk is free."); }
 					
 					// Get the largest block of unreserved room Y indexes, or an empty
 					// array if no rooms are unreserved in the chunk
@@ -396,7 +393,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 						for(DungeonRoomSet s : sets)
 						{
 							// If set is too large, bail
-							if(s.getSizeY() > unreserved.size()) { Dungeonator.GetLogger().info("Not enough height for room set."); continue; }
+							if(s.getSizeY() > unreserved.size()) { if(debug) { Dungeonator.GetLogger().info("Not enough height for room set."); } continue; }
 							
 							// Tentatively set this point and the starting Y from the
 							// unreserved list as our room set origin. Check adjacent chunks
@@ -445,7 +442,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 								}
 								
 								// Log
-								Dungeonator.GetLogger().info("Reserved room set "+s+" at {"+originX+","+originY+","+originZ+"}");
+								if(debug) { Dungeonator.GetLogger().info("Reserved room set "+s+" at {"+originX+","+originY+","+originZ+"}"); }
 								
 								// Move the set to the end of the list
 								sets.remove(s);
@@ -460,7 +457,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 			}
 		}
 		
-		System.out.println("Noise for {"+x+","+z+"}: "+value);
+		if(debug) { System.out.println("Noise for {"+x+","+z+"}: "+value); }
 	}
 
 	@Override
@@ -468,14 +465,14 @@ public class DungeonChunkProvider implements IChunkProvider {
 		// Always returns true; I believe this is present due to some
 		// strangeness/sloppiness in how the IChunkProvider interface
 		// is used for multiple purposes
-		System.out.println("Call to isChunkLoader("+arg0+","+arg1+")");
+	    if(debug) { System.out.println("Call to isChunkLoader("+arg0+","+arg1+")"); }
 		return true;
 	}
 
 	@Override
 	public boolean saveChunks(boolean arg0, IProgressUpdate arg1) {
 		// Does nothing in this implementation
-		System.out.println("Call to saveChunks("+arg0+","+arg1+")");
+	    if(debug) { System.out.println("Call to saveChunks("+arg0+","+arg1+")"); }
 		return true;
 	}
 

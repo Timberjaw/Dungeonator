@@ -396,7 +396,7 @@ public class DungeonDataManager {
 				{
 					// Get the reserved room
 					rooms[i] = reservedRooms[0][i][0];
-					Dungeonator.GetLogger().info("Found reserved room "+rooms[i].getLibraryId());
+					//Dungeonator.GetLogger().info("Found reserved room "+rooms[i].getLibraryId());
 				}
 				else
 				{
@@ -432,7 +432,7 @@ public class DungeonDataManager {
 					folderPath = Dungeonator.ProcessedTileFolderPath;
 					
 					tmpTheme = "."+theme;
-					Dungeonator.GetLogger().info("Selected theme "+theme+" for room.");
+					//Dungeonator.GetLogger().info("Selected theme "+theme+" for room.");
 				}
 				
 				// Get the full path to the source tile

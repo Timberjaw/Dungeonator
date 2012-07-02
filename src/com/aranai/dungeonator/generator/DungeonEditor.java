@@ -200,6 +200,36 @@ public class DungeonEditor {
 		{
 			this.cmdNode(cmd);
 		}
+		else if(cmd.getCmd().equals("bedcheck"))
+		{
+		    this.cmdBedCheck(cmd);
+		}
+	}
+	
+	public void cmdBedCheck(DCommandEvent cmd)
+	{
+	    byte[] blockData = room.getRawBlockData();
+        byte[] blocks = room.getRawBlocks();
+        
+        int pos = 0;
+        
+        for(int x = 0; x < 16; x++)
+        {
+            for(int z = 0; z < 16; z++)
+            {
+                for(int y = 0; y < 8; y++)
+                {
+                    pos = DungeonMath.getRoomPosFromCoords(x, y, z);
+                    
+                    if(blocks[pos] == 26)
+                    {
+                        byte data = blockData[pos];
+                            
+                        System.out.println("Found door at "+x+","+y+","+z+" with data:"+data);
+                    }
+                }
+            }
+        }
 	}
 	
 	/**
@@ -1660,6 +1690,14 @@ public class DungeonEditor {
 			HashMap<String,org.jnbt.Tag> entityTags = new HashMap<String,org.jnbt.Tag>();
 			HashMap<String,org.jnbt.Tag> innerTags = new HashMap<String,org.jnbt.Tag>();
 			
+			if(b == null)
+			{
+			    String msg = "Unexpected NULL tile entity. Skipping.";
+			    System.out.println(msg);
+			    editor.sendMessage(msg);
+			    continue;
+			}
+			
 			// Add common elements
 			innerTags.put("x", new IntTag("x", b.getX() & 0xF));
 			innerTags.put("y", new IntTag("y", (b.getY() & 0x7)));
@@ -1932,12 +1970,16 @@ public class DungeonEditor {
 			}
 		}
 		
-		((CraftChunk)c).getHandle().b = blocks;
+		net.minecraft.server.Chunk tmpC = new net.minecraft.server.Chunk(((CraftChunk)c).getHandle().world, blocks, c.getX(), c.getZ());
+		
+		// HACK: Replace block list via ChunkSection's ?(byte[] blocks) method
+		// and Chunk's ?(ChunkSection[] sections) method
+		// Likely to break in future updates if the Chunk class changes
+		((CraftChunk)c).getHandle().a(tmpC.h());
 		
 		// DEBUG: Try to force lighting recalc
 		((CraftChunk)c).getHandle().initLighting(); // Redo SKYLIGHT
 		
-		c.getWorld().refreshChunk(c.getX(), c.getZ());
 		for(Entity e : c.getEntities())
 		{
 			if(!(e instanceof Player))
@@ -1945,6 +1987,8 @@ public class DungeonEditor {
 				e.remove();
 			}
 		}
+		
+		c.getWorld().refreshChunk(c.getX(), c.getZ());
 	}
 	
 	/**

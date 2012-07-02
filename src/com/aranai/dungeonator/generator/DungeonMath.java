@@ -17,7 +17,7 @@ public class DungeonMath {
 	 */
 	public static int getPosFromCoords(int x, int y, int z)
 	{
-		return (x & 0xF) << 11 | (z & 0xF) << 7 | (y & 0x7F);
+		return (x & 0xF) << 11 | (z & 0xF) << 7 | (y & 0xFF);
 	}
 	
 	/**

@@ -8,10 +8,10 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.block.ContainerBlock;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.Furnace;
 import org.bukkit.block.Sign;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jnbt.CompoundTag;
 import org.jnbt.IntTag;
@@ -203,6 +203,12 @@ public class DungeonChunk {
 		Block b = this.getHandle().getBlock(x, y+editor_y, z);
 		BlockState bs = b.getState();
 		
+		if(b.getTypeId() == 0)
+		{
+		    System.out.println("Expected "+type+" at "+x+","+(y+editor_y)+","+z+", found AIR.");
+		    return;
+		}
+		
 		if(type.equalsIgnoreCase("sign"))
 		{
 			// Get lines
@@ -222,7 +228,7 @@ public class DungeonChunk {
 			// Get item stacks
 			if(bs instanceof Chest || bs instanceof Furnace || bs instanceof Dispenser)
 			{
-				ContainerBlock s = (ContainerBlock) bs;
+				InventoryHolder s = (InventoryHolder) bs;
 				List<Tag> list = ((ListTag)data.get("stacks")).getValue();
 				//ItemStack[] stacks = new ItemStack[list.size()];
 				for(Tag e : list)
@@ -263,6 +269,6 @@ public class DungeonChunk {
 	 */
 	public static final int getIndexFromCoords(int x, int y, int z)
 	{
-		return (x & 0xF) << 11 | (z & 0xF) << 7 | (y & 0x7F);
+		return (x & 0xF) << 11 | (z & 0xF) << 7 | (y & 0xFF);
 	}
 }
