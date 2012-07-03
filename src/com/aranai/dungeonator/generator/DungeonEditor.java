@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.Furnace;
-import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -1125,7 +1123,7 @@ public class DungeonEditor {
 					{
 						// Border chunk
 						mat = Material.STONE;
-						tmpFillMat = null;
+						tmpFillMat = Material.AIR;
 					}
 					
 					this.flattenChunk(chunk.getWorld().getChunkAt(fX, fZ), mat, tmpFillMat);
@@ -1374,7 +1372,7 @@ public class DungeonEditor {
 								for(int y = 0; y < 8; y++)
 								{
 									// Set block type and basic data value
-									tmpChunk.getHandle().getBlock(x, y+this.editor_y, z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
+									tmpChunk.getHandle().getBlock(x, y+this.editor_y+(setY*8), z).setTypeIdAndData(blocks[DungeonMath.getRoomPosFromCoords(x, y, z)], (byte)0, false);
 								}
 							}
 						}
@@ -1387,7 +1385,7 @@ public class DungeonEditor {
 							{
 								for(int y = 0; y < 8; y++)
 								{
-									tmpChunk.getHandle().getBlock(x, y+this.editor_y, z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
+									tmpChunk.getHandle().getBlock(x, y+this.editor_y+(setY*8), z).setData(blockData[DungeonMath.getRoomPosFromCoords(x, y, z)], false);
 								}
 							}
 						}
@@ -1942,6 +1940,46 @@ public class DungeonEditor {
 	 */
 	public void flattenChunk(Chunk c, Material floorMaterial, Material fillMaterial)
 	{
+	    Block b = null;
+	    
+	    for(int y = 127; y >= 0; y--)
+	    {
+	        for(int x = 0; x < 16; x++)
+	        {
+	            for(int z = 0; z < 16; z++)
+	            {
+	                
+	                b = c.getBlock(x, y, z);
+	                if(y == (this.editor_y-1))
+	                {
+	                    b.setTypeId(7);
+	                    continue;
+	                }
+	                else if(y == (this.editor_y))
+                    {
+                        b.setTypeId(floorMaterial.getId());
+                        continue;
+                    }
+	                
+	                if(b.getType() != Material.AIR)
+	                {
+	                    b.setTypeId(fillMaterial.getId());
+	                }
+	            }
+	        }
+	    }
+	    
+	    for(Entity e : c.getEntities())
+        {
+            if(!(e instanceof Player))
+            {
+                e.remove();
+            }
+        }
+	    
+	    c.getWorld().refreshChunk(c.getX(), c.getZ());
+	    
+	    /*
 		byte[] blocks = new byte[32768];
 		
 		Arrays.fill(blocks, (byte)0);
@@ -1989,6 +2027,7 @@ public class DungeonEditor {
 		}
 		
 		c.getWorld().refreshChunk(c.getX(), c.getZ());
+		*/
 	}
 	
 	/**

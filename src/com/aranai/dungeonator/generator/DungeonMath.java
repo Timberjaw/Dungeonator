@@ -15,7 +15,7 @@ public class DungeonMath {
 	 * @param z the z coordinate
 	 * @return the array position
 	 */
-	public static int getPosFromCoords(int x, int y, int z)
+	public static final int getPosFromCoords(int x, int y, int z)
 	{
 		return (x & 0xF) << 11 | (z & 0xF) << 7 | (y & 0xFF);
 	}
@@ -28,7 +28,7 @@ public class DungeonMath {
 	 * @param z the z coordinate
 	 * @return the room byte array position from coords
 	 */
-	public static int getRoomPosFromCoords(int x, int y, int z)
+	public static final int getRoomPosFromCoords(int x, int y, int z)
 	{
 		return (x & 0xF) << 7 | (z & 0xF) << 3 | (y & 0x7);
 	}
@@ -42,7 +42,7 @@ public class DungeonMath {
 	 * @param size the size class of the widget
 	 * @return the widget byte array position
 	 */
-	public static int getWidgetPosFromCoords(int x, int y, int z, DungeonWidget.Size size)
+	public static final int getWidgetPosFromCoords(int x, int y, int z, DungeonWidget.Size size)
 	{
 		return x*size.bound()*size.bound() + y*size.bound() + z;
 	}
