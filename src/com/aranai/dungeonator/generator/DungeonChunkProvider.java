@@ -36,7 +36,8 @@ public class DungeonChunkProvider implements IChunkProvider {
 	private Dungeonator dungeonator;
 	
 	private HashMap<String,DungeonRoom[]> roomCache = new HashMap<String,DungeonRoom[]>();
-	private static HashSet<Byte> blocksWithData;
+	@SuppressWarnings("unused")
+    private static HashSet<Byte> blocksWithData;
 	
 	// Noise generator attributes
 	private SimplexOctaveGenerator octave;
@@ -98,6 +99,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		
 		// Get active rooms for chunk
 		DungeonChunk dc = new DungeonChunk(this.world.getChunkAt(arg1, arg2), DungeonRoomType.BASIC_TILE, arg1, arg2);
+		org.bukkit.Chunk c = dc.getHandle();
 		
 		DungeonRoom[] rooms = null;
 		if(roomCache.containsKey(hash))
@@ -118,14 +120,15 @@ public class DungeonChunkProvider implements IChunkProvider {
 		}
 		
 		int pos = 0;
-		boolean update = false;
+		//boolean update = false;
 		
 		for(int r = 0; r < rooms.length; r++)
 		{
-			byte[] blocks = rooms[r].getRawBlocks();
-			byte[] data = rooms[r].getRawBlockData();
+			//byte[] blocks = rooms[r].getRawBlocks();
+			//byte[] data = rooms[r].getRawBlockData();
 			
 			// Set data values
+			/*
 			for(int y = 7; y >= 0; y--)
             {
     			for(int x = 0; x < 16; x++)
@@ -142,6 +145,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 					}
 				}
 			}
+			*/
 			
 			// Handle tile entities
 			CompoundTag schematic = rooms[r].getSchematic();
@@ -194,7 +198,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 								for(int z = 0; z < w.getSize().bound(); z++)
 								{
 									pos = DungeonMath.getWidgetPosFromCoords(x, y, z, w.getSize());
-									dc.getHandle().getBlock(
+									c.getBlock(
 										x+tmpPos.getBlockX(),
 										y+tmpPos.getBlockY()+(r*8),
 										z+tmpPos.getBlockZ()
@@ -207,7 +211,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 			}
 		}
 		
-		((org.bukkit.craftbukkit.CraftChunk)dc.getHandle()).getHandle().initLighting();
+		//((org.bukkit.craftbukkit.CraftChunk)c).getHandle().initLighting();
 		
 		// Remove from cache; we shouldn't need it again
 		if(roomCache.containsKey(hash))
@@ -251,6 +255,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		int tmp2;
 		
 		byte[] tmpBlocks2 = new byte[32768]; // 16 * 16 * 128
+		byte[] tmpData2 = new byte[32768];
 		
 		if(roomCount > 0)
 		{
@@ -260,6 +265,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 				rooms[r].setLocation(arg0, r, arg1);
 				
 				byte[] tmpBlocks = rooms[r].getRawBlocks();
+				byte[] tmpData = rooms[r].getRawBlockData();
 				
 				for(int y = 0; y < 8; y++)
                 {
@@ -269,7 +275,8 @@ public class DungeonChunkProvider implements IChunkProvider {
     					{
     					    tmp = DungeonMath.getRoomPosFromCoords(x, y, z);
     					    tmp2 = (x * 16 + z) * 128 + (r * 8) + y;
-    					    tmpBlocks2[tmp2] = tmpBlocks[tmp]; 
+    					    tmpBlocks2[tmp2] = tmpBlocks[tmp];
+    					    tmpData2[tmp2] = tmpData[tmp];
 						}
 					}
 				}
@@ -322,6 +329,22 @@ public class DungeonChunkProvider implements IChunkProvider {
 		// Create Chunk
 		Chunk chunk = new Chunk(mw, tmpBlocks2, arg0, arg1);
 		chunk.initLighting();
+		
+		// Update sections
+		for(int y = 127; y >= 0; y--)
+		{
+		    for(int x = 0; x < 16; x++)
+		    {
+		        for(int z = 0; z < 16; z++)
+		        {
+		            tmp = (x * 16 + z) * 128 + y;
+		            if(tmpData2[tmp] > 0)
+		            {
+		                chunk.a(x,y,z,tmpBlocks2[tmp],tmpData2[tmp]);
+		            }
+		        }
+		    }
+		}
         
         if(debug) { System.out.println("Generation Time {"+arg0+","+arg1+"}: "+((System.currentTimeMillis()-startTime))+" ms, DB Time "+dbTime+" milliseconds"); }
         
@@ -334,10 +357,10 @@ public class DungeonChunkProvider implements IChunkProvider {
 	public void reserveRooms(int x, int z)
 	{
 		// Check the noise value
-		double value = getNoise(x, 0, z);
+	    double value = Math.random();
 		
 		// If noise value is above threshhold
-		if(value > 0.0)
+		if(value > 0.7)
 		{
 			// Get 3 random sets
 			Vector<DungeonRoomSet> sets = dungeonator.getDataManager().getRandomRoomSets(3);

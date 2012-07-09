@@ -34,7 +34,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	protected Connection conn;
 	
 	/** The database path. */
-	public final static String db = "jdbc:sqlite:" + Dungeonator.BaseFolderPath + "dungeonator.db";
+	public final static String rawDb = Dungeonator.BaseFolderPath + "dungeonator.db";
+	public final static String db = "jdbc:sqlite:" + rawDb;
 	
 	/*
 	 * Table names
@@ -100,8 +101,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	
 	// Library Widgets
 	private static String SqlCreateTableLibraryWidgets = "CREATE TABLE `"+TblLibraryWidgets+"`" +
-			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64)," +
-			"`size_class` INTEGER," +
+			"(`id` INTEGER PRIMARY KEY, `filename` varchar(64), `size_class` INTEGER," +
+			"`bound_x` INTEGER, `bound_y` INTEGER, `bound_z` INTEGER," + 
 			"`origin_x` INTEGER, `origin_y` INTEGER, `origin_z` INTEGER);";
 	
 	/*
@@ -138,7 +139,15 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		// Open connection
 		try {
 			Class.forName("org.sqlite.JDBC");
-			conn = DriverManager.getConnection(db);
+			
+			// Initialize database
+			Connection connDisk = DriverManager.getConnection(db);
+	        this.initTables(connDisk);
+	        connDisk.close();
+			
+			conn = DriverManager.getConnection("jdbc:sqlite::memory:");
+			
+			this.initTables(conn);
 		} catch (ClassNotFoundException e) {
 			Dungeonator.GetLogger().severe("Could not load database class!");
 			e.printStackTrace();
@@ -147,11 +156,80 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 			e.printStackTrace();
 		}
 		
-		// Initialize database
-		this.initTables();
+		// Load from disk
+		loadFromDisk();
 		
 		Dungeonator.GetLogger().info("DungeonDataStore(Sqlite) Initialized.");
 	}
+	
+	/**
+	 * Open a connection to the database and copy it into RAM. This results
+	 * in better performance for queries but also means that any changes
+	 * will not be persistent.
+	 */
+	private void loadFromDisk() {
+	        try {
+                Statement stmt = conn.createStatement();
+                Statement stmt2 = conn.createStatement();
+                ResultSet rs = null;
+                
+                // Set autocommit to avoid transaction issues while attaching/detaching
+                conn.setAutoCommit(true);
+            
+                // Attach on-disk database to in-memory database
+                String attachStmt = "ATTACH '" + rawDb + "' AS src";
+                stmt.execute(attachStmt);
+
+                // Copy data from on-disk database to in-memory database
+                String tableNameQuery = "SELECT name FROM main.sqlite_master WHERE type='table'";
+                rs = stmt.executeQuery(tableNameQuery);
+                while(rs.next()) {
+                        String sql = "INSERT INTO " + rs.getString(1) + " SELECT * FROM src." + rs.getString(1);
+                        stmt2.execute(sql);
+                }
+                
+                // Detach on-disk database
+                String detachStmt = "DETACH src";
+                stmt.execute(detachStmt);
+                
+                conn.setAutoCommit(false);
+	        } catch (Exception e) {
+	                e.printStackTrace();
+	        }
+	}
+	
+	public void saveToDisk()
+	{
+        try {
+            Statement stmt = conn.createStatement();
+            Statement stmt2 = conn.createStatement();
+            ResultSet rs = null;
+            
+            // Set autocommit to avoid transaction issues while attaching/detaching
+            conn.setAutoCommit(true);
+        
+            // Attach on-disk database to in-memory database
+            String attachStmt = "ATTACH '" + rawDb + "' AS src";
+            stmt.execute(attachStmt);
+
+            // Copy data from on-disk database to in-memory database
+            String tableNameQuery = "SELECT name FROM main.sqlite_master WHERE type='table'";
+            rs = stmt.executeQuery(tableNameQuery);
+            while(rs.next()) {
+                    String sql = "DELETE FROM src." + rs.getString(1) + "; INSERT INTO src." + rs.getString(1) + " SELECT * FROM " + rs.getString(1);
+                    stmt2.execute(sql);
+            }
+            
+            // Detach on-disk database
+            String detachStmt = "DETACH src";
+            stmt.execute(detachStmt);
+            
+            conn.setAutoCommit(false);
+        } catch (SQLException e) {
+            Dungeonator.GetLogger().severe("Could not save to disk.");
+            e.printStackTrace();
+        }
+    }
 	
 	/* (non-Javadoc)
 	 * @see com.aranai.dungeonator.datastore.IDungeonDataStore#shutdown()
@@ -162,6 +240,9 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 		if(conn != null)
 		{
 			try {
+			    // Save to disk
+			    this.saveToDisk();
+			    
 				conn.close();
 			} catch (SQLException e) {
 				Dungeonator.GetLogger().severe("Could not close database connection!");
@@ -173,7 +254,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	/**
 	 * Initializes the data store tables.
 	 */
-	private void initTables()
+	private void initTables(Connection conn)
 	{
 		ResultSet rs = null;
     	Statement st = null;
