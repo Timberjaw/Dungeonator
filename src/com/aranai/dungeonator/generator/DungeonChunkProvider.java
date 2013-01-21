@@ -8,12 +8,14 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.bukkit.World;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.noise.SimplexOctaveGenerator;
 import org.jnbt.CompoundTag;
 import org.jnbt.ListTag;
 import org.jnbt.Tag;
+
+import net.minecraft.server.v1_4_R1.*;
+import org.bukkit.craftbukkit.v1_4_R1.*;
 
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.datastore.DataStoreAssetException;
@@ -23,12 +25,6 @@ import com.aranai.dungeonator.dungeonchunk.DungeonRoomSet;
 import com.aranai.dungeonator.dungeonchunk.DungeonRoomType;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidget;
 import com.aranai.dungeonator.dungeonchunk.DungeonWidgetNode;
-
-import net.minecraft.server.Chunk;
-import net.minecraft.server.ChunkPosition;
-import net.minecraft.server.EnumCreatureType;
-import net.minecraft.server.IChunkProvider;
-import net.minecraft.server.IProgressUpdate;
 
 public class DungeonChunkProvider implements IChunkProvider {
 
@@ -228,7 +224,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		long startDbTime = 0;
 		long dbTime = 0;
 		
-		net.minecraft.server.World mw = ((CraftWorld)this.world).getHandle();
+		net.minecraft.server.v1_4_R1.World mw = ((CraftWorld)this.world).getHandle();
 		
 		// Get rooms from the data manager
 		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
@@ -493,13 +489,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 	}
 
 	@Override
-	public boolean saveChunks(boolean arg0, IProgressUpdate arg1) {
-		// Does nothing in this implementation
-	    if(debug) { System.out.println("Call to saveChunks("+arg0+","+arg1+")"); }
-		return true;
-	}
-
-	@Override
 	public boolean unloadChunks() {
 		// Does nothing in this implementation
 		return false;
@@ -512,17 +501,41 @@ public class DungeonChunkProvider implements IChunkProvider {
 	}
 
 	@Override
-	public ChunkPosition findNearestMapFeature(net.minecraft.server.World arg0,
+	public ChunkPosition findNearestMapFeature(net.minecraft.server.v1_4_R1.World arg0,
 			String arg1, int arg2, int arg3, int arg4) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public List getMobsFor(EnumCreatureType arg0, int arg1, int arg2, int arg3) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public int getLoadedChunks() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public List getMobsFor(EnumCreatureType arg0, int arg1, int arg2, int arg3) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void recreateStructures(int arg0, int arg1) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public boolean saveChunks(boolean arg0, IProgressUpdate arg1) {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
 }

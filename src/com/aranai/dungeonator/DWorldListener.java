@@ -1,11 +1,12 @@
 package com.aranai.dungeonator;
 
 import org.bukkit.World;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
+
+import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
 
 import com.aranai.dungeonator.generator.DungeonChunkProvider;
 

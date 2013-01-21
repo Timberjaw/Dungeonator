@@ -3,7 +3,7 @@ package com.aranai.dungeonator.amt;
 import java.util.HashMap;
 import java.util.Vector;
 
-import net.minecraft.server.Block;
+import net.minecraft.server.v1_4_R1.Block;
 
 /**
  * Handles loading of themes and conversion between themes.

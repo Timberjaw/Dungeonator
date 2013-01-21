@@ -33,6 +33,9 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	/** The database connection. */
 	protected Connection conn;
 	
+	/** Shutdown status */
+	private boolean shutdown = false;
+	
 	/** The database path. */
 	public final static String rawDb = Dungeonator.BaseFolderPath + "dungeonator.db";
 	public final static String db = "jdbc:sqlite:" + rawDb;
@@ -146,8 +149,10 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	        connDisk.close();
 			
 			conn = DriverManager.getConnection("jdbc:sqlite::memory:");
-			
 			this.initTables(conn);
+			
+			// Load from disk
+	        loadFromDisk();
 		} catch (ClassNotFoundException e) {
 			Dungeonator.GetLogger().severe("Could not load database class!");
 			e.printStackTrace();
@@ -155,9 +160,6 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 			Dungeonator.GetLogger().severe("Could not open database connection!");
 			e.printStackTrace();
 		}
-		
-		// Load from disk
-		loadFromDisk();
 		
 		Dungeonator.GetLogger().info("DungeonDataStore(Sqlite) Initialized.");
 	}
@@ -184,6 +186,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
                 String tableNameQuery = "SELECT name FROM main.sqlite_master WHERE type='table'";
                 rs = stmt.executeQuery(tableNameQuery);
                 while(rs.next()) {
+                    System.out.println(rs.getString(1));
                         String sql = "INSERT INTO " + rs.getString(1) + " SELECT * FROM src." + rs.getString(1);
                         stmt2.execute(sql);
                 }
@@ -205,6 +208,8 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             Statement stmt2 = conn.createStatement();
             ResultSet rs = null;
             
+            Dungeonator.GetLogger().info("DungeonDataStore(Sqlite) Writing to disk.");
+            
             // Set autocommit to avoid transaction issues while attaching/detaching
             conn.setAutoCommit(true);
         
@@ -216,7 +221,7 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
             String tableNameQuery = "SELECT name FROM main.sqlite_master WHERE type='table'";
             rs = stmt.executeQuery(tableNameQuery);
             while(rs.next()) {
-                    String sql = "DELETE FROM src." + rs.getString(1) + "; INSERT INTO src." + rs.getString(1) + " SELECT * FROM " + rs.getString(1);
+                    String sql = "REPLACE INTO src." + rs.getString(1) + " SELECT * FROM " + rs.getString(1);
                     stmt2.execute(sql);
             }
             
@@ -237,8 +242,10 @@ public class SqliteDungeonDataStore implements IDungeonDataStore {
 	@Override
 	public void shutdown()
 	{
-		if(conn != null)
+		if(!shutdown && conn != null)
 		{
+		    shutdown = true;
+		    
 			try {
 			    // Save to disk
 			    this.saveToDisk();

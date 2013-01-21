@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Chunk;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -13,11 +14,14 @@ import org.bukkit.block.Furnace;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 import org.jnbt.CompoundTag;
 import org.jnbt.IntTag;
 import org.jnbt.ListTag;
 import org.jnbt.StringTag;
 import org.jnbt.Tag;
+
+import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
 
 import com.aranai.dungeonator.Direction;
 
@@ -209,6 +213,12 @@ public class DungeonChunk {
 		    return;
 		}
 		
+		if(((CraftWorld)bs.getWorld()).getTileEntityAt(x+(this.getX()*16), y+editor_y, z+(this.getZ()*16)) == null)
+        {
+		    System.out.println("Expected tile entity "+type+" at "+(x+(this.getX()*16))+", "+(y+editor_y)+","+(z+(this.getZ()*16))+", found null.");
+            return;
+        }
+		
 		if(type.equalsIgnoreCase("sign"))
 		{
 			// Get lines
@@ -250,7 +260,9 @@ public class DungeonChunk {
 					// TODO
 					
 					// Add stack
-					s.getInventory().setItem(item_pos, new ItemStack(item_type, item_amount, (short)item_damage, (byte)item_data));
+					ItemStack is = new ItemStack(item_type, item_amount, (short)item_damage);
+					is.setData(new MaterialData(item_type, (byte)item_data));
+					s.getInventory().setItem(item_pos, is);
 				}
 				
 				// Add the stacks to the object's inventory
