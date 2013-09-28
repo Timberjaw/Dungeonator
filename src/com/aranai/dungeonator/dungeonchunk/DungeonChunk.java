@@ -2,6 +2,7 @@ package com.aranai.dungeonator.dungeonchunk;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.Chunk;
 import org.bukkit.Material;
@@ -21,7 +22,7 @@ import org.jnbt.ListTag;
 import org.jnbt.StringTag;
 import org.jnbt.Tag;
 
-import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
 
 import com.aranai.dungeonator.Direction;
 
@@ -47,6 +48,25 @@ public class DungeonChunk {
 
 	/** The neighboring chunks */
 	private DungeonChunk[] neighbors = new DungeonChunk[4];
+	
+	/** List of items that can be placed randomly into chests */
+	static Material[] ChestContents = {
+	    Material.DIRT,
+	    Material.APPLE,
+	    Material.BAKED_POTATO,
+	    Material.BONE,
+	    Material.BOOK_AND_QUILL,
+	    Material.BOW,
+	    Material.BREAD,
+	    Material.BOWL,
+	    Material.BROWN_MUSHROOM,
+	    Material.BUCKET,
+	    Material.CAKE,
+	    Material.COAL,
+	    Material.COBBLESTONE,
+	    Material.EGG,
+	    Material.STONE_AXE
+	};
 	
 	/**
 	 * Instantiates a new dungeon chunk from an existing chunk
@@ -205,7 +225,7 @@ public class DungeonChunk {
 		int y = ((IntTag)data.get("y")).getValue();
 		int z = ((IntTag)data.get("z")).getValue();
 		Block b = this.getHandle().getBlock(x, y+editor_y, z);
-		BlockState bs = b.getState();
+		if(b == null) { System.out.println("Missing block at "+(x+(this.getX()*16))+", "+(y+editor_y)+","+(z+(this.getZ()*16))+"."); return; }
 		
 		if(b.getTypeId() == 0)
 		{
@@ -213,11 +233,15 @@ public class DungeonChunk {
 		    return;
 		}
 		
-		if(((CraftWorld)bs.getWorld()).getTileEntityAt(x+(this.getX()*16), y+editor_y, z+(this.getZ()*16)) == null)
+		if(((CraftWorld)b.getWorld()).getTileEntityAt(x+(this.getX()*16), y+editor_y, z+(this.getZ()*16)) == null)
         {
-		    System.out.println("Expected tile entity "+type+" at "+(x+(this.getX()*16))+", "+(y+editor_y)+","+(z+(this.getZ()*16))+", found null.");
+		    System.out.println("Expected tile entity "+type+" at "+(x+(this.getX()*16))+", "+(y+editor_y)+","+(z+(this.getZ()*16))+", found null. Found "+
+		    		((CraftWorld)b.getWorld()).getTileEntityAt(z+(this.getZ()*16), y+editor_y, x+(this.getX()*16))+" at swapped X/Z"
+		    		);
             return;
         }
+		
+		BlockState bs = b.getState();
 		
 		if(type.equalsIgnoreCase("sign"))
 		{
@@ -240,6 +264,7 @@ public class DungeonChunk {
 			{
 				InventoryHolder s = (InventoryHolder) bs;
 				List<Tag> list = ((ListTag)data.get("stacks")).getValue();
+				int totalItems = 0;
 				//ItemStack[] stacks = new ItemStack[list.size()];
 				for(Tag e : list)
 				{
@@ -251,6 +276,7 @@ public class DungeonChunk {
 					int item_type = ((IntTag)c.get("type")).getValue();
 					// Amount
 					int item_amount = ((IntTag)c.get("amount")).getValue();
+					totalItems += item_amount;
 					// Damage
 					int item_damage = ((IntTag)c.get("damage")).getValue();
 					// Data
@@ -263,6 +289,47 @@ public class DungeonChunk {
 					ItemStack is = new ItemStack(item_type, item_amount, (short)item_damage);
 					is.setData(new MaterialData(item_type, (byte)item_data));
 					s.getInventory().setItem(item_pos, is);
+				}
+				
+				// Add some random stuff to the container
+				if(totalItems == 0)
+				{
+				    Random r = new Random();
+				    
+				    int max = 0;
+				    int maxItems = 0;
+				    int luck = r.nextInt(20);
+				    
+				    // Determine max slots to fill
+				    if(luck <= 2) {
+				        // Unlucky
+				    } else if(luck <= 10) {
+				        // Meh
+				        max = (int) (s.getInventory().getSize() / 4);
+				        maxItems = r.nextInt(3);
+				    } else if(luck <= 18) {
+				        // Lucky
+				        max = (int) (s.getInventory().getSize() / 2);
+				        maxItems = r.nextInt(10);
+				    } else {
+				        // Very lucky
+				        max = s.getInventory().getSize();
+				        maxItems = r.nextInt(64);
+				    }
+				    
+				    // Actual slots to fill
+				    if(max > 0 && maxItems > 0)
+				    {
+    				    int slots = r.nextInt(max);
+    				    
+    				    for(int i = 0; i < slots; i++)
+    				    {
+    				        Material m = DungeonChunk.ChestContents[r.nextInt(DungeonChunk.ChestContents.length)];
+    				        int items = Math.min(r.nextInt(maxItems) + 1, m.getMaxStackSize());
+    				        ItemStack is = new ItemStack(m, items);
+    				        s.getInventory().setItem(i, is);
+    				    }
+				    }
 				}
 				
 				// Add the stacks to the object's inventory

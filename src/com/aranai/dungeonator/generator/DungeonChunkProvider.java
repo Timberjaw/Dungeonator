@@ -14,8 +14,9 @@ import org.jnbt.CompoundTag;
 import org.jnbt.ListTag;
 import org.jnbt.Tag;
 
-import net.minecraft.server.v1_4_R1.*;
-import org.bukkit.craftbukkit.v1_4_R1.*;
+import net.minecraft.server.v1_6_R3.*;
+
+import org.bukkit.craftbukkit.v1_6_R3.*;
 
 import com.aranai.dungeonator.Dungeonator;
 import com.aranai.dungeonator.datastore.DataStoreAssetException;
@@ -120,44 +121,9 @@ public class DungeonChunkProvider implements IChunkProvider {
 		
 		for(int r = 0; r < rooms.length; r++)
 		{
-			//byte[] blocks = rooms[r].getRawBlocks();
-			//byte[] data = rooms[r].getRawBlockData();
-			
-			// Set data values
-			/*
-			for(int y = 7; y >= 0; y--)
-            {
-    			for(int x = 0; x < 16; x++)
-    			{
-    				for(int z = 0; z < 16; z++)
-    				{
-						pos = DungeonMath.getRoomPosFromCoords(x, y, z);
-						
-						// Blocks with orientation/data
-						if(DungeonChunkProvider.blocksWithData.contains(blocks[pos]))
-						{
-						    dc.getHandle().getBlock(x, y + (r * 8), z).setData(data[pos], update);
-						}
-					}
-				}
-			}
-			*/
-			
 			// Handle tile entities
 			CompoundTag schematic = rooms[r].getSchematic();
-			if(schematic != null)
-			{
-				if(schematic.getValue().containsKey("tileEntities"))
-				{
-					Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
-					
-					for(org.jnbt.Tag t : tileEntities.values())
-					{
-						dc.addTileEntityFromTag(t, r*8);
-					}
-				}
-			}
-			else
+			if(schematic == null)
 			{
 			    if(debug) { System.out.println("Unexpected NULL schematic."); }
 			}
@@ -205,9 +171,17 @@ public class DungeonChunkProvider implements IChunkProvider {
 					}
 				}
 			}
+			
+			if(schematic.getValue().containsKey("tileEntities"))
+			{
+				Map<String,org.jnbt.Tag> tileEntities = ((CompoundTag)schematic.getValue().get("tileEntities")).getValue();
+				
+				for(org.jnbt.Tag t : tileEntities.values())
+				{
+					dc.addTileEntityFromTag(t, r*8);
+				}
+			}
 		}
-		
-		//((org.bukkit.craftbukkit.CraftChunk)c).getHandle().initLighting();
 		
 		// Remove from cache; we shouldn't need it again
 		if(roomCache.containsKey(hash))
@@ -224,7 +198,7 @@ public class DungeonChunkProvider implements IChunkProvider {
 		long startDbTime = 0;
 		long dbTime = 0;
 		
-		net.minecraft.server.v1_4_R1.World mw = ((CraftWorld)this.world).getHandle();
+		net.minecraft.server.v1_6_R3.World mw = ((CraftWorld)this.world).getHandle();
 		
 		// Get rooms from the data manager
 		DungeonChunk dc = new DungeonChunk(null, DungeonRoomType.BASIC_TILE, arg0, arg1);
@@ -500,13 +474,6 @@ public class DungeonChunkProvider implements IChunkProvider {
 		return false;
 	}
 
-	@Override
-	public ChunkPosition findNearestMapFeature(net.minecraft.server.v1_4_R1.World arg0,
-			String arg1, int arg2, int arg3, int arg4) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
     @Override
     public int getLoadedChunks() {
         // TODO Auto-generated method stub
@@ -537,5 +504,19 @@ public class DungeonChunkProvider implements IChunkProvider {
         // TODO Auto-generated method stub
         return false;
     }
+
+	@Override
+	public void b() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ChunkPosition findNearestMapFeature(
+			net.minecraft.server.v1_6_R3.World arg0, String arg1, int arg2,
+			int arg3, int arg4) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
 
-import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
 
 import com.aranai.dungeonator.generator.DungeonChunkProvider;
 
